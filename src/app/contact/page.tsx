@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ArrowLeft, ExternalLink, Mail, MapPin } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { FadeIn, FadeInItem, StaggerContainer } from "@/components/animations";
 
 export const metadata: Metadata = {
   title: "Contact — UNIFIÉE",
@@ -54,29 +55,29 @@ export default function ContactPage() {
       <div className="max-w-7xl mx-auto px-6 py-20 md:py-28">
 
         {/* Header */}
-        <div className="max-w-3xl mb-16">
-          <div className="inline-flex items-center gap-2 text-xs font-mono text-primary border border-primary/30 rounded-md px-3 py-1.5 mb-8 bg-primary/5">
-            <span className="size-1.5 rounded-full bg-primary" />
-            Under Development
-          </div>
-          <h1 className="text-4xl md:text-5xl lg:text-[3.25rem] font-semibold tracking-tight leading-[1.06]">
-            Let&apos;s talk procurement, partnerships, or integration.
-          </h1>
-          <p className="text-sm md:text-base text-muted-foreground mt-5 leading-relaxed max-w-2xl">
-            We&apos;re actively speaking with buyers, vendors, and partners
-            building complex procurement workflows. Reach us directly — we
-            respond personally.
-          </p>
-        </div>
+        <StaggerContainer className="max-w-3xl mb-16">
+          <FadeInItem delay={0.1}>
+            <h1 className="text-4xl md:text-5xl lg:text-[3.25rem] font-semibold tracking-tight leading-[1.06]">
+              Let&apos;s talk procurement, partnerships, or integration.
+            </h1>
+          </FadeInItem>
+          <FadeInItem delay={0.2}>
+            <p className="text-sm md:text-base text-muted-foreground mt-5 leading-relaxed max-w-2xl">
+              We&apos;re actively speaking with buyers, vendors, and partners
+              building complex procurement workflows. Reach us directly — we
+              respond personally.
+            </p>
+          </FadeInItem>
+        </StaggerContainer>
 
         {/* Grid */}
-        <div className="grid lg:grid-cols-[1fr_1.4fr] gap-5">
+        <StaggerContainer className="grid lg:grid-cols-[1fr_1.4fr] gap-5">
 
           {/* Left — General + Location */}
           <div className="flex flex-col gap-5">
 
             {/* General Inquiries */}
-            <div className="bg-card border border-border rounded-xl p-6">
+            <FadeInItem className="bg-card border border-border rounded-xl p-6">
               <p className="text-[10px] font-mono text-muted-foreground tracking-widest uppercase mb-5">
                 General Inquiries
               </p>
@@ -128,10 +129,10 @@ export default function ContactPage() {
                   </p>
                 </div>
               </div>
-            </div>
+            </FadeInItem>
 
             {/* Location */}
-            <div className="bg-card border border-border rounded-xl p-6">
+            <FadeInItem className="bg-card border border-border rounded-xl p-6">
               <p className="text-[10px] font-mono text-muted-foreground tracking-widest uppercase mb-5">
                 Location
               </p>
@@ -144,17 +145,19 @@ export default function ContactPage() {
                   <p className="text-sm text-muted-foreground mt-0.5">India</p>
                 </div>
               </div>
-            </div>
+            </FadeInItem>
           </div>
 
           {/* Right — Team */}
           <div className="flex flex-col gap-5">
-            <p className="text-[10px] font-mono text-muted-foreground tracking-widest uppercase">
-              Core Team
-            </p>
+            <FadeInItem>
+              <p className="text-[10px] font-mono text-muted-foreground tracking-widest uppercase">
+                Core Team
+              </p>
+            </FadeInItem>
 
             {team.map((member) => (
-              <div
+              <FadeInItem
                 key={member.name}
                 className="bg-card border border-border rounded-xl p-6 hover:border-primary/20 transition-colors"
               >
@@ -194,10 +197,10 @@ export default function ContactPage() {
                     </span>
                   </a>
                 </div>
-              </div>
+              </FadeInItem>
             ))}
           </div>
-        </div>
+        </StaggerContainer>
       </div>
     </div>
   );

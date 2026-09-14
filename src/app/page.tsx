@@ -13,7 +13,7 @@ import {
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-
+import { FadeIn, FadeInItem, StaggerContainer } from "@/components/animations";
 export const metadata: Metadata = {
   title: "UNIFIÉE — One system, from requirement to production",
   description:
@@ -98,20 +98,24 @@ export default function HomePage() {
         />
         <div className="absolute inset-x-0 bottom-0 h-48 bg-linear-to-t from-background to-transparent pointer-events-none" />
 
-        <div className="relative max-w-4xl mx-auto px-6 text-center">
-          <h1 className="text-5xl sm:text-6xl lg:text-7xl font-semibold leading-[1.06] tracking-tight text-foreground">
-            One system, from requirement to production.
-          </h1>
+        <StaggerContainer className="relative max-w-4xl mx-auto px-6 text-center">
+          <FadeInItem>
+            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-semibold leading-[1.06] tracking-tight text-foreground">
+              One system, from requirement to production.
+            </h1>
+          </FadeInItem>
 
-          <p className="text-base md:text-lg text-muted-foreground mt-7 max-w-xl mx-auto leading-relaxed font-light">
-            UNIFIÉE is an intelligent B2B operating layer that connects the
-            fragmented decisions, suppliers, and workflows behind food and
-            beverage packaging operations.
-          </p>
+          <FadeInItem delay={0.1}>
+            <p className="text-base md:text-lg text-muted-foreground mt-7 max-w-xl mx-auto leading-relaxed font-light">
+              UNIFIÉE is an intelligent B2B operating layer that connects the
+              fragmented decisions, suppliers, and workflows behind food and
+              beverage packaging operations.
+            </p>
+          </FadeInItem>
 
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mt-10">
+          <FadeInItem delay={0.2} className="flex flex-col sm:flex-row items-center justify-center gap-3 mt-10">
             <Link href="/contact" className={buttonVariants({ size: "lg" })}>
-              Let's Talk
+              Let&apos;s Talk
             </Link>
             <a
               href="https://docs.google.com/forms/d/e/1FAIpQLSfnqzq5UKUFp_rlQgw7518s-6Gi9Ryu4rXV316FxmEZSeI8HQ/viewform"
@@ -125,10 +129,10 @@ export default function HomePage() {
               Learn More
               <ArrowRight className="size-4" />
             </Link>
-          </div>
+          </FadeInItem>
 
           {/* Image mosaic */}
-          <div className="mt-14 grid grid-cols-3 gap-3 max-w-2xl mx-auto">
+          <FadeInItem delay={0.3} className="mt-14 grid grid-cols-3 gap-3 max-w-2xl mx-auto">
             {heroImages.map((img) => (
               <div
                 key={img.src}
@@ -143,20 +147,22 @@ export default function HomePage() {
                 />
               </div>
             ))}
-          </div>
-        </div>
+          </FadeInItem>
+        </StaggerContainer>
       </section>
 
       {/* ─── Fragmentation Metrics ─── */}
       <section className="py-24 md:py-32 border-t border-border">
         <div className="max-w-7xl mx-auto px-6">
-          <h2 className="text-3xl md:text-4xl font-semibold tracking-tight max-w-2xl text-foreground">
-            Sourcing packaging shouldn&apos;t mean managing chaos.
-          </h2>
+          <FadeIn>
+            <h2 className="text-3xl md:text-4xl font-semibold tracking-tight max-w-2xl text-foreground">
+              Sourcing packaging shouldn&apos;t mean managing chaos.
+            </h2>
+          </FadeIn>
 
-          <div className="grid md:grid-cols-3 gap-px bg-border border border-border rounded-xl overflow-hidden mt-14">
+          <StaggerContainer className="grid md:grid-cols-3 gap-px bg-border border border-border rounded-xl overflow-hidden mt-14">
             {metrics.map((m) => (
-              <div key={m.stat} className="bg-background p-8">
+              <FadeInItem key={m.stat} className="bg-background p-8">
                 <p className="font-heading text-5xl md:text-6xl font-semibold text-foreground tracking-tight">
                   {m.stat}
                 </p>
@@ -166,9 +172,9 @@ export default function HomePage() {
                 <p className="text-sm text-muted-foreground mt-4 leading-relaxed">
                   {m.description}
                 </p>
-              </div>
+              </FadeInItem>
             ))}
-          </div>
+          </StaggerContainer>
         </div>
       </section>
 
@@ -185,7 +191,7 @@ export default function HomePage() {
         <div className="absolute inset-0 bg-linear-to-r from-background via-background/75 to-background/10" />
         <div className="absolute inset-0 bg-linear-to-t from-background/60 to-transparent" />
 
-        <div className="relative h-full max-w-7xl mx-auto px-6 flex flex-col justify-center">
+        <FadeIn className="relative h-full max-w-7xl mx-auto px-6 flex flex-col justify-center">
           <p className="text-xs font-mono text-muted-foreground tracking-widest uppercase mb-4">
             The Operational Reality
           </p>
@@ -197,26 +203,26 @@ export default function HomePage() {
             layer of building a food brand was never designed to scale. UNIFIÉE
             is.
           </p>
-        </div>
+        </FadeIn>
       </section>
 
       {/* ─── Platform Features ─── */}
       <section className="py-24 md:py-32">
         <div className="max-w-7xl mx-auto px-6">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-14">
+          <FadeIn className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-14">
             <h2 className="text-3xl md:text-4xl font-semibold tracking-tight max-w-xl text-foreground">
               Built for the actual scale of your business.
             </h2>
             <p className="text-sm text-muted-foreground font-mono">
               Three modules. One integrated workflow.
             </p>
-          </div>
+          </FadeIn>
 
-          <div className="border border-border rounded-xl overflow-hidden divide-y divide-border">
+          <StaggerContainer className="border border-border rounded-xl overflow-hidden divide-y divide-border">
             {modules.map((mod) => {
               const Icon = mod.Icon;
               return (
-                <div
+                <FadeInItem
                   key={mod.number}
                   className="bg-background grid md:grid-cols-[5rem_1fr] hover:bg-muted/30 transition-colors group"
                 >
@@ -224,7 +230,7 @@ export default function HomePage() {
                     <span className="text-xs font-mono text-muted-foreground">
                       {mod.number}
                     </span>
-                    <div className="size-8 rounded-lg border border-border bg-background flex items-center justify-center group-hover:border-primary/40 transition-colors">
+                    <div className="size-8 rounded-lg border border-border bg-background/35 flex items-center justify-center group-hover:border-primary/40 dark:group-hover:border-primary transition-colors">
                       <Icon className="size-4 text-muted-foreground group-hover:text-primary transition-colors" />
                     </div>
                   </div>
@@ -236,30 +242,30 @@ export default function HomePage() {
                       {mod.description}
                     </p>
                   </div>
-                </div>
+                </FadeInItem>
               );
             })}
-          </div>
+          </StaggerContainer>
         </div>
       </section>
 
       {/* ─── Bento Grid ─── */}
       <section className="py-24 md:py-32 bg-muted/30 border-y border-border">
         <div className="max-w-7xl mx-auto px-6">
-          <div className="mb-12">
+          <FadeIn className="mb-12">
             <p className="text-xs font-mono text-muted-foreground tracking-widest uppercase mb-3">
               Platform Capabilities
             </p>
             <h2 className="text-3xl md:text-4xl font-semibold tracking-tight text-foreground">
               Infrastructure at every layer.
             </h2>
-          </div>
+          </FadeIn>
 
-          <div className="grid grid-cols-2 lg:grid-cols-4 auto-rows-fr gap-4">
+          <StaggerContainer className="grid grid-cols-2 lg:grid-cols-4 auto-rows-fr gap-4">
             {/* AI Decision — 2×2 */}
-            <div className="col-span-2 row-span-2 bg-card border border-border rounded-xl p-7 flex flex-col justify-between hover:border-primary/30 transition-colors group">
+            <FadeInItem className="col-span-2 row-span-2 bg-card border border-border rounded-xl p-7 flex flex-col justify-between hover:border-primary/30 dark:hover:border-primary hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 group">
               <div>
-                <div className="size-9 rounded-lg border border-border bg-background flex items-center justify-center mb-5 group-hover:border-primary/40 transition-colors">
+                <div className="size-9 rounded-lg border border-border bg-background/35 flex items-center justify-center mb-5 group-hover:border-primary/40 dark:group-hover:border-primary transition-colors">
                   <Brain className="size-4 text-muted-foreground group-hover:text-primary transition-colors" />
                 </div>
                 <h3 className="text-xl font-semibold tracking-tight">AI Decision Support</h3>
@@ -271,13 +277,13 @@ export default function HomePage() {
               </div>
               <div className="mt-6 font-mono text-xs bg-muted/60 rounded-lg p-4 space-y-1.5 border border-border">
                 <p className="text-muted-foreground">→ Analyzing operational profile...</p>
-                <p className="text-primary font-medium">Recommended: 90gsm PE-coated kraft, 8oz taper</p>
+                <p className="font-medium">Recommended: 90gsm PE-coated kraft, 8oz taper</p>
                 <p className="text-muted-foreground">Unit cost estimate: ₹4.20 – ₹4.80</p>
               </div>
-            </div>
+            </FadeInItem>
 
             {/* Stat 72h */}
-            <div className="bg-card border border-border rounded-xl p-5 flex flex-col justify-between hover:border-primary/30 transition-colors">
+            <FadeInItem className="bg-card border border-border rounded-xl p-5 flex flex-col justify-between hover:border-primary/30 dark:hover:border-primary hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 group">
               <Zap className="size-4 text-muted-foreground" />
               <div>
                 <p className="font-heading text-4xl font-semibold mt-3 text-foreground">72h</p>
@@ -285,10 +291,10 @@ export default function HomePage() {
                   Avg. time from requirements to confirmed supplier match.
                 </p>
               </div>
-            </div>
+            </FadeInItem>
 
             {/* Stat 0 */}
-            <div className="bg-card border border-border rounded-xl p-5 flex flex-col justify-between hover:border-primary/30 transition-colors">
+            <FadeInItem className="bg-card border border-border rounded-xl p-5 flex flex-col justify-between hover:border-primary/30 dark:hover:border-primary hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 group">
               <Globe className="size-4 text-muted-foreground" />
               <div>
                 <p className="font-heading text-4xl font-semibold mt-3 text-foreground">0</p>
@@ -296,12 +302,12 @@ export default function HomePage() {
                   MOQ overcommits on platform-matched orders.
                 </p>
               </div>
-            </div>
+            </FadeInItem>
 
             {/* Pipeline */}
-            <div className="col-span-2 bg-card border border-border rounded-xl p-5 hover:border-primary/30 transition-colors group">
+            <FadeInItem className="col-span-2 bg-card border border-border rounded-xl p-5 hover:border-primary/30 dark:hover:border-primary hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 group">
               <div className="flex items-center gap-2.5 mb-4">
-                <div className="size-7 rounded-md border border-border bg-background flex items-center justify-center group-hover:border-primary/40 transition-colors">
+                <div className="size-7 rounded-md border border-border bg-background/35 flex items-center justify-center group-hover:border-primary/40 dark:group-hover:border-primary transition-colors">
                   <GitBranch className="size-3.5 text-muted-foreground group-hover:text-primary transition-colors" />
                 </div>
                 <div>
@@ -320,12 +326,12 @@ export default function HomePage() {
                   </div>
                 ))}
               </div>
-            </div>
+            </FadeInItem>
 
             {/* Supply matching */}
-            <div className="col-span-2 bg-card border border-border rounded-xl p-5 hover:border-primary/30 transition-colors group">
+            <FadeInItem className="col-span-2 bg-card border border-border rounded-xl p-5 hover:border-primary/30 dark:hover:border-primary hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 group">
               <div className="flex items-center gap-2.5 mb-4">
-                <div className="size-7 rounded-md border border-border bg-background flex items-center justify-center group-hover:border-primary/40 transition-colors">
+                <div className="size-7 rounded-md border border-border bg-background/35 flex items-center justify-center group-hover:border-primary/40 dark:group-hover:border-primary transition-colors">
                   <Network className="size-3.5 text-muted-foreground group-hover:text-primary transition-colors" />
                 </div>
                 <div>
@@ -343,12 +349,12 @@ export default function HomePage() {
                   </div>
                 ))}
               </div>
-            </div>
+            </FadeInItem>
 
             {/* Adaptive strip */}
-            <div className="col-span-2 lg:col-span-4 bg-card border border-border rounded-xl p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5 hover:border-primary/30 transition-colors group">
+            <FadeInItem className="col-span-2 lg:col-span-4 bg-card border border-border rounded-xl p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5 hover:border-primary/30 dark:hover:border-primary hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 group">
               <div className="flex items-center gap-3.5">
-                <div className="size-9 rounded-lg border border-border bg-background flex items-center justify-center group-hover:border-primary/40 transition-colors">
+                <div className="size-9 rounded-lg border border-border bg-background/35 flex items-center justify-center group-hover:border-primary/40 dark:group-hover:border-primary transition-colors">
                   <Layers className="size-4 text-muted-foreground group-hover:text-primary transition-colors" />
                 </div>
                 <div>
@@ -358,13 +364,13 @@ export default function HomePage() {
               </div>
               <div className="flex items-center gap-2 flex-wrap">
                 {["Core Identity", "Seasonal Layer", "Promotional Layer", "Localized Layer"].map((tag) => (
-                  <span key={tag} className="text-xs px-2.5 py-1 border border-border rounded-md text-muted-foreground bg-background">
+                  <span key={tag} className="text-xs px-2.5 py-1 border border-border rounded-md text-muted-foreground bg-background/30">
                     {tag}
                   </span>
                 ))}
               </div>
-            </div>
-          </div>
+            </FadeInItem>
+          </StaggerContainer>
         </div>
       </section>
 
@@ -372,7 +378,7 @@ export default function HomePage() {
       <section className="py-24 md:py-32">
         <div className="max-w-7xl mx-auto px-6">
           <div className="grid lg:grid-cols-2 gap-16 lg:gap-24 items-start">
-            <div>
+            <FadeIn>
               <p className="text-xs font-mono text-muted-foreground tracking-widest uppercase mb-4">
                 Adaptive Packaging
               </p>
@@ -398,8 +404,8 @@ export default function HomePage() {
                   </li>
                 ))}
               </ul>
-            </div>
-            <div className="relative h-110 lg:h-135 w-full rounded-2xl overflow-hidden border border-border group">
+            </FadeIn>
+            <FadeIn delay={0.2} className="relative h-110 lg:h-135 w-full rounded-2xl overflow-hidden border border-border group">
               <Image
                 src="https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=1000&q=80&auto=format&fit=crop"
                 alt="F&B adaptive packaging modularity"
@@ -418,7 +424,7 @@ export default function HomePage() {
                   Swap promotional assets without touching the core brand identity.
                 </p>
               </div>
-            </div>
+            </FadeIn>
           </div>
         </div>
       </section>
@@ -426,14 +432,14 @@ export default function HomePage() {
       {/* ─── Product Scope ─── */}
       <section className="py-24 md:py-32 border-t border-border">
         <div className="max-w-7xl mx-auto px-6">
-          <div className="mb-14">
+          <FadeIn className="mb-14">
             <p className="text-xs font-mono text-muted-foreground tracking-widest uppercase mb-4">
               Product Scope
             </p>
             <h2 className="text-3xl md:text-4xl font-semibold tracking-tight max-w-2xl text-foreground">
               Engineered for complete operational touchpoints.
             </h2>
-          </div>
+          </FadeIn>
         </div>
       </section>
 
@@ -451,7 +457,7 @@ export default function HomePage() {
           <div className="absolute inset-0 bg-background/90 dark:bg-background/95" />
         </div>
 
-        <div className="relative max-w-7xl mx-auto px-6 text-center">
+        <FadeIn className="relative max-w-7xl mx-auto px-6 text-center">
           <h2 className="text-4xl md:text-5xl font-semibold tracking-tight max-w-2xl mx-auto leading-snug text-foreground">
             Build your physical brand on a single operational system.
           </h2>
@@ -473,7 +479,7 @@ export default function HomePage() {
               <ArrowRight className="size-4" />
             </a>
           </div>
-        </div>
+        </FadeIn>
       </section>
     </div>
   );

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { FadeIn, FadeInItem, StaggerContainer } from "@/components/animations";
 
 export const metadata: Metadata = {
   title: "About — UNIFIÉE",
@@ -73,17 +74,17 @@ export default function AboutPage() {
       {/* ─── Manifesto ─── */}
       <section className="pt-32 pb-20">
         <div className="max-w-7xl mx-auto px-6">
-          <div className="grid lg:grid-cols-2 gap-16 lg:gap-24">
-            <div>
+          <StaggerContainer className="grid lg:grid-cols-2 gap-16 lg:gap-24">
+            <FadeInItem>
               <p className="text-xs font-mono text-muted-foreground tracking-widest uppercase mb-6">
                 Our Foundation
               </p>
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-semibold tracking-tight leading-[1.06]">
                 Unifying fragmented F&amp;B infrastructure.
               </h1>
-            </div>
+            </FadeInItem>
 
-            <div className="space-y-4 self-end">
+            <FadeInItem delay={0.2} className="space-y-4 self-end">
               <p className="text-sm text-muted-foreground leading-relaxed">
                 The transition from a design idea on a computer screen to a
                 physical package held in a consumer&apos;s hand remains deeply
@@ -100,10 +101,10 @@ export default function AboutPage() {
                 the supply ecosystem into a structured database, we let
                 technology shoulder the operational weight.
               </p>
-            </div>
-          </div>
+            </FadeInItem>
+          </StaggerContainer>
 
-          <div className="mt-14 relative h-80 md:h-110 rounded-xl overflow-hidden border border-border">
+          <FadeIn delay={0.4} className="mt-14 relative h-80 md:h-110 rounded-xl overflow-hidden border border-border">
             <Image
               src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=1400&q=80&auto=format&fit=crop"
               alt="Modern infrastructure representing the UNIFIÉE platform"
@@ -118,21 +119,21 @@ export default function AboutPage() {
                 Physical operations deserve software-grade infrastructure.
               </p>
             </div>
-          </div>
+          </FadeIn>
         </div>
       </section>
 
       {/* ─── Comparison Table ─── */}
       <section className="py-24 md:py-32 border-t border-border">
         <div className="max-w-7xl mx-auto px-6">
-          <div className="mb-12">
+          <FadeIn className="mb-12">
             <p className="text-xs font-mono text-muted-foreground tracking-widest uppercase mb-4">
               Structural Comparison
             </p>
             <h2 className="text-3xl md:text-4xl font-semibold tracking-tight max-w-2xl text-foreground">
               Engineered for scale, not billable hours.
             </h2>
-          </div>
+          </FadeIn>
 
           <div className="border border-border rounded-xl overflow-hidden">
             <div className="grid grid-cols-3 bg-muted/40">
@@ -170,7 +171,7 @@ export default function AboutPage() {
       {/* ─── Data Flywheel ─── */}
       <section className="py-24 md:py-32 border-t border-border bg-muted/20">
         <div className="max-w-7xl mx-auto px-6">
-          <div className="text-center mb-14 max-w-2xl mx-auto">
+          <FadeIn className="text-center mb-14 max-w-2xl mx-auto">
             <p className="text-xs font-mono text-muted-foreground tracking-widest uppercase mb-4">
               The Data Flywheel
             </p>
@@ -184,20 +185,20 @@ export default function AboutPage() {
               optimizes itself. Over time, the platform&apos;s ability to match
               your project with the perfect supplier improves automatically.
             </p>
-          </div>
+          </FadeIn>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <StaggerContainer className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {flywheel.map((item) => (
-              <div
+              <FadeInItem
                 key={item.step}
                 className="bg-card border border-border rounded-xl p-6 hover:border-primary/30 transition-colors"
               >
                 <span className="text-xs font-mono text-primary">{item.step}</span>
                 <h3 className="text-base font-semibold mt-4 text-foreground">{item.label}</h3>
                 <p className="text-sm text-muted-foreground mt-2 leading-relaxed">{item.detail}</p>
-              </div>
+              </FadeInItem>
             ))}
-          </div>
+          </StaggerContainer>
 
           <div className="mt-8 flex items-center justify-center gap-2">
             {flywheel.map((item, i) => (
@@ -213,13 +214,13 @@ export default function AboutPage() {
 
       {/* ─── Ecosystem CTA ─── */}
       <section className="py-24 md:py-32 border-t border-border">
-        <div className="max-w-7xl mx-auto px-6 grid lg:grid-cols-2 gap-16 items-center">
-          <div>
+        <StaggerContainer className="max-w-7xl mx-auto px-6 grid lg:grid-cols-2 gap-16 items-center">
+          <FadeInItem>
             <h2 className="text-4xl md:text-5xl font-semibold tracking-tight leading-snug text-foreground">
               Help shape the next layer of F&amp;B infrastructure.
             </h2>
-          </div>
-          <div>
+          </FadeInItem>
+          <FadeInItem delay={0.2}>
             <p className="text-sm text-muted-foreground leading-relaxed">
               We are not engineering this platform inside a silo. UNIFIÉE is
               built directly alongside the real restaurant founders, cloud
@@ -240,8 +241,8 @@ export default function AboutPage() {
                 <ArrowRight className="size-4" />
               </a>
             </div>
-          </div>
-        </div>
+          </FadeInItem>
+        </StaggerContainer>
       </section>
     </div>
   );

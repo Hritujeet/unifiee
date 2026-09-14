@@ -1,11 +1,12 @@
 "use client";
 
-import { Button, buttonVariants } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Menu, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import { ThemeToggle } from "./theme-toggle";
 
 const navLinks = [
   { href: "/", label: "Home" },
@@ -76,6 +77,7 @@ export function Navbar() {
             >
               Take our Survey
             </a>
+            <ThemeToggle />
             <Link
               href="#"
               className={buttonVariants({ variant: "default", size: "sm" })}
@@ -86,6 +88,7 @@ export function Navbar() {
 
           {/* Mobile controls */}
           <div className="md:hidden flex items-center gap-3">
+            <ThemeToggle />
             <button
               id="mobile-menu-toggle"
               onClick={() => setMobileOpen((o) => !o)}

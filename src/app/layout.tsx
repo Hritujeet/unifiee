@@ -8,7 +8,7 @@ import { Footer } from "@/components/footer";
 
 const dmSansHeading = DM_Sans({subsets:['latin'],variable:'--font-heading'});
 
-const geist = Geist({subsets:['latin'],variable:'--font-sans'});
+const roboto = Roboto({subsets:['latin'],variable:'--font-sans'});
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
@@ -30,7 +30,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={cn(
               "h-full antialiased",
               geistMono.variable
-            , "font-sans", geist.variable, dmSansHeading.variable)}
+            , "font-sans", roboto.variable, dmSansHeading.variable)}
     >
       <body className="min-h-full flex flex-col bg-background text-foreground font-sans">
         <Providers>
