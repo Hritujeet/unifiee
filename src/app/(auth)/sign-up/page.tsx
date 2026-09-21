@@ -1,9 +1,9 @@
-import React from 'react'
+import { SignupForm } from "@/components/signup-form"
 
-const page = () => {
-    return (
-        <div>page</div>
-    )
+export default function Page() {
+  return (
+    <div className="flex min-h-svh w-full items-center justify-center p-6 md:p-10">
+      <SignupForm />
+    </div>
+  )
 }
-
-export default page
