@@ -1,14 +1,12 @@
-import type { Metadata } from "next";
-import { DM_Sans, Geist_Mono, Roboto, Geist } from "next/font/google";
-import "./globals.css";
 import { cn } from "@/lib/utils";
-import { Providers } from "@/components/providers";
-import { Navbar } from "@/components/navbar";
-import { Footer } from "@/components/footer";
+import type { Metadata } from "next";
+import { DM_Sans, Geist_Mono, Roboto } from "next/font/google";
+import "./globals.css";
+import { ThemeProvider } from "next-themes";
 
-const dmSansHeading = DM_Sans({subsets:['latin'],variable:'--font-heading'});
+const dmSansHeading = DM_Sans({ subsets: ['latin'], variable: '--font-heading' });
 
-const roboto = Roboto({subsets:['latin'],variable:'--font-sans'});
+const roboto = Roboto({ subsets: ['latin'], variable: '--font-sans' });
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
@@ -28,16 +26,19 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="en"
       suppressHydrationWarning
       className={cn(
-              "h-full antialiased",
-              geistMono.variable
-            , "font-sans", roboto.variable, dmSansHeading.variable)}
+        "h-full antialiased",
+        geistMono.variable
+        , "font-sans", roboto.variable, dmSansHeading.variable)}
     >
-      <body className="min-h-full flex flex-col bg-background text-foreground font-sans">
-        <Providers>
-          <Navbar />
-          <main className="flex-1">{children}</main>
-          <Footer />
-        </Providers>
+      <body>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          {children}
+        </ThemeProvider>
       </body>
     </html>
   );

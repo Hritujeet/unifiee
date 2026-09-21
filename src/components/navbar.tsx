@@ -79,7 +79,7 @@ export function Navbar() {
             </a>
             <ThemeToggle />
             <Link
-              href="#"
+              href="/sign-in"
               className={buttonVariants({ variant: "default", size: "sm" })}
             >
               Sign in
