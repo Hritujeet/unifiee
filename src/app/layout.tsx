@@ -1,12 +1,12 @@
 import { cn } from "@/lib/utils";
 import type { Metadata } from "next";
-import { DM_Sans, Geist_Mono, Roboto } from "next/font/google";
+import { DM_Sans, Geist_Mono, Roboto, Inter, Geist } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "next-themes";
 
-const dmSansHeading = DM_Sans({ subsets: ['latin'], variable: '--font-heading' });
+const dmSansHeading = DM_Sans({subsets:['latin'],variable:'--font-heading'});
 
-const roboto = Roboto({ subsets: ['latin'], variable: '--font-sans' });
+const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
@@ -28,7 +28,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={cn(
         "h-full antialiased",
         geistMono.variable
-        , "font-sans", roboto.variable, dmSansHeading.variable)}
+        , "font-sans", geist.variable, dmSansHeading.variable)}
     >
       <body>
         <ThemeProvider
