@@ -112,7 +112,7 @@ const OnboardingForm = () => {
 
             {/* Divider + form label */}
             {tab && (
-                <FadeIn key={tab} delay={0.1} className="mt-12 w-full max-w-2xl">
+                <div key={tab} className="mt-12 w-full max-w-2xl">
                     <div className="flex items-center gap-3 mb-8">
                         <div className="h-px flex-1 bg-border" />
                         <p className="text-xs font-mono text-muted-foreground tracking-widest uppercase">
@@ -121,7 +121,7 @@ const OnboardingForm = () => {
                         <div className="h-px flex-1 bg-border" />
                     </div>
                     {FormComponent}
-                </FadeIn>
+                </div>
             )}
         </section>
     )

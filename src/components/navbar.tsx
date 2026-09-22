@@ -133,7 +133,7 @@ export function Navbar() {
               </a>
               <Link
                 href="/sign-in"
-                className={buttonVariants({ variant: "default", size: "sm" })}
+                className={cn(buttonVariants({ variant: "default", size: "sm" }), "w-full justify-center")}
               >
                 Sign in
               </Link>
