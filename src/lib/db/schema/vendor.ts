@@ -12,6 +12,7 @@ export const vendorTable = pgTable("vendor", {
     name: varchar("name", { length: 255 }).notNull(),
     fullName: varchar("fullname", { length: 300 }).notNull(),
     companyName: varchar("companyname", { length: 500 }).notNull(),
+    type: VENDOR_TYPE("vendor_type").notNull(),
     email: varchar("email", { length: 255 }).notNull().unique(),
     phone: varchar("phone", { length: 255 }).notNull().unique(),
     services: varchar("services", { length: 500 }).array(),

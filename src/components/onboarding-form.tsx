@@ -14,18 +14,21 @@ import BusinessOnboardingForm from './business-onboarding-form';
 const options = [
     {
         value: "vendor",
-        title: "Vendor",
-        description: "I wish to provide packaging services and join the supplier network.",
+        title: "I'm a Vendor",
+        badge: "Supplier · Manufacturer · Printer",
+        description: "Join UNIFIÉE's verified supplier network. Get discovered by F&B brands actively looking for packaging partners.",
+        cta: "List your business, services, and capabilities — and let clients come to you.",
     },
     {
         value: "fb-business",
-        title: "F&B Business",
-        description: "I wish to procure packaging for my brand, restaurant, or café.",
+        title: "I'm an F&B Business",
+        badge: "Café · Restaurant · Cloud Kitchen",
+        description: "Source the right packaging for your brand — faster, smarter, and from verified vendors only.",
+        cta: "Tell us about your business and start connecting with the right suppliers.",
     },
 ]
 
 const OnboardingForm = () => {
-    // Always controlled — starts as empty string (no selection)
     const [tab, setTab] = useState<string>("")
     const [FormComponent, setFormComponent] = useState<React.ReactNode | null>(null)
 
@@ -41,23 +44,20 @@ const OnboardingForm = () => {
 
     return (
         <section className="min-h-screen flex flex-col items-center justify-start py-20 px-4 sm:px-8">
+
             {/* Header */}
-            <div className="text-center mb-12 max-w-xl">
-                <p className="text-xs font-mono text-muted-foreground tracking-widest uppercase mb-3">
-                    Registration
+            <div className="text-center mb-14 max-w-2xl">
+                <p className="text-xs font-mono text-muted-foreground tracking-widest uppercase mb-4">
+                    — Join the network —
                 </p>
                 <h1 className="font-heading text-4xl sm:text-5xl font-semibold tracking-tight leading-tight">
-                    Register to UNIFIÉE
+                    Who are you joining as?
                 </h1>
-                <p className="mt-4 text-sm text-muted-foreground leading-relaxed">
-                    Tell us who you are so we can tailor your onboarding experience.
+                <p className="mt-4 text-base text-muted-foreground leading-relaxed">
+                    UNIFIÉE connects <span className="text-foreground font-medium">F&B brands</span> with{" "}
+                    <span className="text-foreground font-medium">packaging suppliers</span>. Pick the path that fits you.
                 </p>
             </div>
-
-            {/* Role selector label */}
-            <p className="text-sm font-medium text-foreground mb-4 self-start max-w-2xl w-full mx-auto">
-                What best describes you?
-            </p>
 
             {/* Cards */}
             <RadioGroup
@@ -71,19 +71,22 @@ const OnboardingForm = () => {
                         <FieldLabel
                             key={opt.value}
                             htmlFor={opt.value}
-                            className={`cursor-pointer transition-all duration-200 border rounded-xl overflow-hidden p-0 ${selected
-                                ? "border-primary bg-primary/5 ring-1 ring-primary/30 shadow-sm"
+                            className={`cursor-pointer transition-all duration-200 border rounded-2xl overflow-hidden p-0 ${selected
+                                ? "border-primary bg-primary/5 ring-2 ring-primary/25 shadow-md"
                                 : "border-border hover:border-primary/40 hover:bg-muted/40"
                                 }`}
                         >
                             <Field orientation="horizontal" className="p-0">
-                                <FieldContent className="px-6 py-6">
-                                    <FieldTitle
-                                        className={`text-base font-semibold transition-colors`}
-                                    >
+                                <FieldContent className="px-6 py-6 gap-2">
+                                    <FieldTitle className="text-base font-semibold mt-0.5">
                                         {opt.title}
                                     </FieldTitle>
-                                    <FieldDescription className="text-sm mt-1.5 leading-relaxed">
+
+                                    <p className="text-[10px] font-mono tracking-widest text-muted-foreground uppercase -mt-1">
+                                        {opt.badge}
+                                    </p>
+
+                                    <FieldDescription className="text-xs leading-relaxed">
                                         {opt.description}
                                     </FieldDescription>
                                 </FieldContent>
@@ -94,15 +97,23 @@ const OnboardingForm = () => {
                 })}
             </RadioGroup>
 
+            {/* Prompt */}
             {!tab && (
-                <p className="mt-6 text-xs font-mono text-muted-foreground tracking-widest uppercase animate-pulse">
-                    Select one to continue ↑
+                <p className="mt-8 text-xs font-mono text-muted-foreground tracking-widest uppercase animate-pulse">
+                    ↑ select one to continue
                 </p>
             )}
 
-            {/* Sub-form area */}
-            {FormComponent && (
-                <div className="mt-10 w-full max-w-2xl">
+            {/* Divider + form label */}
+            {tab && (
+                <div className="mt-12 w-full max-w-2xl">
+                    <div className="flex items-center gap-3 mb-8">
+                        <div className="h-px flex-1 bg-border" />
+                        <p className="text-xs font-mono text-muted-foreground tracking-widest uppercase">
+                            {tab === "vendor" ? "Vendor Registration" : "Business Registration"}
+                        </p>
+                        <div className="h-px flex-1 bg-border" />
+                    </div>
                     {FormComponent}
                 </div>
             )}
