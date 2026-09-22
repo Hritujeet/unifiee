@@ -135,7 +135,7 @@ export function Navbar() {
                 href="#"
                 className={buttonVariants({ variant: "default", size: "sm" })}
               >
-                Login
+                Sign in
               </Link>
             </div>
           </div>
