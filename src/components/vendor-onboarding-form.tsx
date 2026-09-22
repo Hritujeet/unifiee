@@ -39,10 +39,12 @@ const social_platforms = [
     { label: "Other", value: "other" },
 ]
 
+type FormValues = z.infer<typeof vendorOnboardingSchema>
+
 export default function VendorOnboardingForm() {
     const [termsAccepted, setTermsAccepted] = useState(false)
 
-    const { register, control, handleSubmit, formState: { errors, isSubmitting }, reset } = useForm<z.infer<typeof vendorOnboardingSchema>>({
+    const { register, control, handleSubmit, formState: { errors, isSubmitting }, reset } = useForm<FormValues>({
         resolver: zodResolver(vendorOnboardingSchema),
         defaultValues: {
             fullname: "",
@@ -50,7 +52,8 @@ export default function VendorOnboardingForm() {
             gstin: "",
             email: "",
             mobile: "",
-            services: [""],
+            vendorType: undefined,
+            services: [{ value: "" }],
             socials: [{ platform: "", url: "" }],
             address: ""
         }
@@ -58,7 +61,6 @@ export default function VendorOnboardingForm() {
 
     const { fields: serviceFields, append: appendService, remove: removeService } = useFieldArray({
         control,
-        // @ts-ignore
         name: "services"
     })
 
@@ -67,17 +69,31 @@ export default function VendorOnboardingForm() {
         name: "socials"
     })
 
-    const submitHandler = async (data: z.infer<typeof vendorOnboardingSchema>) => {
-        console.log("Vendor data:", data)
+    const submitHandler = async (data: FormValues) => {
+        // Filter out empty services and socials before sending
+        const cleaned = {
+            ...data,
+            services: data.services
+                ?.map((s) => s.value.trim())
+                .filter(Boolean),
+            socials: data.socials
+                ?.filter((s) => s.platform && s.url)
+                .map((s) => ({ platform: s.platform, url: s.url })),
+        }
+        console.log("Vendor data:", cleaned)
         await new Promise((resolve) => setTimeout(resolve, 1500))
         toast.success("Registered as vendor successfully")
         reset()
         setTermsAccepted(false)
     }
 
+    const errorHandler = () => {
+        toast.error("Please fill in all required fields correctly")
+    }
+
     return (
         <div className="w-full max-w-2xl mx-auto">
-            <form onSubmit={handleSubmit(submitHandler)}>
+            <form onSubmit={handleSubmit(submitHandler, errorHandler)}>
                 <FieldGroup>
                     <FieldSet>
                         <FieldLegend className="text-2xl font-bold">Register as a Vendor</FieldLegend>
@@ -111,6 +127,7 @@ export default function VendorOnboardingForm() {
                                 <Input
                                     id="gstin"
                                     placeholder="22AAAAA0000A1Z5"
+                                    maxLength={15}
                                     {...register("gstin")}
                                 />
                                 {errors.gstin && <p className="text-xs text-destructive">{errors.gstin.message}</p>}
@@ -140,7 +157,7 @@ export default function VendorOnboardingForm() {
                                     name="vendorType"
                                     control={control}
                                     render={({ field }) => (
-                                        <Select onValueChange={field.onChange} value={field.value}>
+                                        <Select onValueChange={field.onChange} value={field.value ?? ""}>
                                             <SelectTrigger id="vendorType" className="w-full">
                                                 <SelectValue placeholder="Select Vendor Type" />
                                             </SelectTrigger>
@@ -167,8 +184,7 @@ export default function VendorOnboardingForm() {
                                         type="button"
                                         variant="outline"
                                         size="sm"
-                                        // @ts-ignore
-                                        onClick={() => appendService("")}
+                                        onClick={() => appendService({ value: "" })}
                                         className="h-7 gap-1 text-xs"
                                     >
                                         <PlusIcon className="size-3.5" />
@@ -185,9 +201,9 @@ export default function VendorOnboardingForm() {
                                                 <Input
                                                     id={`service-${index}`}
                                                     placeholder={`Service ${index + 1}`}
-                                                    {...register(`services.${index}`)}
+                                                    {...register(`services.${index}.value`)}
                                                 />
-                                                {errors.services?.[index] && <p className="text-xs text-destructive">{errors.services[index]?.message}</p>}
+                                                {errors.services?.[index]?.value && <p className="text-xs text-destructive">{errors.services[index]?.value?.message}</p>}
                                             </div>
                                             {serviceFields.length > 1 && (
                                                 <Button
@@ -233,7 +249,7 @@ export default function VendorOnboardingForm() {
                                                     control={control}
                                                     render={({ field: selectField }) => (
                                                         <Select
-                                                            value={selectField.value}
+                                                            value={selectField.value ?? ""}
                                                             onValueChange={selectField.onChange}
                                                         >
                                                             <SelectTrigger className="w-37.5 shrink-0">
@@ -269,8 +285,6 @@ export default function VendorOnboardingForm() {
                                                     </Button>
                                                 )}
                                             </div>
-                                            {errors.socials?.[index]?.platform && <p className="text-xs text-destructive">{errors.socials[index]?.platform?.message}</p>}
-                                            {errors.socials?.[index]?.url && <p className="text-xs text-destructive">{errors.socials[index]?.url?.message}</p>}
                                         </div>
                                     ))}
                                 </div>

@@ -61,9 +61,9 @@ export default function BusinessOnboardingForm() {
         defaultValues: {
             fullname: "",
             ownerName: "",
-            role: "owner",
+            role: undefined,
             businessName: "",
-            businessType: "cafe",
+            businessType: undefined,
             email: "",
             phone: "",
             gstin: "",
@@ -86,9 +86,13 @@ export default function BusinessOnboardingForm() {
         setTermsAccepted(false)
     }
 
+    const errorHandler = () => {
+        toast.error("Please fill in all required fields correctly")
+    }
+
     return (
         <div className="w-full max-w-2xl mx-auto">
-            <form onSubmit={handleSubmit(submitHandler)}>
+            <form onSubmit={handleSubmit(submitHandler, errorHandler)}>
                 <FieldGroup>
                     <FieldSet>
                         <FieldLegend className="text-2xl font-bold">Register as a Business</FieldLegend>
