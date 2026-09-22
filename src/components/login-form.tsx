@@ -1,3 +1,4 @@
+"use client"
 import { cn } from "cn"
 import Link from "next/link"
 
@@ -6,6 +7,14 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
+import { loginFormSchema } from "@/lib/zod-schema"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
+import { z } from "zod"
+import { Loader2 } from "lucide-react"
+import { toast } from "sonner"
+import { useRouter } from "next/navigation"
+import { FadeIn } from "./animations"
 
 function GoogleIcon() {
   return (
@@ -39,6 +48,24 @@ export function LoginForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
+  const router = useRouter()
+
+  const { register, handleSubmit, formState: { errors, isSubmitting }, reset } = useForm<z.infer<typeof loginFormSchema>>({
+    resolver: zodResolver(loginFormSchema),
+    defaultValues: {
+      email: "",
+      password: ""
+    }
+  })
+
+  const submitHandler = async (data: z.infer<typeof loginFormSchema>) => {
+    console.log(data)
+    await new Promise((resolve) => setTimeout(resolve, 1500))
+    toast.success("Signed in successfully")
+    reset()
+    router.push("/")
+  }
+
   return (
     <div className={cn("w-full max-w-md", className)} {...props}>
       <Card className="overflow-hidden rounded-2xl ring-1 ring-border/60 shadow-xl shadow-black/5 dark:shadow-black/20">
@@ -50,12 +77,13 @@ export function LoginForm({
             Sign in to your UNIFIÉE account
           </p>
 
-          <form className="flex w-full flex-col gap-4">
+          <form onSubmit={handleSubmit(submitHandler)} className="flex w-full flex-col gap-4">
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="email" className="text-xs text-muted-foreground">
                 Email
               </Label>
-              <Input id="email" type="email" placeholder="you@company.com" required className="h-10 rounded-lg text-sm" />
+              <Input id="email" type="email" placeholder="you@company.com" className="h-10 rounded-lg text-sm" {...register("email")} />
+              {errors.email && <p className="text-xs text-destructive">{errors.email.message}</p>}
             </div>
 
             <div className="flex flex-col gap-1.5">
@@ -67,11 +95,12 @@ export function LoginForm({
                   Forgot password?
                 </Link>
               </div>
-              <Input id="password" type="password" required className="h-10 rounded-lg text-sm" />
+              <Input id="password" type="password" className="h-10 rounded-lg text-sm" {...register("password")} />
+              {errors.password && <p className="text-xs text-destructive">{errors.password.message}</p>}
             </div>
 
-            <Button type="submit">
-              Sign In
+            <Button disabled={isSubmitting} type="submit">
+              {isSubmitting ? <Loader2 className="animate-spin" /> : "Sign In"}
             </Button>
 
             <div className="relative flex items-center gap-3 text-xs text-muted-foreground">
@@ -80,7 +109,7 @@ export function LoginForm({
               <Separator className="flex-1" />
             </div>
 
-            <Button variant="outline" type="button" className="gap-2.5">
+            <Button disabled={isSubmitting} variant="outline" type="button" className="gap-2.5">
               <GoogleIcon />
               Continue with Google
             </Button>

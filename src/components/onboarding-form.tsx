@@ -10,6 +10,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useEffect, useState } from 'react';
 import VendorOnboardingForm from './vendor-onboarding-form';
 import BusinessOnboardingForm from './business-onboarding-form';
+import { FadeIn, FadeInItem, StaggerContainer } from "./animations";
 
 const options = [
     {
@@ -46,7 +47,7 @@ const OnboardingForm = () => {
         <section className="min-h-screen flex flex-col items-center justify-start py-20 px-4 sm:px-8">
 
             {/* Header */}
-            <div className="text-center mb-14 max-w-2xl">
+            <FadeIn delay={0.1} className="text-center mb-14 max-w-2xl">
                 <p className="text-xs font-mono text-muted-foreground tracking-widest uppercase mb-4">
                     — Join the network —
                 </p>
@@ -57,56 +58,61 @@ const OnboardingForm = () => {
                     UNIFIÉE connects <span className="text-foreground font-medium">F&B brands</span> with{" "}
                     <span className="text-foreground font-medium">packaging suppliers</span>. Pick the path that fits you.
                 </p>
-            </div>
+            </FadeIn>
 
             {/* Cards */}
-            <RadioGroup
-                value={tab}
-                onValueChange={setTab}
-                className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-2xl"
-            >
-                {options.map((opt) => {
-                    const selected = tab === opt.value
-                    return (
-                        <FieldLabel
-                            key={opt.value}
-                            htmlFor={opt.value}
-                            className={`cursor-pointer transition-all duration-200 border rounded-2xl overflow-hidden p-0 ${selected
-                                ? "border-primary bg-primary/5 ring-2 ring-primary/25 shadow-md"
-                                : "border-border hover:border-primary/40 hover:bg-muted/40"
-                                }`}
-                        >
-                            <Field orientation="horizontal" className="p-0">
-                                <FieldContent className="px-6 py-6 gap-2">
-                                    <FieldTitle className="text-base font-semibold mt-0.5">
-                                        {opt.title}
-                                    </FieldTitle>
+            <StaggerContainer delayChildren={0.2} staggerChildren={0.1} className="w-full max-w-2xl">
+                <RadioGroup
+                    value={tab}
+                    onValueChange={setTab}
+                    className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full"
+                >
+                    {options.map((opt) => {
+                        const selected = tab === opt.value
+                        return (
+                            <FadeInItem key={opt.value} className="h-full">
+                                <FieldLabel
+                                    htmlFor={opt.value}
+                                    className={`cursor-pointer transition-all duration-200 border rounded-2xl overflow-hidden p-0 block h-full ${selected
+                                        ? "border-primary bg-primary/5 ring-2 ring-primary/25 shadow-md"
+                                        : "border-border hover:border-primary/40 hover:bg-muted/40"
+                                        }`}
+                                >
+                                    <Field orientation="horizontal" className="p-0 h-full">
+                                        <FieldContent className="px-6 py-6 gap-2 h-full justify-start">
+                                            <FieldTitle className="text-base font-semibold mt-0.5">
+                                                {opt.title}
+                                            </FieldTitle>
 
-                                    <p className="text-[10px] font-mono tracking-widest text-muted-foreground uppercase -mt-1">
-                                        {opt.badge}
-                                    </p>
+                                            <p className="text-[10px] font-mono tracking-widest text-muted-foreground uppercase -mt-1">
+                                                {opt.badge}
+                                            </p>
 
-                                    <FieldDescription className="text-xs leading-relaxed">
-                                        {opt.description}
-                                    </FieldDescription>
-                                </FieldContent>
-                                <RadioGroupItem value={opt.value} id={opt.value} className="hidden" />
-                            </Field>
-                        </FieldLabel>
-                    )
-                })}
-            </RadioGroup>
+                                            <FieldDescription className="text-xs leading-relaxed">
+                                                {opt.description}
+                                            </FieldDescription>
+                                        </FieldContent>
+                                        <RadioGroupItem value={opt.value} id={opt.value} className="hidden" />
+                                    </Field>
+                                </FieldLabel>
+                            </FadeInItem>
+                        )
+                    })}
+                </RadioGroup>
+            </StaggerContainer>
 
             {/* Prompt */}
             {!tab && (
-                <p className="mt-8 text-xs font-mono text-muted-foreground tracking-widest uppercase animate-pulse">
-                    ↑ select one to continue
-                </p>
+                <FadeIn delay={0.4} className="mt-8">
+                    <p className="text-xs font-mono text-muted-foreground tracking-widest uppercase animate-pulse">
+                        ↑ select one to continue
+                    </p>
+                </FadeIn>
             )}
 
             {/* Divider + form label */}
             {tab && (
-                <div className="mt-12 w-full max-w-2xl">
+                <FadeIn key={tab} delay={0.1} className="mt-12 w-full max-w-2xl">
                     <div className="flex items-center gap-3 mb-8">
                         <div className="h-px flex-1 bg-border" />
                         <p className="text-xs font-mono text-muted-foreground tracking-widest uppercase">
@@ -115,7 +121,7 @@ const OnboardingForm = () => {
                         <div className="h-px flex-1 bg-border" />
                     </div>
                     {FormComponent}
-                </div>
+                </FadeIn>
             )}
         </section>
     )

@@ -3,10 +3,11 @@ import type { Metadata } from "next";
 import { DM_Sans, Geist_Mono, Roboto, Inter, Geist } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "next-themes";
+import { Toaster } from "@/components/ui/sonner";
 
-const dmSansHeading = DM_Sans({subsets:['latin'],variable:'--font-heading'});
+const dmSansHeading = DM_Sans({ subsets: ['latin'], variable: '--font-heading' });
 
-const geist = Geist({subsets:['latin'],variable:'--font-sans'});
+const geist = Geist({ subsets: ['latin'], variable: '--font-sans' });
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
@@ -37,6 +38,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           enableSystem
           disableTransitionOnChange
         >
+          <Toaster />
           {children}
         </ThemeProvider>
       </body>

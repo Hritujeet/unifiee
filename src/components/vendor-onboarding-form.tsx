@@ -14,7 +14,12 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Checkbox } from "@/components/ui/checkbox"
-import { PlusIcon, XIcon } from "lucide-react"
+import { PlusIcon, XIcon, Loader2 } from "lucide-react"
+import { useForm, useFieldArray, Controller } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { vendorOnboardingSchema } from "@/lib/zod-schema"
+import { z } from "zod"
+import { toast } from "sonner"
 
 const vendor_type = [
     { label: "Manufacturer", value: "manufacturer" },
@@ -34,33 +39,45 @@ const social_platforms = [
     { label: "Other", value: "other" },
 ]
 
-type Social = { id: number; platform: string; url: string }
-
 export default function VendorOnboardingForm() {
-    const [services, setServices] = useState<string[]>([""])
-    const [socials, setSocials] = useState<Social[]>([{ id: Date.now(), platform: "", url: "" }])
     const [termsAccepted, setTermsAccepted] = useState(false)
 
-    // --- Services ---
-    const addService = () => setServices((prev) => [...prev, ""])
-    const removeService = (index: number) =>
-        setServices((prev) => prev.filter((_, i) => i !== index))
-    const updateService = (index: number, value: string) =>
-        setServices((prev) => prev.map((s, i) => (i === index ? value : s)))
+    const { register, control, handleSubmit, formState: { errors, isSubmitting }, reset } = useForm<z.infer<typeof vendorOnboardingSchema>>({
+        resolver: zodResolver(vendorOnboardingSchema),
+        defaultValues: {
+            fullname: "",
+            companyFirmName: "",
+            gstin: "",
+            email: "",
+            mobile: "",
+            services: [""],
+            socials: [{ platform: "", url: "" }],
+            address: ""
+        }
+    })
 
-    // --- Socials ---
-    const addSocial = () =>
-        setSocials((prev) => [...prev, { id: Date.now(), platform: "", url: "" }])
-    const removeSocial = (id: number) =>
-        setSocials((prev) => prev.filter((s) => s.id !== id))
-    const updateSocial = (id: number, field: "platform" | "url", value: string) =>
-        setSocials((prev) =>
-            prev.map((s) => (s.id === id ? { ...s, [field]: value } : s))
-        )
+    const { fields: serviceFields, append: appendService, remove: removeService } = useFieldArray({
+        control,
+        // @ts-ignore
+        name: "services"
+    })
+
+    const { fields: socialFields, append: appendSocial, remove: removeSocial } = useFieldArray({
+        control,
+        name: "socials"
+    })
+
+    const submitHandler = async (data: z.infer<typeof vendorOnboardingSchema>) => {
+        console.log("Vendor data:", data)
+        await new Promise((resolve) => setTimeout(resolve, 1500))
+        toast.success("Registered as vendor successfully")
+        reset()
+        setTermsAccepted(false)
+    }
 
     return (
         <div className="w-full max-w-2xl mx-auto">
-            <form>
+            <form onSubmit={handleSubmit(submitHandler)}>
                 <FieldGroup>
                     <FieldSet>
                         <FieldLegend className="text-2xl font-bold">Register as a Vendor</FieldLegend>
@@ -73,27 +90,30 @@ export default function VendorOnboardingForm() {
                                 <Input
                                     id="fullname"
                                     placeholder="Your Full Name"
-                                    required
+                                    {...register("fullname")}
                                 />
+                                {errors.fullname && <p className="text-xs text-destructive">{errors.fullname.message}</p>}
                                 <FieldDescription>
                                     Your full name will be displayed on your profile and the quotations you publish.
                                 </FieldDescription>
                             </Field>
                             <Field>
-                                <FieldLabel htmlFor="company-firm-name">Company / Firm Name</FieldLabel>
+                                <FieldLabel htmlFor="companyFirmName">Company / Firm Name</FieldLabel>
                                 <Input
-                                    id="company-firm-name"
+                                    id="companyFirmName"
                                     placeholder="Your Company / Firm Name"
-                                    required
+                                    {...register("companyFirmName")}
                                 />
+                                {errors.companyFirmName && <p className="text-xs text-destructive">{errors.companyFirmName.message}</p>}
                             </Field>
                             <Field>
                                 <FieldLabel htmlFor="gstin">GSTIN</FieldLabel>
                                 <Input
                                     id="gstin"
                                     placeholder="22AAAAA0000A1Z5"
-                                    required
+                                    {...register("gstin")}
                                 />
+                                {errors.gstin && <p className="text-xs text-destructive">{errors.gstin.message}</p>}
                             </Field>
                             <Field>
                                 <FieldLabel htmlFor="email">Email</FieldLabel>
@@ -101,33 +121,42 @@ export default function VendorOnboardingForm() {
                                     id="email"
                                     type="email"
                                     placeholder="email@example.com"
-                                    required
+                                    {...register("email")}
                                 />
+                                {errors.email && <p className="text-xs text-destructive">{errors.email.message}</p>}
                             </Field>
                             <Field>
                                 <FieldLabel htmlFor="mobile">Mobile</FieldLabel>
                                 <Input
                                     id="mobile"
                                     placeholder="+91 1234567890"
-                                    required
+                                    {...register("mobile")}
                                 />
+                                {errors.mobile && <p className="text-xs text-destructive">{errors.mobile.message}</p>}
                             </Field>
                             <Field>
-                                <FieldLabel htmlFor="vendor-type">Vendor Type</FieldLabel>
-                                <Select>
-                                    <SelectTrigger id="vendor-type" className="w-full">
-                                        <SelectValue placeholder="Select Vendor Type" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectGroup>
-                                            {vendor_type.map((item) => (
-                                                <SelectItem key={item.value} value={item.value}>
-                                                    {item.label}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectGroup>
-                                    </SelectContent>
-                                </Select>
+                                <FieldLabel htmlFor="vendorType">Vendor Type</FieldLabel>
+                                <Controller
+                                    name="vendorType"
+                                    control={control}
+                                    render={({ field }) => (
+                                        <Select onValueChange={field.onChange} value={field.value}>
+                                            <SelectTrigger id="vendorType" className="w-full">
+                                                <SelectValue placeholder="Select Vendor Type" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectGroup>
+                                                    {vendor_type.map((item) => (
+                                                        <SelectItem key={item.value} value={item.value}>
+                                                            {item.label}
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectGroup>
+                                            </SelectContent>
+                                        </Select>
+                                    )}
+                                />
+                                {errors.vendorType && <p className="text-xs text-destructive">{errors.vendorType.message}</p>}
                             </Field>
 
                             {/* ── Services ── */}
@@ -138,7 +167,8 @@ export default function VendorOnboardingForm() {
                                         type="button"
                                         variant="outline"
                                         size="sm"
-                                        onClick={addService}
+                                        // @ts-ignore
+                                        onClick={() => appendService("")}
                                         className="h-7 gap-1 text-xs"
                                     >
                                         <PlusIcon className="size-3.5" />
@@ -149,15 +179,17 @@ export default function VendorOnboardingForm() {
                                     List the services your business provides (e.g. Flexo Printing, Corrugation).
                                 </FieldDescription>
                                 <div className="flex flex-col gap-2 mt-1">
-                                    {services.map((service, index) => (
-                                        <div key={index} className="flex gap-2">
-                                            <Input
-                                                id={`service-${index}`}
-                                                placeholder={`Service ${index + 1}`}
-                                                value={service}
-                                                onChange={(e) => updateService(index, e.target.value)}
-                                            />
-                                            {services.length > 1 && (
+                                    {serviceFields.map((field, index) => (
+                                        <div key={field.id} className="flex gap-2">
+                                            <div className="flex flex-col gap-1 w-full">
+                                                <Input
+                                                    id={`service-${index}`}
+                                                    placeholder={`Service ${index + 1}`}
+                                                    {...register(`services.${index}`)}
+                                                />
+                                                {errors.services?.[index] && <p className="text-xs text-destructive">{errors.services[index]?.message}</p>}
+                                            </div>
+                                            {serviceFields.length > 1 && (
                                                 <Button
                                                     type="button"
                                                     variant="ghost"
@@ -182,7 +214,7 @@ export default function VendorOnboardingForm() {
                                         type="button"
                                         variant="outline"
                                         size="sm"
-                                        onClick={addSocial}
+                                        onClick={() => appendSocial({ platform: "", url: "" })}
                                         className="h-7 gap-1 text-xs"
                                     >
                                         <PlusIcon className="size-3.5" />
@@ -193,43 +225,52 @@ export default function VendorOnboardingForm() {
                                     Add your business social media profiles or website links.
                                 </FieldDescription>
                                 <div className="flex flex-col gap-2 mt-1">
-                                    {socials.map((social) => (
-                                        <div key={social.id} className="flex gap-2 items-center">
-                                            <Select
-                                                value={social.platform}
-                                                onValueChange={(val) => updateSocial(social.id, "platform", val)}
-                                            >
-                                                <SelectTrigger className="w-37.5 shrink-0">
-                                                    <SelectValue placeholder="Platform" />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    <SelectGroup>
-                                                        {social_platforms.map((p) => (
-                                                            <SelectItem key={p.value} value={p.value}>
-                                                                {p.label}
-                                                            </SelectItem>
-                                                        ))}
-                                                    </SelectGroup>
-                                                </SelectContent>
-                                            </Select>
-                                            <Input
-                                                placeholder="https://..."
-                                                value={social.url}
-                                                onChange={(e) => updateSocial(social.id, "url", e.target.value)}
-                                                className="flex-1"
-                                            />
-                                            {socials.length > 1 && (
-                                                <Button
-                                                    type="button"
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    onClick={() => removeSocial(social.id)}
-                                                    className="shrink-0 text-muted-foreground hover:text-destructive"
-                                                    aria-label="Remove social"
-                                                >
-                                                    <XIcon className="size-4" />
-                                                </Button>
-                                            )}
+                                    {socialFields.map((field, index) => (
+                                        <div key={field.id} className="flex flex-col gap-1 w-full">
+                                            <div className="flex gap-2 items-center">
+                                                <Controller
+                                                    name={`socials.${index}.platform`}
+                                                    control={control}
+                                                    render={({ field: selectField }) => (
+                                                        <Select
+                                                            value={selectField.value}
+                                                            onValueChange={selectField.onChange}
+                                                        >
+                                                            <SelectTrigger className="w-37.5 shrink-0">
+                                                                <SelectValue placeholder="Platform" />
+                                                            </SelectTrigger>
+                                                            <SelectContent>
+                                                                <SelectGroup>
+                                                                    {social_platforms.map((p) => (
+                                                                        <SelectItem key={p.value} value={p.value}>
+                                                                            {p.label}
+                                                                        </SelectItem>
+                                                                    ))}
+                                                                </SelectGroup>
+                                                            </SelectContent>
+                                                        </Select>
+                                                    )}
+                                                />
+                                                <Input
+                                                    placeholder="https://..."
+                                                    {...register(`socials.${index}.url`)}
+                                                    className="flex-1"
+                                                />
+                                                {socialFields.length > 1 && (
+                                                    <Button
+                                                        type="button"
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        onClick={() => removeSocial(index)}
+                                                        className="shrink-0 text-muted-foreground hover:text-destructive"
+                                                        aria-label="Remove social"
+                                                    >
+                                                        <XIcon className="size-4" />
+                                                    </Button>
+                                                )}
+                                            </div>
+                                            {errors.socials?.[index]?.platform && <p className="text-xs text-destructive">{errors.socials[index]?.platform?.message}</p>}
+                                            {errors.socials?.[index]?.url && <p className="text-xs text-destructive">{errors.socials[index]?.url?.message}</p>}
                                         </div>
                                     ))}
                                 </div>
@@ -240,7 +281,8 @@ export default function VendorOnboardingForm() {
                                 <FieldDescription>
                                     Enter your Firm/Company Address. If N/A, enter your City and State (e.g. Kota, Rajasthan).
                                 </FieldDescription>
-                                <Textarea id="address" placeholder="12, Talwandi, Kota, Rajasthan - 324005" />
+                                <Textarea id="address" placeholder="12, Talwandi, Kota, Rajasthan - 324005" {...register("address")} />
+                                {errors.address && <p className="text-xs text-destructive">{errors.address.message}</p>}
                             </Field>
 
                         </FieldGroup>
@@ -262,7 +304,9 @@ export default function VendorOnboardingForm() {
                         </label>
                     </div>
 
-                    <Button type="submit" disabled={!termsAccepted} className="w-full">Register as Vendor</Button>
+                    <Button type="submit" disabled={!termsAccepted || isSubmitting} className="w-full">
+                        {isSubmitting ? <Loader2 className="animate-spin" /> : "Register as Vendor"}
+                    </Button>
                 </FieldGroup>
             </form>
         </div>

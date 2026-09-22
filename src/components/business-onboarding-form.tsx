@@ -21,7 +21,12 @@ import {
     SelectValue,
 } from "@/components/ui/select"
 import { Checkbox } from "@/components/ui/checkbox"
-import { PlusIcon, XIcon } from "lucide-react"
+import { PlusIcon, XIcon, Loader2 } from "lucide-react"
+import { useForm, useFieldArray, Controller } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { businessOnboardingSchema } from "@/lib/zod-schema"
+import { z } from "zod"
+import { toast } from "sonner"
 
 const business_types = [
     { label: "Café", value: "cafe" },
@@ -48,25 +53,42 @@ const social_platforms = [
     { label: "Other", value: "other" },
 ]
 
-type Social = { id: number; platform: string; url: string }
-
 export default function BusinessOnboardingForm() {
-    const [socials, setSocials] = useState<Social[]>([{ id: Date.now(), platform: "", url: "" }])
     const [termsAccepted, setTermsAccepted] = useState(false)
 
-    // --- Socials ---
-    const addSocial = () =>
-        setSocials((prev) => [...prev, { id: Date.now(), platform: "", url: "" }])
-    const removeSocial = (id: number) =>
-        setSocials((prev) => prev.filter((s) => s.id !== id))
-    const updateSocial = (id: number, field: "platform" | "url", value: string) =>
-        setSocials((prev) =>
-            prev.map((s) => (s.id === id ? { ...s, [field]: value } : s))
-        )
+    const { register, control, handleSubmit, formState: { errors, isSubmitting }, reset } = useForm<z.infer<typeof businessOnboardingSchema>>({
+        resolver: zodResolver(businessOnboardingSchema),
+        defaultValues: {
+            fullname: "",
+            ownerName: "",
+            role: "owner",
+            businessName: "",
+            businessType: "cafe",
+            email: "",
+            phone: "",
+            gstin: "",
+            website: "",
+            socials: [{ platform: "", url: "" }],
+            businessAddress: ""
+        }
+    })
+
+    const { fields: socialFields, append: appendSocial, remove: removeSocial } = useFieldArray({
+        control,
+        name: "socials"
+    })
+
+    const submitHandler = async (data: z.infer<typeof businessOnboardingSchema>) => {
+        console.log("Business data:", data)
+        await new Promise((resolve) => setTimeout(resolve, 1500))
+        toast.success("Registered as business successfully")
+        reset()
+        setTermsAccepted(false)
+    }
 
     return (
         <div className="w-full max-w-2xl mx-auto">
-            <form>
+            <form onSubmit={handleSubmit(submitHandler)}>
                 <FieldGroup>
                     <FieldSet>
                         <FieldLegend className="text-2xl font-bold">Register as a Business</FieldLegend>
@@ -81,38 +103,47 @@ export default function BusinessOnboardingForm() {
                                 <Input
                                     id="fullname"
                                     placeholder="Your Full Name"
-                                    required
+                                    {...register("fullname")}
                                 />
+                                {errors.fullname && <p className="text-xs text-destructive">{errors.fullname.message}</p>}
                                 <FieldDescription>
                                     Your name as it will appear on your profile and orders.
                                 </FieldDescription>
                             </Field>
 
                             <Field>
-                                <FieldLabel htmlFor="owner-name">Owner Name</FieldLabel>
+                                <FieldLabel htmlFor="ownerName">Owner Name</FieldLabel>
                                 <Input
-                                    id="owner-name"
+                                    id="ownerName"
                                     placeholder="Business Owner's Full Name"
-                                    required
+                                    {...register("ownerName")}
                                 />
+                                {errors.ownerName && <p className="text-xs text-destructive">{errors.ownerName.message}</p>}
                             </Field>
 
                             <Field>
                                 <FieldLabel htmlFor="role">Your Role</FieldLabel>
-                                <Select>
-                                    <SelectTrigger id="role" className="w-full">
-                                        <SelectValue placeholder="Select your role" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectGroup>
-                                            {roles.map((item) => (
-                                                <SelectItem key={item.value} value={item.value}>
-                                                    {item.label}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectGroup>
-                                    </SelectContent>
-                                </Select>
+                                <Controller
+                                    name="role"
+                                    control={control}
+                                    render={({ field }) => (
+                                        <Select onValueChange={field.onChange} value={field.value}>
+                                            <SelectTrigger id="role" className="w-full">
+                                                <SelectValue placeholder="Select your role" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectGroup>
+                                                    {roles.map((item) => (
+                                                        <SelectItem key={item.value} value={item.value}>
+                                                            {item.label}
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectGroup>
+                                            </SelectContent>
+                                        </Select>
+                                    )}
+                                />
+                                {errors.role && <p className="text-xs text-destructive">{errors.role.message}</p>}
                                 <FieldDescription>
                                     Your designation within the business.
                                 </FieldDescription>
@@ -120,30 +151,38 @@ export default function BusinessOnboardingForm() {
 
                             {/* ── Business Details ── */}
                             <Field>
-                                <FieldLabel htmlFor="business-name">Business Name</FieldLabel>
+                                <FieldLabel htmlFor="businessName">Business Name</FieldLabel>
                                 <Input
-                                    id="business-name"
+                                    id="businessName"
                                     placeholder="e.g. Brewed Awakenings Café"
-                                    required
+                                    {...register("businessName")}
                                 />
+                                {errors.businessName && <p className="text-xs text-destructive">{errors.businessName.message}</p>}
                             </Field>
 
                             <Field>
-                                <FieldLabel htmlFor="business-type">Business Type</FieldLabel>
-                                <Select>
-                                    <SelectTrigger id="business-type" className="w-full">
-                                        <SelectValue placeholder="Select business type" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectGroup>
-                                            {business_types.map((item) => (
-                                                <SelectItem key={item.value} value={item.value}>
-                                                    {item.label}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectGroup>
-                                    </SelectContent>
-                                </Select>
+                                <FieldLabel htmlFor="businessType">Business Type</FieldLabel>
+                                <Controller
+                                    name="businessType"
+                                    control={control}
+                                    render={({ field }) => (
+                                        <Select onValueChange={field.onChange} value={field.value}>
+                                            <SelectTrigger id="businessType" className="w-full">
+                                                <SelectValue placeholder="Select business type" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectGroup>
+                                                    {business_types.map((item) => (
+                                                        <SelectItem key={item.value} value={item.value}>
+                                                            {item.label}
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectGroup>
+                                            </SelectContent>
+                                        </Select>
+                                    )}
+                                />
+                                {errors.businessType && <p className="text-xs text-destructive">{errors.businessType.message}</p>}
                                 <FieldDescription>
                                     The category that best describes your food & beverage business.
                                 </FieldDescription>
@@ -156,8 +195,9 @@ export default function BusinessOnboardingForm() {
                                     id="email"
                                     type="email"
                                     placeholder="email@example.com"
-                                    required
+                                    {...register("email")}
                                 />
+                                {errors.email && <p className="text-xs text-destructive">{errors.email.message}</p>}
                             </Field>
 
                             <Field>
@@ -166,8 +206,9 @@ export default function BusinessOnboardingForm() {
                                     id="phone"
                                     type="tel"
                                     placeholder="+91 1234567890"
-                                    required
+                                    {...register("phone")}
                                 />
+                                {errors.phone && <p className="text-xs text-destructive">{errors.phone.message}</p>}
                             </Field>
 
                             {/* ── Optional Fields ── */}
@@ -180,7 +221,9 @@ export default function BusinessOnboardingForm() {
                                     id="gstin"
                                     placeholder="22AAAAA0000A1Z5"
                                     maxLength={15}
+                                    {...register("gstin")}
                                 />
+                                {errors.gstin && <p className="text-xs text-destructive">{errors.gstin.message}</p>}
                             </Field>
 
                             <Field>
@@ -192,16 +235,18 @@ export default function BusinessOnboardingForm() {
                                     id="website"
                                     type="url"
                                     placeholder="https://yourbusiness.com"
+                                    {...register("website")}
                                 />
+                                {errors.website && <p className="text-xs text-destructive">{errors.website.message}</p>}
                             </Field>
 
                             <Field>
-                                <FieldLabel htmlFor="store-image">
+                                <FieldLabel htmlFor="storeImage">
                                     Store Image{" "}
                                     <span className="text-muted-foreground font-normal text-xs">(optional)</span>
                                 </FieldLabel>
                                 <label
-                                    htmlFor="store-image"
+                                    htmlFor="storeImage"
                                     className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-input rounded-lg cursor-pointer bg-muted/30 hover:bg-muted/50 transition-colors"
                                 >
                                     <div className="flex flex-col items-center justify-center gap-1 text-muted-foreground pointer-events-none">
@@ -214,12 +259,14 @@ export default function BusinessOnboardingForm() {
                                         <span className="text-xs">PNG, JPG, WEBP up to 5 MB</span>
                                     </div>
                                     <Input
-                                        id="store-image"
+                                        id="storeImage"
                                         type="file"
                                         accept="image/png,image/jpeg,image/webp"
                                         className="hidden"
+                                        {...register("storeImage")}
                                     />
                                 </label>
+                                {errors.storeImage && <p className="text-xs text-destructive">{errors.storeImage.message?.toString()}</p>}
                                 <FieldDescription>
                                     A photo of your store or outlet for your profile.
                                 </FieldDescription>
@@ -236,7 +283,7 @@ export default function BusinessOnboardingForm() {
                                         type="button"
                                         variant="outline"
                                         size="sm"
-                                        onClick={addSocial}
+                                        onClick={() => appendSocial({ platform: "", url: "" })}
                                         className="h-7 gap-1 text-xs"
                                     >
                                         <PlusIcon className="size-3.5" />
@@ -247,43 +294,52 @@ export default function BusinessOnboardingForm() {
                                     Add your business social media profiles or website links.
                                 </FieldDescription>
                                 <div className="flex flex-col gap-2 mt-1">
-                                    {socials.map((social) => (
-                                        <div key={social.id} className="flex gap-2 items-center">
-                                            <Select
-                                                value={social.platform}
-                                                onValueChange={(val) => updateSocial(social.id, "platform", val)}
-                                            >
-                                                <SelectTrigger className="w-37.5 shrink-0">
-                                                    <SelectValue placeholder="Platform" />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    <SelectGroup>
-                                                        {social_platforms.map((p) => (
-                                                            <SelectItem key={p.value} value={p.value}>
-                                                                {p.label}
-                                                            </SelectItem>
-                                                        ))}
-                                                    </SelectGroup>
-                                                </SelectContent>
-                                            </Select>
-                                            <Input
-                                                placeholder="https://..."
-                                                value={social.url}
-                                                onChange={(e) => updateSocial(social.id, "url", e.target.value)}
-                                                className="flex-1"
-                                            />
-                                            {socials.length > 1 && (
-                                                <Button
-                                                    type="button"
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    onClick={() => removeSocial(social.id)}
-                                                    className="shrink-0 text-muted-foreground hover:text-destructive"
-                                                    aria-label="Remove social"
-                                                >
-                                                    <XIcon className="size-4" />
-                                                </Button>
-                                            )}
+                                    {socialFields.map((field, index) => (
+                                        <div key={field.id} className="flex flex-col gap-1 w-full">
+                                            <div className="flex gap-2 items-center">
+                                                <Controller
+                                                    name={`socials.${index}.platform`}
+                                                    control={control}
+                                                    render={({ field: selectField }) => (
+                                                        <Select
+                                                            value={selectField.value}
+                                                            onValueChange={selectField.onChange}
+                                                        >
+                                                            <SelectTrigger className="w-37.5 shrink-0">
+                                                                <SelectValue placeholder="Platform" />
+                                                            </SelectTrigger>
+                                                            <SelectContent>
+                                                                <SelectGroup>
+                                                                    {social_platforms.map((p) => (
+                                                                        <SelectItem key={p.value} value={p.value}>
+                                                                            {p.label}
+                                                                        </SelectItem>
+                                                                    ))}
+                                                                </SelectGroup>
+                                                            </SelectContent>
+                                                        </Select>
+                                                    )}
+                                                />
+                                                <Input
+                                                    placeholder="https://..."
+                                                    className="flex-1"
+                                                    {...register(`socials.${index}.url`)}
+                                                />
+                                                {socialFields.length > 1 && (
+                                                    <Button
+                                                        type="button"
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        onClick={() => removeSocial(index)}
+                                                        className="shrink-0 text-muted-foreground hover:text-destructive"
+                                                        aria-label="Remove social"
+                                                    >
+                                                        <XIcon className="size-4" />
+                                                    </Button>
+                                                )}
+                                            </div>
+                                            {errors.socials?.[index]?.platform && <p className="text-xs text-destructive">{errors.socials[index]?.platform?.message}</p>}
+                                            {errors.socials?.[index]?.url && <p className="text-xs text-destructive">{errors.socials[index]?.url?.message}</p>}
                                         </div>
                                     ))}
                                 </div>
@@ -291,15 +347,16 @@ export default function BusinessOnboardingForm() {
 
                             {/* ── Address ── */}
                             <Field>
-                                <FieldLabel htmlFor="business-address">Business Address</FieldLabel>
+                                <FieldLabel htmlFor="businessAddress">Business Address</FieldLabel>
                                 <FieldDescription>
                                     Enter your outlet or registered business address.
                                 </FieldDescription>
                                 <Textarea
-                                    id="business-address"
+                                    id="businessAddress"
                                     placeholder="12, MG Road, Bengaluru, Karnataka - 560001"
-                                    required
+                                    {...register("businessAddress")}
                                 />
+                                {errors.businessAddress && <p className="text-xs text-destructive">{errors.businessAddress.message}</p>}
                             </Field>
 
                         </FieldGroup>
@@ -321,7 +378,9 @@ export default function BusinessOnboardingForm() {
                         </label>
                     </div>
 
-                    <Button type="submit" disabled={!termsAccepted} className="w-full">Register as Business</Button>
+                    <Button type="submit" disabled={!termsAccepted || isSubmitting} className="w-full">
+                        {isSubmitting ? <Loader2 className="animate-spin" /> : "Register as Business"}
+                    </Button>
                 </FieldGroup>
             </form>
         </div>
