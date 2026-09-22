@@ -132,7 +132,7 @@ export function Navbar() {
                 Take our Survey
               </a>
               <Link
-                href="#"
+                href="/sign-in"
                 className={buttonVariants({ variant: "default", size: "sm" })}
               >
                 Sign in
