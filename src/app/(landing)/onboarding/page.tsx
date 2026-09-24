@@ -2,6 +2,7 @@
 import { authClient } from "@/lib/auth-client"
 import { useRouter } from "next/navigation"
 import { useEffect } from "react"
+import { Loader2 } from "lucide-react"
 import OnboardingForm from "@/components/site/onboarding-form"
 
 const OnboardingPage = () => {
@@ -14,9 +15,13 @@ const OnboardingPage = () => {
         }
     }, [session, isPending, router])
 
-    if (isPending) return null
-
-    if (!session) return null
+    if (isPending || !session) {
+        return (
+            <div className="flex min-h-[calc(100vh-4rem)] w-full items-center justify-center">
+                <Loader2 className="size-8 animate-spin text-muted-foreground" />
+            </div>
+        )
+    }
 
     return <OnboardingForm />
 }

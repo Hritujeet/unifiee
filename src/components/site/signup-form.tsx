@@ -16,6 +16,7 @@ import { useForm } from "react-hook-form"
 import { toast } from "sonner"
 import { z } from "zod"
 import { authClient } from "@/lib/auth-client"
+import { useState } from "react"
 
 function GoogleIcon() {
   return (
@@ -51,49 +52,53 @@ export function SignupForm({
 }: React.ComponentProps<"div">) {
   const router = useRouter()
   const queryClient = useQueryClient()
+  const [isRedirecting, setIsRedirecting] = useState(false)
 
-  const { register, handleSubmit, formState: { errors, isSubmitting }, reset } = useForm<z.infer<typeof signupFormSchema>>({
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+    setValue,
+  } = useForm<z.infer<typeof signupFormSchema>>({
     resolver: zodResolver(signupFormSchema),
     defaultValues: {
       name: "",
       email: "",
-      password: ""
-    }
+      password: "",
+    },
   })
 
   const mutation = useMutation({
     mutationFn: async (formData: z.infer<typeof signupFormSchema>) => {
-      const { data: result, error } = await authClient.signUp.email({
+      return await authClient.signUp.email({
         name: formData.name,
         email: formData.email,
         password: formData.password,
       })
-      if (result) {
-        return result
-      }
-      else {
-        throw error
-      }
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["account", "user"]
-      })
-      reset()
+    onSuccess: (result) => {
+      if (result.error) {
+        toast.error(result.error.message || "Failed to create account. Please try again.")
+        setValue("password", "", { shouldValidate: false })
+        setValue("email", "", { shouldValidate: false })
+        setValue("name", "", { shouldValidate: false })
+        return
+      }
       toast.success("Account created successfully!")
+      queryClient.invalidateQueries({ queryKey: ["account", "user"] })
+      setIsRedirecting(true)
       router.push("/onboarding")
     },
-    onError: (error) => {
-      console.error(error)
-      toast.error("Failed to create account. Please try again.")
-      reset()
-    }
+    onError: () => {
+      toast.error("Something went wrong. Please check your connection and try again.")
+    },
   })
 
-
-  const submitHandler = async (data: z.infer<typeof signupFormSchema>) => {
-    mutation.mutate(data);
+  const submitHandler = (data: z.infer<typeof signupFormSchema>) => {
+    mutation.mutate(data)
   }
+
+  const busy = mutation.isPending || isSubmitting || isRedirecting
 
   return (
     <div className={cn("w-full max-w-md", className)} {...props}>
@@ -106,21 +111,41 @@ export function SignupForm({
             Join UNIFIÉE - One place for all your packaging needs
           </p>
 
-          <form onSubmit={handleSubmit(submitHandler)} className="flex w-full flex-col gap-4">
+          <form onSubmit={handleSubmit(submitHandler)} className="flex w-full flex-col gap-4" noValidate>
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="name" className="text-xs text-muted-foreground">
                 Name
               </Label>
-              <Input id="name" type="text" placeholder="Alex" className="h-10 rounded-lg text-sm" {...register("name")} />
-              {errors.name && <p className="text-xs text-destructive">{errors.name.message}</p>}
+              <Input
+                id="name"
+                type="text"
+                autoComplete="name"
+                placeholder="Alex"
+                className="h-10 rounded-lg text-sm"
+                aria-invalid={!!errors.name}
+                {...register("name")}
+              />
+              {errors.name && (
+                <p className="text-xs text-destructive">{errors.name.message}</p>
+              )}
             </div>
 
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="email" className="text-xs text-muted-foreground">
                 Email
               </Label>
-              <Input id="email" type="email" placeholder="you@company.com" className="h-10 rounded-lg text-sm" {...register("email")} />
-              {errors.email && <p className="text-xs text-destructive">{errors.email.message}</p>}
+              <Input
+                id="email"
+                type="email"
+                autoComplete="email"
+                placeholder="you@company.com"
+                className="h-10 rounded-lg text-sm"
+                aria-invalid={!!errors.email}
+                {...register("email")}
+              />
+              {errors.email && (
+                <p className="text-xs text-destructive">{errors.email.message}</p>
+              )}
             </div>
 
             <div className="flex flex-col gap-1.5">
@@ -128,16 +153,28 @@ export function SignupForm({
                 <Label htmlFor="password" className="text-xs text-muted-foreground">
                   Password
                 </Label>
-                <Link href="#" className="text-xs text-muted-foreground hover:text-foreground underline-offset-4 hover:underline transition-colors">
+                <Link
+                  href="#"
+                  className="text-xs text-muted-foreground hover:text-foreground underline-offset-4 hover:underline transition-colors"
+                >
                   Forgot password?
                 </Link>
               </div>
-              <Input id="password" type="password" className="h-10 rounded-lg text-sm" {...register("password")} />
-              {errors.password && <p className="text-xs text-destructive">{errors.password.message}</p>}
+              <Input
+                id="password"
+                type="password"
+                autoComplete="new-password"
+                className="h-10 rounded-lg text-sm"
+                aria-invalid={!!errors.password}
+                {...register("password")}
+              />
+              {errors.password && (
+                <p className="text-xs text-destructive">{errors.password.message}</p>
+              )}
             </div>
 
-            <Button disabled={mutation.isPending} type="submit">
-              {mutation.isPending ? <Loader2 className="animate-spin" /> : "Create Account"}
+            <Button disabled={busy} type="submit">
+              {busy ? <Loader2 className="animate-spin" /> : "Create Account"}
             </Button>
 
             <div className="relative flex items-center gap-3 text-xs text-muted-foreground">
@@ -146,20 +183,20 @@ export function SignupForm({
               <Separator className="flex-1" />
             </div>
 
-            <Button disabled={mutation.isPending} variant="outline" type="button" className="gap-2.5">
+            <Button disabled={busy} variant="outline" type="button" className="gap-2.5">
               <GoogleIcon />
               Continue with Google
             </Button>
           </form>
 
           <p className="mt-6 text-center text-sm text-muted-foreground">
-            Already have an account?{' '}
+            Already have an account?{" "}
             <Link href="/sign-in" className="font-medium text-foreground transition-colors underline-offset-4 hover:underline">
               Sign In
             </Link>
           </p>
         </CardContent>
       </Card>
-    </div >
+    </div>
   )
 }

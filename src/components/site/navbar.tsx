@@ -21,6 +21,7 @@ export function Navbar() {
   const router = useRouter();
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [isSigningOut, setIsSigningOut] = useState(false);
   const { data: session, isPending } = authClient.useSession();
 
   useEffect(() => {
@@ -34,6 +35,7 @@ export function Navbar() {
   }, [pathname]);
 
   const handleSignOut = async () => {
+    setIsSigningOut(true);
     await authClient.signOut();
     toast.success("Signed out successfully");
     router.push("/sign-in");
@@ -50,10 +52,11 @@ export function Navbar() {
           id="nav-signout-btn"
           variant="outline"
           size="sm"
+          disabled={isSigningOut}
           onClick={handleSignOut}
           className="gap-2"
         >
-          <LogOut className="size-3.5" />
+          {isSigningOut ? <Loader2 className="size-3.5 animate-spin" /> : <LogOut className="size-3.5" />}
           Sign out
         </Button>
       );
@@ -74,9 +77,10 @@ export function Navbar() {
       return (
         <button
           onClick={handleSignOut}
+          disabled={isSigningOut}
           className={cn(buttonVariants({ variant: "outline" }), "w-full justify-center gap-2")}
         >
-          <LogOut className="size-3.5" />
+          {isSigningOut ? <Loader2 className="size-3.5 animate-spin" /> : <LogOut className="size-3.5" />}
           Sign out
         </button>
       );

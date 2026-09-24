@@ -16,6 +16,7 @@ import { useForm } from "react-hook-form"
 import { toast } from "sonner"
 import { z } from "zod"
 import { authClient } from "@/lib/auth-client"
+import { useState } from "react"
 
 function GoogleIcon() {
   return (
@@ -51,43 +52,50 @@ export function LoginForm({
 }: React.ComponentProps<"div">) {
   const router = useRouter()
 
-  const { register, handleSubmit, formState: { errors, isSubmitting }, reset } = useForm<z.infer<typeof loginFormSchema>>({
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+    setValue,
+  } = useForm<z.infer<typeof loginFormSchema>>({
     resolver: zodResolver(loginFormSchema),
     defaultValues: {
       email: "",
-      password: ""
-    }
+      password: "",
+    },
   })
   const queryClient = useQueryClient()
+  const [isRedirecting, setIsRedirecting] = useState(false)
 
   const mutation = useMutation({
     mutationFn: async (formData: z.infer<typeof loginFormSchema>) => {
-      const { data: result, error } = await authClient.signIn.email({
+      return await authClient.signIn.email({
         email: formData.email,
         password: formData.password,
       })
-      if (result) {
-        return result
-      } else {
-        throw error
-      }
     },
-    onSuccess: () => {
+    onSuccess: (result) => {
+      if (result.error) {
+        toast.error(result.error.message || "Invalid email or password.")
+        setValue("password", "", { shouldValidate: false })
+        setValue("email", "", { shouldValidate: false })
+        return
+      }
       toast.success("Signed in successfully!")
       queryClient.invalidateQueries({ queryKey: ["account", "user"] })
-      reset()
+      setIsRedirecting(true)
       router.push("/")
     },
-    onError: (error) => {
-      console.error(error)
-      toast.error("Invalid email or password.")
-      reset()
-    }
+    onError: () => {
+      toast.error("Something went wrong. Please check your connection and try again.")
+    },
   })
 
   const submitHandler = (data: z.infer<typeof loginFormSchema>) => {
     mutation.mutate(data)
   }
+
+  const busy = mutation.isPending || isSubmitting || isRedirecting
 
   return (
     <div className={cn("w-full max-w-md", className)} {...props}>
@@ -100,13 +108,23 @@ export function LoginForm({
             Sign in to your UNIFIÉE account
           </p>
 
-          <form onSubmit={handleSubmit(submitHandler)} className="flex w-full flex-col gap-4">
+          <form onSubmit={handleSubmit(submitHandler)} className="flex w-full flex-col gap-4" noValidate>
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="email" className="text-xs text-muted-foreground">
                 Email
               </Label>
-              <Input id="email" type="email" placeholder="you@company.com" className="h-10 rounded-lg text-sm" {...register("email")} />
-              {errors.email && <p className="text-xs text-destructive">{errors.email.message}</p>}
+              <Input
+                id="email"
+                type="email"
+                autoComplete="email"
+                placeholder="you@company.com"
+                className="h-10 rounded-lg text-sm"
+                aria-invalid={!!errors.email}
+                {...register("email")}
+              />
+              {errors.email && (
+                <p className="text-xs text-destructive">{errors.email.message}</p>
+              )}
             </div>
 
             <div className="flex flex-col gap-1.5">
@@ -114,16 +132,28 @@ export function LoginForm({
                 <Label htmlFor="password" className="text-xs text-muted-foreground">
                   Password
                 </Label>
-                <Link href="#" className="text-xs text-muted-foreground hover:text-foreground underline-offset-4 hover:underline transition-colors">
+                <Link
+                  href="#"
+                  className="text-xs text-muted-foreground hover:text-foreground underline-offset-4 hover:underline transition-colors"
+                >
                   Forgot password?
                 </Link>
               </div>
-              <Input id="password" type="password" className="h-10 rounded-lg text-sm" {...register("password")} />
-              {errors.password && <p className="text-xs text-destructive">{errors.password.message}</p>}
+              <Input
+                id="password"
+                type="password"
+                autoComplete="current-password"
+                className="h-10 rounded-lg text-sm"
+                aria-invalid={!!errors.password}
+                {...register("password")}
+              />
+              {errors.password && (
+                <p className="text-xs text-destructive">{errors.password.message}</p>
+              )}
             </div>
 
-            <Button disabled={mutation.isPending} type="submit">
-              {mutation.isPending ? <Loader2 className="animate-spin" /> : "Sign In"}
+            <Button disabled={busy} type="submit">
+              {busy ? <Loader2 className="animate-spin" /> : "Sign In"}
             </Button>
 
             <div className="relative flex items-center gap-3 text-xs text-muted-foreground">
@@ -132,14 +162,14 @@ export function LoginForm({
               <Separator className="flex-1" />
             </div>
 
-            <Button disabled={mutation.isPending} variant="outline" type="button" className="gap-2.5">
+            <Button disabled={busy} variant="outline" type="button" className="gap-2.5">
               <GoogleIcon />
               Continue with Google
             </Button>
           </form>
 
           <p className="mt-6 text-center text-sm text-muted-foreground">
-            Don&apos;t have an account?{' '}
+            Don&apos;t have an account?{" "}
             <Link href="/sign-up" className="font-medium text-foreground transition-colors underline-offset-4 hover:underline">
               Sign up
             </Link>
