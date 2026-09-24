@@ -13,4 +13,7 @@ export const auth = betterAuth({
     emailAndPassword: {
         enabled: true,
     },
+    trustedOrigins: [
+        "https://*.hritujeets-projects.vercel.app"
+    ]
 });
