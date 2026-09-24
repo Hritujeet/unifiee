@@ -7,14 +7,14 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
-import { loginFormSchema } from "@/lib/zod-schema"
+import { signupFormSchema } from "@/lib/zod-schema"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm } from "react-hook-form"
-import { z } from "zod"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { Loader2 } from "lucide-react"
-import { toast } from "sonner"
 import { useRouter } from "next/navigation"
-import { FadeIn } from "./animations"
+import { useForm } from "react-hook-form"
+import { toast } from "sonner"
+import { z } from "zod"
 
 function GoogleIcon() {
   return (
@@ -44,26 +44,44 @@ function GoogleIcon() {
   )
 }
 
-export function LoginForm({
+export function SignupForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
   const router = useRouter()
+  const queryClient = useQueryClient()
 
-  const { register, handleSubmit, formState: { errors, isSubmitting }, reset } = useForm<z.infer<typeof loginFormSchema>>({
-    resolver: zodResolver(loginFormSchema),
+  const { register, handleSubmit, formState: { errors, isSubmitting }, reset } = useForm<z.infer<typeof signupFormSchema>>({
+    resolver: zodResolver(signupFormSchema),
     defaultValues: {
+      name: "",
       email: "",
       password: ""
     }
   })
 
-  const submitHandler = async (data: z.infer<typeof loginFormSchema>) => {
-    console.log(data)
-    await new Promise((resolve) => setTimeout(resolve, 1500))
-    toast.success("Signed in successfully")
-    reset()
-    router.push("/")
+  const mutation = useMutation({
+    mutationFn: async (data: z.infer<typeof signupFormSchema>) => {
+      console.log(data)
+      await new Promise((resolve) => setTimeout(resolve, 1500))
+    },
+    onSuccess: () => {
+      toast.success("Account created succesfully")
+      queryClient.invalidateQueries({
+        queryKey: ["account", "user"]
+      })
+      reset()
+      // router.push("/onboarding")
+    },
+    onError: (error) => {
+      console.log(error)
+      reset()
+      toast.error("Failed to create account")
+    }
+  })
+
+  const submitHandler = async (data: z.infer<typeof signupFormSchema>) => {
+    mutation.mutate(data);
   }
 
   return (
@@ -71,13 +89,21 @@ export function LoginForm({
       <Card className="overflow-hidden rounded-2xl ring-1 ring-border/60 shadow-xl shadow-black/5 dark:shadow-black/20">
         <CardContent className="flex flex-col items-center px-8 py-4">
           <h1 className="font-heading text-2xl font-semibold tracking-tight text-foreground mb-2">
-            Welcome back
+            Create an account
           </h1>
           <p className="text-sm text-muted-foreground mb-6">
-            Sign in to your UNIFIÉE account
+            Join UNIFIÉE - One place for all your packaging needs
           </p>
 
           <form onSubmit={handleSubmit(submitHandler)} className="flex w-full flex-col gap-4">
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="name" className="text-xs text-muted-foreground">
+                Name
+              </Label>
+              <Input id="name" type="text" placeholder="Alex" className="h-10 rounded-lg text-sm" {...register("name")} />
+              {errors.name && <p className="text-xs text-destructive">{errors.name.message}</p>}
+            </div>
+
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="email" className="text-xs text-muted-foreground">
                 Email
@@ -99,8 +125,8 @@ export function LoginForm({
               {errors.password && <p className="text-xs text-destructive">{errors.password.message}</p>}
             </div>
 
-            <Button disabled={isSubmitting} type="submit">
-              {isSubmitting ? <Loader2 className="animate-spin" /> : "Sign In"}
+            <Button disabled={mutation.isPending} type="submit">
+              {mutation.isPending ? <Loader2 className="animate-spin" /> : "Create Account"}
             </Button>
 
             <div className="relative flex items-center gap-3 text-xs text-muted-foreground">
@@ -109,20 +135,20 @@ export function LoginForm({
               <Separator className="flex-1" />
             </div>
 
-            <Button disabled={isSubmitting} variant="outline" type="button" className="gap-2.5">
+            <Button disabled={mutation.isPending} variant="outline" type="button" className="gap-2.5">
               <GoogleIcon />
               Continue with Google
             </Button>
           </form>
 
           <p className="mt-6 text-center text-sm text-muted-foreground">
-            Don&apos;t have an account?{' '}
-            <Link href="/sign-up" className="font-medium text-foreground transition-colors underline-offset-4 hover:underline">
-              Sign up
+            Already have an account?{' '}
+            <Link href="/sign-in" className="font-medium text-foreground transition-colors underline-offset-4 hover:underline">
+              Sign In
             </Link>
           </p>
         </CardContent>
       </Card>
-    </div>
+    </div >
   )
 }

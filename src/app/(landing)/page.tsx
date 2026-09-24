@@ -13,7 +13,7 @@ import {
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { FadeIn, FadeInItem, StaggerContainer } from "@/components/animations";
+import { FadeIn, FadeInItem, StaggerContainer } from "@/components/site/animations";
 export const metadata: Metadata = {
   title: "UNIFIÉE — One system, from requirement to production",
   description:

@@ -3,7 +3,7 @@ import Link from "next/link";
 import { ArrowLeft, ExternalLink, Mail, MapPin } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { FadeIn, FadeInItem, StaggerContainer } from "@/components/animations";
+import { FadeIn, FadeInItem, StaggerContainer } from "@/components/site/animations";
 
 export const metadata: Metadata = {
   title: "Contact — UNIFIÉE",

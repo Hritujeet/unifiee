@@ -4,6 +4,7 @@ import { DM_Sans, Geist_Mono, Roboto, Inter, Geist } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "next-themes";
 import { Toaster } from "@/components/ui/sonner";
+import TanstackQueryProvider from "@/components/providers/tanstack-query-providers";
 
 const dmSansHeading = DM_Sans({ subsets: ['latin'], variable: '--font-heading' });
 
@@ -38,8 +39,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           enableSystem
           disableTransitionOnChange
         >
-          <Toaster />
-          {children}
+          <TanstackQueryProvider>
+            <Toaster />
+            {children}
+          </TanstackQueryProvider>
         </ThemeProvider>
       </body>
     </html>
