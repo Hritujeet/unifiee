@@ -15,6 +15,7 @@ import { useRouter } from "next/navigation"
 import { useForm } from "react-hook-form"
 import { toast } from "sonner"
 import { z } from "zod"
+import { authClient } from "@/lib/auth-client"
 
 function GoogleIcon() {
   return (
@@ -61,24 +62,34 @@ export function SignupForm({
   })
 
   const mutation = useMutation({
-    mutationFn: async (data: z.infer<typeof signupFormSchema>) => {
-      console.log(data)
-      await new Promise((resolve) => setTimeout(resolve, 1500))
+    mutationFn: async (formData: z.infer<typeof signupFormSchema>) => {
+      const { data: result, error } = await authClient.signUp.email({
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,
+      })
+      if (result) {
+        return result
+      }
+      else {
+        throw error
+      }
     },
     onSuccess: () => {
-      toast.success("Account created succesfully")
       queryClient.invalidateQueries({
         queryKey: ["account", "user"]
       })
       reset()
-      // router.push("/onboarding")
+      toast.success("Account created successfully!")
+      router.push("/onboarding")
     },
     onError: (error) => {
-      console.log(error)
+      console.error(error)
+      toast.error("Failed to create account. Please try again.")
       reset()
-      toast.error("Failed to create account")
     }
   })
+
 
   const submitHandler = async (data: z.infer<typeof signupFormSchema>) => {
     mutation.mutate(data);

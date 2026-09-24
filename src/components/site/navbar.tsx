@@ -1,11 +1,13 @@
 "use client";
 
-import { buttonVariants } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { authClient } from "@/lib/auth-client";
 import { cn } from "@/lib/utils";
-import { Menu, X } from "lucide-react";
+import { Loader2, LogOut, Menu, X } from "lucide-react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import { ThemeToggle } from "./theme-toggle";
 
 const navLinks = [
@@ -16,8 +18,10 @@ const navLinks = [
 
 export function Navbar() {
   const pathname = usePathname();
+  const router = useRouter();
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { data: session, isPending } = authClient.useSession();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 16);
@@ -28,6 +32,64 @@ export function Navbar() {
   useEffect(() => {
     setMobileOpen(false);
   }, [pathname]);
+
+  const handleSignOut = async () => {
+    await authClient.signOut();
+    toast.success("Signed out successfully");
+    router.push("/sign-in");
+    router.refresh();
+  };
+
+  const AuthButton = () => {
+    if (isPending) {
+      return <Loader2 className="size-4 animate-spin text-muted-foreground" />;
+    }
+    if (session) {
+      return (
+        <Button
+          id="nav-signout-btn"
+          variant="outline"
+          size="sm"
+          onClick={handleSignOut}
+          className="gap-2"
+        >
+          <LogOut className="size-3.5" />
+          Sign out
+        </Button>
+      );
+    }
+    return (
+      <Link
+        href="/sign-in"
+        className={buttonVariants({ variant: "default", size: "sm" })}
+      >
+        Sign in
+      </Link>
+    );
+  };
+
+  const MobileAuthButton = () => {
+    if (isPending) return null;
+    if (session) {
+      return (
+        <button
+          onClick={handleSignOut}
+          className={cn(buttonVariants({ variant: "outline" }), "w-full justify-center gap-2")}
+        >
+          <LogOut className="size-3.5" />
+          Sign out
+        </button>
+      );
+    }
+    return (
+      <Link
+        href="/sign-in"
+        className={cn(buttonVariants({ variant: "default", size: "sm" }), "w-full justify-center")}
+      >
+        Sign in
+      </Link>
+    );
+  };
 
   return (
     <header
@@ -78,12 +140,7 @@ export function Navbar() {
               Take our Survey
             </a>
             <ThemeToggle />
-            <Link
-              href="/sign-in"
-              className={buttonVariants({ variant: "default", size: "sm" })}
-            >
-              Sign in
-            </Link>
+            <AuthButton />
           </div>
 
           {/* Mobile controls */}
@@ -131,12 +188,7 @@ export function Navbar() {
               >
                 Take our Survey
               </a>
-              <Link
-                href="/sign-in"
-                className={cn(buttonVariants({ variant: "default", size: "sm" }), "w-full justify-center")}
-              >
-                Sign in
-              </Link>
+              <MobileAuthButton />
             </div>
           </div>
         )}

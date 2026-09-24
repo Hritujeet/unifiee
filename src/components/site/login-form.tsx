@@ -15,6 +15,7 @@ import { useRouter } from "next/navigation"
 import { useForm } from "react-hook-form"
 import { toast } from "sonner"
 import { z } from "zod"
+import { authClient } from "@/lib/auth-client"
 
 function GoogleIcon() {
   return (
@@ -60,31 +61,32 @@ export function LoginForm({
   const queryClient = useQueryClient()
 
   const mutation = useMutation({
-    mutationFn: async (data: z.infer<typeof loginFormSchema>) => {
-      console.log(data)
-      await new Promise((resolve) => setTimeout(resolve, 1500))
-    },
-    onSuccess: async () => {
-      toast.success("Signed in successfully")
-      await queryClient.invalidateQueries({
-        queryKey: ["account", "user"]
+    mutationFn: async (formData: z.infer<typeof loginFormSchema>) => {
+      const { data: result, error } = await authClient.signIn.email({
+        email: formData.email,
+        password: formData.password,
       })
+      if (result) {
+        return result
+      } else {
+        throw error
+      }
+    },
+    onSuccess: () => {
+      toast.success("Signed in successfully!")
+      queryClient.invalidateQueries({ queryKey: ["account", "user"] })
       reset()
-      // router.push("/")
+      router.push("/")
     },
     onError: (error) => {
-      console.log(error)
+      console.error(error)
+      toast.error("Invalid email or password.")
       reset()
-      toast.error("Failed to sign in")
     }
   })
 
-  const submitHandler = async (data: z.infer<typeof loginFormSchema>) => {
-    console.log(data)
-    await new Promise((resolve) => setTimeout(resolve, 1500))
-    toast.success("Signed in successfully")
-    reset()
-    router.push("/")
+  const submitHandler = (data: z.infer<typeof loginFormSchema>) => {
+    mutation.mutate(data)
   }
 
   return (
