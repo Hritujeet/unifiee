@@ -39,6 +39,18 @@ const metrics = [
     description:
       "Suppliers routinely become unresponsive mid-order, creating catastrophic blind spots in physical supply lines.",
   },
+  {
+    stat: "COSTS",
+    label: "4 — Hidden",
+    description:
+      "The quoted price is rarely the whole picture. Design, printing, minimum quantities, delivery and coordination can add costs across different vendors.",
+  },
+  {
+    stat: "FOLLOW-UPS",
+    label: "5 — Endless",
+    description:
+      "One order turns into calls, WhatsApp messages, quote comparisons and status checks — because nothing sits in one place.",
+  },
 ];
 
 const modules = [
@@ -63,22 +75,43 @@ const modules = [
       "Demand is routed directly into an optimized network of validated manufacturers based on volume, location constraints, and strict quality parity.",
     Icon: Network,
   },
+  {
+    number: "04",
+    title: "Stay seasonal without rebuilding your brand.",
+    description:
+      "Adapt packaging for festivals, campaigns and promotions while keeping the core brand identity consistent.",
+    Icon: Layers,
+  },
+  {
+    number: "05",
+    title: "Design when you need it. Procurement when you don't.",
+    description:
+      "An optional design layer within the platform supporting branding, packaging design and dieline work without turning UNIFIÉE into a branding agency.",
+    Icon: CheckCircle2,
+  },
+  {
+    number: "06",
+    title: "From brand idea to production-ready design.",
+    description:
+      "Generate packaging concepts through an AI-assisted workflow built around real packaging specifications and production requirements, with human-crafted design available when needed.",
+    Icon: Zap,
+  },
 ];
 
 const heroImages = [
   {
-    src: "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=500&q=80&auto=format&fit=crop",
-    alt: "Branded coffee cups on a counter",
+    src: "https://images.unsplash.com/photo-1652862729869-2f4e80c1849d?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8OHx8Zm9vZCUyMHBhY2thZ2luZ3xlbnwwfHwwfHx8MA%3D%3D",
+    alt: "Food Packagings",
     offset: "mt-0",
   },
   {
-    src: "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=500&q=80&auto=format&fit=crop",
-    alt: "Seasonal decorated packaging cups",
+    src: "https://images.unsplash.com/photo-1648587456176-4969b0124b12?q=80&w=1259&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+    alt: "Variety of Packagings",
     offset: "mt-8",
   },
   {
-    src: "https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=500&q=80&auto=format&fit=crop",
-    alt: "Premium latte art close up",
+    src: "https://images.unsplash.com/photo-1610963349635-d34a47455591?q=80&w=880&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+    alt: "Decorated Packaging",
     offset: "mt-4",
   },
 ];
@@ -126,7 +159,7 @@ export default function HomePage() {
               Take our Survey
             </a>
             <Link href="/about" className={cn(buttonVariants({ variant: "ghost", size: "lg" }), "gap-2")}>
-              Learn More
+              Join Us
               <ArrowRight className="size-4" />
             </Link>
           </FadeInItem>
@@ -160,10 +193,10 @@ export default function HomePage() {
             </h2>
           </FadeIn>
 
-          <StaggerContainer className="grid md:grid-cols-3 gap-px bg-border border border-border rounded-xl overflow-hidden mt-14">
-            {metrics.map((m) => (
-              <FadeInItem key={m.stat} className="bg-background p-8">
-                <p className="font-heading text-5xl md:text-6xl font-semibold text-foreground tracking-tight">
+          <StaggerContainer className="grid md:grid-cols-6 gap-px bg-border border border-border rounded-xl overflow-hidden mt-14">
+            {metrics.map((m, i) => (
+              <FadeInItem key={m.stat} className={cn("bg-background p-8", i < 3 ? "md:col-span-2" : "md:col-span-3")}>
+                <p className="font-heading text-4xl md:text-5xl font-semibold text-foreground tracking-tight">
                   {m.stat}
                 </p>
                 <p className="text-xs font-mono text-muted-foreground uppercase tracking-widest mt-3">
@@ -213,20 +246,20 @@ export default function HomePage() {
             <h2 className="text-3xl md:text-4xl font-semibold tracking-tight max-w-xl text-foreground">
               Built for the actual scale of your business.
             </h2>
-            <p className="text-sm text-muted-foreground font-mono">
-              Three modules. One integrated workflow.
+            <p className="text-sm text-muted-foreground font-mono text-right">
+              Six systems. One integrated workflow.
             </p>
           </FadeIn>
 
-          <StaggerContainer className="border border-border rounded-xl overflow-hidden divide-y divide-border">
+          <StaggerContainer className="grid lg:grid-cols-2 gap-px bg-border border border-border rounded-xl overflow-hidden">
             {modules.map((mod) => {
               const Icon = mod.Icon;
               return (
                 <FadeInItem
                   key={mod.number}
-                  className="bg-background grid md:grid-cols-[5rem_1fr] hover:bg-muted/30 transition-colors group"
+                  className="bg-background grid sm:grid-cols-[5rem_1fr] hover:bg-muted/30 transition-colors group"
                 >
-                  <div className="flex md:flex-col items-center md:items-start gap-4 md:gap-3 p-6 md:p-8 border-b md:border-b-0 md:border-r border-border">
+                  <div className="flex sm:flex-col items-center sm:items-start gap-4 sm:gap-3 p-6 sm:p-8 border-b sm:border-b-0 sm:border-r border-border">
                     <span className="text-xs font-mono text-muted-foreground">
                       {mod.number}
                     </span>
@@ -234,7 +267,7 @@ export default function HomePage() {
                       <Icon className="size-4 text-muted-foreground group-hover:text-primary transition-colors" />
                     </div>
                   </div>
-                  <div className="p-6 md:p-8">
+                  <div className="p-6 sm:p-8">
                     <h3 className="text-lg md:text-xl font-semibold text-foreground tracking-tight">
                       {mod.title}
                     </h3>
@@ -430,16 +463,62 @@ export default function HomePage() {
       </section>
 
       {/* ─── Product Scope ─── */}
-      <section className="py-24 md:py-32 border-t border-border">
+      <section className="py-24 md:py-32 border-t border-border bg-muted/20">
         <div className="max-w-7xl mx-auto px-6">
-          <FadeIn className="mb-14">
-            <p className="text-xs font-mono text-muted-foreground tracking-widest uppercase mb-4">
-              Product Scope
+          <FadeIn className="mb-14 flex flex-col md:flex-row md:items-end justify-between gap-6">
+            <div>
+              <p className="text-xs font-mono text-muted-foreground tracking-widest uppercase mb-4">
+                Product Scope
+              </p>
+              <h2 className="text-3xl md:text-4xl font-semibold tracking-tight max-w-2xl text-foreground">
+                Engineered for complete operational touchpoints.
+              </h2>
+            </div>
+            <p className="text-sm text-muted-foreground max-w-sm md:text-right">
+              From the kitchen to the customer's hands, every layer of physical delivery is systematically covered.
             </p>
-            <h2 className="text-3xl md:text-4xl font-semibold tracking-tight max-w-2xl text-foreground">
-              Engineered for complete operational touchpoints.
-            </h2>
           </FadeIn>
+
+          <StaggerContainer className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {[
+              {
+                title: "Dine-In & QSR",
+                items: ["Cups & Lids", "Food Trays", "Burger Wrappers", "Greaseproof Paper"],
+              },
+              {
+                title: "Delivery & Transit",
+                items: ["Takeaway Bags", "Tamper-Evident Seals", "Cup Carriers", "Delivery Boxes"],
+              },
+              {
+                title: "Retail & CPG",
+                items: ["Shelf-Ready Boxes", "Glass Jars & Bottles", "Product Labels", "Shrink Sleeves"],
+              },
+              {
+                title: "Brand Collateral",
+                items: ["Custom Napkins", "Branded Stickers", "Menu Cards", "Wet Wipes"],
+              },
+            ].map((scope, idx) => (
+              <FadeInItem 
+                key={scope.title} 
+                className="bg-card border border-border rounded-xl p-6 hover:border-primary/30 dark:hover:border-primary hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300"
+              >
+                <div className="text-xs font-mono text-muted-foreground mb-4">
+                  0{idx + 1} //
+                </div>
+                <h3 className="text-lg font-semibold text-foreground tracking-tight mb-5">
+                  {scope.title}
+                </h3>
+                <ul className="space-y-3">
+                  {scope.items.map((item) => (
+                    <li key={item} className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <div className="size-1 rounded-full bg-primary/50" />
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </FadeInItem>
+            ))}
+          </StaggerContainer>
         </div>
       </section>
 
