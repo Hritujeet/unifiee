@@ -1,4 +1,7 @@
 import Link from "next/link";
+import Image from "next/image";
+import LogoLight from "@/img/LogoLight.png";
+import LogoDark from "@/img/LogoDark.png";
 
 export function Footer() {
   return (
@@ -6,10 +9,11 @@ export function Footer() {
       <div className="max-w-7xl mx-auto px-6 py-12">
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-8">
           <div>
-            <p className="font-heading text-xl tracking-[0.25em] uppercase">
-              Unifiée
-            </p>
-            <p className="text-sm text-muted-foreground mt-2 max-w-xs leading-relaxed">
+            <Link href="/" className="inline-block hover:opacity-80 transition-opacity mb-4">
+              <Image src={LogoLight} alt="UNIFIÉE" className="h-40 w-auto dark:hidden" quality={100} />
+              <Image src={LogoDark} alt="UNIFIÉE" className="h-40 w-auto hidden dark:block" quality={100} />
+            </Link>
+            <p className="text-sm text-muted-foreground max-w-xs leading-relaxed">
               An intelligent procurement platform connecting buyers with vendor
               networks. Unified workflows. One system. Currently in development.
             </p>

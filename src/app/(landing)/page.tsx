@@ -221,17 +221,17 @@ export default function HomePage() {
           sizes="100vw"
         />
         {/* Gradient overlay — left-weighted so text is readable */}
-        <div className="absolute inset-0 bg-linear-to-r from-background via-background/75 to-background/10" />
-        <div className="absolute inset-0 bg-linear-to-t from-background/60 to-transparent" />
+        <div className="absolute inset-0 bg-linear-to-r from-black/90 via-black/60 to-transparent" />
+        <div className="absolute inset-0 bg-linear-to-t from-black/80 to-transparent" />
 
         <FadeIn className="relative h-full max-w-7xl mx-auto px-6 flex flex-col justify-center">
-          <p className="text-xs font-mono text-muted-foreground tracking-widest uppercase mb-4">
+          <p className="text-xs font-mono text-white/70 tracking-widest uppercase mb-4">
             The Operational Reality
           </p>
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-semibold tracking-tight max-w-xl text-foreground leading-snug">
+          <h2 className="text-3xl md:text-4xl lg:text-5xl font-semibold tracking-tight max-w-xl text-white leading-snug">
             Every growing F&amp;B brand runs into the same wall.
           </h2>
-          <p className="text-sm text-muted-foreground mt-4 max-w-md leading-relaxed">
+          <p className="text-sm text-white/70 mt-4 max-w-md leading-relaxed">
             Fragmented suppliers, silent vendors, arbitrary MOQs — the physical
             layer of building a food brand was never designed to scale. UNIFIÉE
             is.
@@ -263,7 +263,7 @@ export default function HomePage() {
                     <span className="text-xs font-mono text-muted-foreground">
                       {mod.number}
                     </span>
-                    <div className="size-8 rounded-lg border border-border bg-background/35 flex items-center justify-center group-hover:border-primary/40 dark:group-hover:border-primary transition-colors">
+                    <div className="size-8 rounded-lg border border-border bg-muted flex items-center justify-center group-hover:border-primary/40 dark:group-hover:border-primary transition-colors">
                       <Icon className="size-4 text-muted-foreground group-hover:text-primary transition-colors" />
                     </div>
                   </div>
@@ -298,7 +298,7 @@ export default function HomePage() {
             {/* AI Decision — 2×2 */}
             <FadeInItem className="col-span-2 row-span-2 bg-card border border-border rounded-xl p-7 flex flex-col justify-between hover:border-primary/30 dark:hover:border-primary hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 group">
               <div>
-                <div className="size-9 rounded-lg border border-border bg-background/35 flex items-center justify-center mb-5 group-hover:border-primary/40 dark:group-hover:border-primary transition-colors">
+                <div className="size-9 rounded-lg border border-border bg-muted flex items-center justify-center mb-5 group-hover:border-primary/40 dark:group-hover:border-primary transition-colors">
                   <Brain className="size-4 text-muted-foreground group-hover:text-primary transition-colors" />
                 </div>
                 <h3 className="text-xl font-semibold tracking-tight">AI Decision Support</h3>
@@ -308,7 +308,7 @@ export default function HomePage() {
                   specification you need.
                 </p>
               </div>
-              <div className="mt-6 font-mono text-xs bg-muted/60 rounded-lg p-4 space-y-1.5 border border-border">
+              <div className="mt-6 font-mono text-xs bg-muted rounded-lg p-4 space-y-1.5 border border-border">
                 <p className="text-muted-foreground">→ Analyzing operational profile...</p>
                 <p className="font-medium">Recommended: 90gsm PE-coated kraft, 8oz taper</p>
                 <p className="text-muted-foreground">Unit cost estimate: ₹4.20 – ₹4.80</p>
@@ -340,7 +340,7 @@ export default function HomePage() {
             {/* Pipeline */}
             <FadeInItem className="col-span-2 bg-card border border-border rounded-xl p-5 hover:border-primary/30 dark:hover:border-primary hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 group">
               <div className="flex items-center gap-2.5 mb-4">
-                <div className="size-7 rounded-md border border-border bg-background/35 flex items-center justify-center group-hover:border-primary/40 dark:group-hover:border-primary transition-colors">
+                <div className="size-7 rounded-md border border-border bg-muted flex items-center justify-center group-hover:border-primary/40 dark:group-hover:border-primary transition-colors">
                   <GitBranch className="size-3.5 text-muted-foreground group-hover:text-primary transition-colors" />
                 </div>
                 <div>
@@ -364,7 +364,7 @@ export default function HomePage() {
             {/* Supply matching */}
             <FadeInItem className="col-span-2 bg-card border border-border rounded-xl p-5 hover:border-primary/30 dark:hover:border-primary hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 group">
               <div className="flex items-center gap-2.5 mb-4">
-                <div className="size-7 rounded-md border border-border bg-background/35 flex items-center justify-center group-hover:border-primary/40 dark:group-hover:border-primary transition-colors">
+                <div className="size-7 rounded-md border border-border bg-muted flex items-center justify-center group-hover:border-primary/40 dark:group-hover:border-primary transition-colors">
                   <Network className="size-3.5 text-muted-foreground group-hover:text-primary transition-colors" />
                 </div>
                 <div>
@@ -387,7 +387,7 @@ export default function HomePage() {
             {/* Adaptive strip */}
             <FadeInItem className="col-span-2 lg:col-span-4 bg-card border border-border rounded-xl p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5 hover:border-primary/30 dark:hover:border-primary hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 group">
               <div className="flex items-center gap-3.5">
-                <div className="size-9 rounded-lg border border-border bg-background/35 flex items-center justify-center group-hover:border-primary/40 dark:group-hover:border-primary transition-colors">
+                <div className="size-9 rounded-lg border border-border bg-muted flex items-center justify-center group-hover:border-primary/40 dark:group-hover:border-primary transition-colors">
                   <Layers className="size-4 text-muted-foreground group-hover:text-primary transition-colors" />
                 </div>
                 <div>
@@ -446,14 +446,14 @@ export default function HomePage() {
                 className="object-cover transition-transform duration-700 group-hover:scale-105"
                 sizes="(max-width: 1024px) 100vw, 50vw"
               />
-              <div className="absolute inset-0 bg-linear-to-t from-background/90 via-background/20 to-transparent" />
+              <div className="absolute inset-0 bg-linear-to-t from-black/90 via-black/40 to-transparent" />
 
               <div className="absolute bottom-8 left-8 right-8">
-                <div className="inline-flex items-center gap-2 text-[10px] font-mono text-primary uppercase tracking-widest mb-3 bg-background/50 backdrop-blur-md px-3 py-1.5 rounded-full border border-border/50">
+                <div className="inline-flex items-center gap-2 text-[10px] font-mono text-primary uppercase tracking-widest mb-3 bg-black/50 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10">
                   <Layers className="size-3" />
                   Dynamic Layering
                 </div>
-                <p className="text-xl md:text-2xl font-semibold text-foreground leading-snug tracking-tight">
+                <p className="text-xl md:text-2xl font-semibold text-white leading-snug tracking-tight">
                   Swap promotional assets without touching the core brand identity.
                 </p>
               </div>
@@ -533,14 +533,14 @@ export default function HomePage() {
             className="object-cover"
             sizes="100vw"
           />
-          <div className="absolute inset-0 bg-background/90 dark:bg-background/95" />
+          <div className="absolute inset-0 bg-black/80" />
         </div>
 
         <FadeIn className="relative max-w-7xl mx-auto px-6 text-center">
-          <h2 className="text-4xl md:text-5xl font-semibold tracking-tight max-w-2xl mx-auto leading-snug text-foreground">
+          <h2 className="text-4xl md:text-5xl font-semibold tracking-tight max-w-2xl mx-auto leading-snug text-white">
             Build your physical brand on a single operational system.
           </h2>
-          <p className="text-sm text-muted-foreground mt-5 max-w-lg mx-auto leading-relaxed">
+          <p className="text-sm text-white/70 mt-5 max-w-lg mx-auto leading-relaxed">
             Shift from fragmented vendor coordination to structured packaging
             infrastructure.
           </p>
@@ -552,7 +552,7 @@ export default function HomePage() {
               href="https://docs.google.com/forms/d/e/1FAIpQLSfnqzq5UKUFp_rlQgw7518s-6Gi9Ryu4rXV316FxmEZSeI8HQ/viewform"
               target="_blank"
               rel="noopener noreferrer"
-              className={cn(buttonVariants({ variant: "ghost", size: "lg" }), "gap-2")}
+              className={cn(buttonVariants({ variant: "outline", size: "lg" }), "text-white border-white/20 hover:bg-white/10 hover:text-white gap-2")}
             >
               Take our research survey
               <ArrowRight className="size-4" />

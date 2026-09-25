@@ -5,6 +5,9 @@ import { authClient } from "@/lib/auth-client";
 import { cn } from "@/lib/utils";
 import { Loader2, LogOut, Menu, X } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
+import LogoLight from "@/img/LogoLight.png";
+import LogoDark from "@/img/LogoDark.png";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -100,7 +103,7 @@ export function Navbar() {
       className={cn(
         "sticky top-0 inset-x-0 z-50 transition-all duration-300",
         scrolled || mobileOpen
-          ? "bg-background/80 backdrop-blur-sm border-b border-border"
+          ? "bg-white/95 dark:bg-[#111111]/80 backdrop-blur-md border-b border-border shadow-[0_1px_3px_0_rgba(0,0,0,0.02)] dark:shadow-none"
           : "bg-transparent"
       )}
     >
@@ -109,9 +112,10 @@ export function Navbar() {
           {/* Wordmark */}
           <Link
             href="/"
-            className="font-heading text-xl tracking-[0.25em] uppercase text-foreground hover:opacity-80 transition-opacity"
+            className="flex items-center hover:opacity-80 transition-opacity"
           >
-            Unifiée
+            <Image src={LogoLight} alt="UNIFIÉE" className="h-40 w-auto dark:hidden" quality={100} priority />
+            <Image src={LogoDark} alt="UNIFIÉE" className="h-40 w-auto hidden dark:block" quality={100} priority />
           </Link>
 
           {/* Desktop center links */}
