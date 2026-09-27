@@ -32,12 +32,10 @@ export const auth = betterAuth({
         account: {
             create: {
                 after: async (createdAccount) => {
-                    if (createdAccount.providerId === "google") {
-                        await db
-                            .update(user)
-                            .set({ emailVerified: true })
-                            .where(eq(user.id, createdAccount.userId));
-                    }
+                    await db
+                        .update(user)
+                        .set({ emailVerified: true })
+                        .where(eq(user.id, createdAccount.userId));
                 },
             },
         },
