@@ -120,7 +120,6 @@ export function SignupForm({
         return
       }
       toast.success("Account created successfully!")
-      queryClient.invalidateQueries({ queryKey: ["account", "user"] })
       setShowPasswordDialog(false)
       setIsRedirecting(true)
       window.location.href = "/onboarding"

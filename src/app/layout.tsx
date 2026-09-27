@@ -5,6 +5,7 @@ import "./globals.css";
 import { ThemeProvider } from "next-themes";
 import { Toaster } from "@/components/ui/sonner";
 import TanstackQueryProvider from "@/components/providers/tanstack-query-providers";
+import NextTopLoader from "nextjs-toploader";
 
 const dmSansHeading = DM_Sans({ subsets: ['latin'], variable: '--font-heading' });
 
@@ -33,6 +34,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         , "font-sans", geist.variable, dmSansHeading.variable)}
     >
       <body>
+        <NextTopLoader color="#2563eb" showSpinner={false} height={1.5} />
         <ThemeProvider
           attribute="class"
           defaultTheme="system"

@@ -136,7 +136,6 @@ export function LoginForm({
         return
       }
       toast.success("Signed in successfully!")
-      queryClient.invalidateQueries({ queryKey: ["account", "user"] })
       setShowPasswordDialog(false)
       setIsRedirecting(true)
       window.location.href = "/"

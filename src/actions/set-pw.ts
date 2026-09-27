@@ -32,7 +32,7 @@ export async function setPasswordAction(data: z.infer<typeof setPasswordSchema>)
       headers: await headers()
     });
     
-    return { success: true };
+    return { success: true, userCreatedAt: session.user.createdAt.getTime() };
   } catch (error) {
     console.error("Error setting password:", error);
     return { success: false, error: "Something went wrong" };

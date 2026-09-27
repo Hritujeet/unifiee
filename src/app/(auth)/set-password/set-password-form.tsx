@@ -43,15 +43,12 @@ export default function SetPasswordForm() {
       }
       return result
     },
-    onSuccess: async () => {
+    onSuccess: (result) => {
       toast.success("Password set successfully!")
-      queryClient.invalidateQueries({ queryKey: ["account", "user"] })
       setIsRedirecting(true)
       
-      const { data: session } = await authClient.getSession()
-      if (session?.user) {
-         const userCreatedAt = new Date(session.user.createdAt).getTime()
-         if (Date.now() - userCreatedAt < 60000) {
+      if (result.userCreatedAt) {
+         if (Date.now() - result.userCreatedAt < 60000) {
              window.location.href = "/onboarding"
              return
          }
