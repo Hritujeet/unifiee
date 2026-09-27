@@ -138,6 +138,12 @@ export function Navbar() {
 
           {/* Desktop right */}
           <div className="hidden md:flex items-center gap-3">
+            <Link
+              href="/onboarding"
+              className={buttonVariants({ variant: "outline", size: "sm" })}
+            >
+              Admin
+            </Link>
             <a
               id="nav-survey-link"
               href="https://docs.google.com/forms/d/e/1FAIpQLSfnqzq5UKUFp_rlQgw7518s-6Gi9Ryu4rXV316FxmEZSeI8HQ/viewform"
@@ -188,6 +194,12 @@ export function Navbar() {
               </Link>
             ))}
             <div className="pt-4 flex flex-col gap-3">
+              <Link
+                href="/onboarding"
+                className={cn(buttonVariants({ variant: "outline" }), "w-full justify-center")}
+              >
+                Admin
+              </Link>
               <a
                 href="https://docs.google.com/forms/d/e/1FAIpQLSfnqzq5UKUFp_rlQgw7518s-6Gi9Ryu4rXV316FxmEZSeI8HQ/viewform"
                 target="_blank"

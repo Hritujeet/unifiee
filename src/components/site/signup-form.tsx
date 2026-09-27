@@ -7,16 +7,22 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
-import { signupFormSchema } from "@/lib/zod-schema"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { Loader2 } from "lucide-react"
+import { Loader2, Eye, EyeOff } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useForm } from "react-hook-form"
 import { toast } from "sonner"
 import { z } from "zod"
 import { authClient } from "@/lib/auth-client"
 import { useState } from "react"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog"
 
 function GoogleIcon() {
   return (
@@ -46,6 +52,19 @@ function GoogleIcon() {
   )
 }
 
+const basicInfoSchema = z.object({
+  name: z.string().min(2, "Name must be at least 2 characters long"),
+  email: z.string().email("Please provide a valid email address"),
+})
+
+const passwordSchema = z.object({
+  password: z.string().min(6, "Password must be at least 6 characters long"),
+  confirmPassword: z.string()
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords do not match",
+  path: ["confirmPassword"]
+})
+
 export function SignupForm({
   className,
   ...props
@@ -53,39 +72,56 @@ export function SignupForm({
   const router = useRouter()
   const queryClient = useQueryClient()
   const [isRedirecting, setIsRedirecting] = useState(false)
+  
+  const [showPasswordDialog, setShowPasswordDialog] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
+  
+  const [pendingName, setPendingName] = useState("")
+  const [pendingEmail, setPendingEmail] = useState("")
 
   const {
-    register,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-    setValue,
-  } = useForm<z.infer<typeof signupFormSchema>>({
-    resolver: zodResolver(signupFormSchema),
+    register: registerBasic,
+    handleSubmit: handleBasicSubmit,
+    formState: { errors: basicErrors },
+  } = useForm<z.infer<typeof basicInfoSchema>>({
+    resolver: zodResolver(basicInfoSchema),
     defaultValues: {
       name: "",
       email: "",
+    },
+  })
+
+  const {
+    register: registerPassword,
+    handleSubmit: handlePasswordSubmit,
+    formState: { errors: passwordErrors },
+    setValue: setPasswordValue,
+  } = useForm<z.infer<typeof passwordSchema>>({
+    resolver: zodResolver(passwordSchema),
+    defaultValues: {
       password: "",
+      confirmPassword: "",
     },
   })
 
   const mutation = useMutation({
-    mutationFn: async (formData: z.infer<typeof signupFormSchema>) => {
+    mutationFn: async (formData: z.infer<typeof passwordSchema>) => {
       return await authClient.signUp.email({
-        name: formData.name,
-        email: formData.email,
+        name: pendingName,
+        email: pendingEmail,
         password: formData.password,
       })
     },
     onSuccess: (result) => {
       if (result.error) {
         toast.error(result.error.message || "Failed to create account. Please try again.")
-        setValue("password", "", { shouldValidate: false })
-        setValue("email", "", { shouldValidate: false })
-        setValue("name", "", { shouldValidate: false })
+        setPasswordValue("password", "", { shouldValidate: false })
+        setPasswordValue("confirmPassword", "", { shouldValidate: false })
         return
       }
       toast.success("Account created successfully!")
       queryClient.invalidateQueries({ queryKey: ["account", "user"] })
+      setShowPasswordDialog(false)
       setIsRedirecting(true)
       router.push("/onboarding")
     },
@@ -94,15 +130,33 @@ export function SignupForm({
     },
   })
 
-  const submitHandler = (data: z.infer<typeof signupFormSchema>) => {
+  const googleMutation = useMutation({
+    mutationFn: async () => {
+      return await authClient.signIn.social({
+        provider: "google",
+        callbackURL: "/callback",
+      })
+    },
+    onError: () => {
+      toast.error("Failed to connect to Google. Please try again.")
+    },
+  })
+
+  const onBasicSubmit = (data: z.infer<typeof basicInfoSchema>) => {
+    setPendingName(data.name)
+    setPendingEmail(data.email)
+    setShowPasswordDialog(true)
+  }
+
+  const onPasswordSubmit = (data: z.infer<typeof passwordSchema>) => {
     mutation.mutate(data)
   }
 
-  const busy = mutation.isPending || isSubmitting || isRedirecting
+  const busy = isRedirecting || googleMutation.isPending
 
   return (
     <div className={cn("w-full max-w-md", className)} {...props}>
-      <Card className="overflow-hidden rounded-2xl ring-1 ring-border/60 shadow-xl shadow-black/5 dark:shadow-black/20">
+      <Card className="overflow-hidden rounded-2xl ring-1 ring-border/60 shadow-xl shadow-black/5 dark:shadow-black/20 animate-in fade-in slide-in-from-bottom-4 duration-700 ease-out">
         <CardContent className="flex flex-col items-center px-8 py-4">
           <h1 className="font-heading text-2xl font-semibold tracking-tight text-foreground mb-2">
             Create an account
@@ -111,7 +165,7 @@ export function SignupForm({
             Join UNIFIÉE - One place for all your packaging needs
           </p>
 
-          <form onSubmit={handleSubmit(submitHandler)} className="flex w-full flex-col gap-4" noValidate>
+          <form onSubmit={handleBasicSubmit(onBasicSubmit)} className="flex w-full flex-col gap-4" noValidate>
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="name" className="text-xs text-muted-foreground">
                 Name
@@ -122,11 +176,11 @@ export function SignupForm({
                 autoComplete="name"
                 placeholder="Alex"
                 className="h-10 rounded-lg text-sm"
-                aria-invalid={!!errors.name}
-                {...register("name")}
+                aria-invalid={!!basicErrors.name}
+                {...registerBasic("name")}
               />
-              {errors.name && (
-                <p className="text-xs text-destructive">{errors.name.message}</p>
+              {basicErrors.name && (
+                <p className="text-[11px] font-medium text-destructive animate-in fade-in slide-in-from-top-1">{basicErrors.name.message}</p>
               )}
             </div>
 
@@ -140,41 +194,16 @@ export function SignupForm({
                 autoComplete="email"
                 placeholder="you@company.com"
                 className="h-10 rounded-lg text-sm"
-                aria-invalid={!!errors.email}
-                {...register("email")}
+                aria-invalid={!!basicErrors.email}
+                {...registerBasic("email")}
               />
-              {errors.email && (
-                <p className="text-xs text-destructive">{errors.email.message}</p>
+              {basicErrors.email && (
+                <p className="text-[11px] font-medium text-destructive animate-in fade-in slide-in-from-top-1">{basicErrors.email.message}</p>
               )}
             </div>
 
-            <div className="flex flex-col gap-1.5">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="password" className="text-xs text-muted-foreground">
-                  Password
-                </Label>
-                <Link
-                  href="#"
-                  className="text-xs text-muted-foreground hover:text-foreground underline-offset-4 hover:underline transition-colors"
-                >
-                  Forgot password?
-                </Link>
-              </div>
-              <Input
-                id="password"
-                type="password"
-                autoComplete="new-password"
-                className="h-10 rounded-lg text-sm"
-                aria-invalid={!!errors.password}
-                {...register("password")}
-              />
-              {errors.password && (
-                <p className="text-xs text-destructive">{errors.password.message}</p>
-              )}
-            </div>
-
-            <Button disabled={busy} type="submit">
-              {busy ? <Loader2 className="animate-spin" /> : "Create Account"}
+            <Button disabled={busy} type="submit" className="transition-all active:scale-[0.98]">
+              Continue
             </Button>
 
             <div className="relative flex items-center gap-3 text-xs text-muted-foreground">
@@ -183,8 +212,8 @@ export function SignupForm({
               <Separator className="flex-1" />
             </div>
 
-            <Button disabled={busy} variant="outline" type="button" className="gap-2.5">
-              <GoogleIcon />
+            <Button disabled={busy} variant="outline" type="button" className="gap-2.5 transition-all hover:bg-muted/50 active:scale-[0.98]" onClick={() => googleMutation.mutate()}>
+              {googleMutation.isPending ? <Loader2 className="animate-spin size-4" /> : <GoogleIcon />}
               Continue with Google
             </Button>
           </form>
@@ -197,6 +226,72 @@ export function SignupForm({
           </p>
         </CardContent>
       </Card>
+
+      <Dialog open={showPasswordDialog} onOpenChange={setShowPasswordDialog}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Secure your account</DialogTitle>
+            <DialogDescription>
+              Create a password for your new account.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handlePasswordSubmit(onPasswordSubmit)} className="flex flex-col gap-4 mt-4" noValidate>
+            <div className="flex flex-col gap-1 p-3 rounded-xl bg-muted/30 ring-1 ring-border/50">
+              <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Creating account for</span>
+              <span className="text-sm font-medium text-foreground truncate">{pendingEmail}</span>
+            </div>
+            
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="password" className="text-xs text-muted-foreground">
+                Password
+              </Label>
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  autoComplete="new-password"
+                  className="h-10 rounded-lg text-sm pr-10"
+                  aria-invalid={!!passwordErrors.password}
+                  {...registerPassword("password")}
+                />
+                <button 
+                  type="button" 
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                >
+                  {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                </button>
+              </div>
+              {passwordErrors.password && (
+                <p className="text-[11px] font-medium text-destructive animate-in fade-in slide-in-from-top-1">{passwordErrors.password.message}</p>
+              )}
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="confirmPassword" className="text-xs text-muted-foreground">
+                Confirm Password
+              </Label>
+              <div className="relative">
+                <Input
+                  id="confirmPassword"
+                  type={showPassword ? "text" : "password"}
+                  autoComplete="new-password"
+                  className="h-10 rounded-lg text-sm pr-10"
+                  aria-invalid={!!passwordErrors.confirmPassword}
+                  {...registerPassword("confirmPassword")}
+                />
+              </div>
+              {passwordErrors.confirmPassword && (
+                <p className="text-[11px] font-medium text-destructive animate-in fade-in slide-in-from-top-1">{passwordErrors.confirmPassword.message}</p>
+              )}
+            </div>
+
+            <Button disabled={mutation.isPending || isRedirecting} type="submit" className="mt-2 transition-all active:scale-[0.98]">
+              {(mutation.isPending || isRedirecting) ? <Loader2 className="animate-spin" /> : "Register"}
+            </Button>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

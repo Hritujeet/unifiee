@@ -11,6 +11,14 @@ export const signupFormSchema = z.object({
     password: z.string().min(6, "Password must be at least 6 characters long")
 })
 
+export const setPasswordSchema = z.object({
+    password: z.string().min(6, "Password must be at least 6 characters long"),
+    confirmPassword: z.string()
+}).refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"]
+})
+
 const socialEntrySchema = z.object({
     platform: z.string(),
     url: z.string().optional().or(z.literal(''))

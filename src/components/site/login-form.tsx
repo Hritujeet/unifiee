@@ -10,13 +10,20 @@ import { Separator } from "@/components/ui/separator"
 import { loginFormSchema } from "@/lib/zod-schema"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { Loader2 } from "lucide-react"
+import { Loader2, Eye, EyeOff } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useForm } from "react-hook-form"
 import { toast } from "sonner"
 import { z } from "zod"
 import { authClient } from "@/lib/auth-client"
 import { useState } from "react"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog"
 
 function GoogleIcon() {
   return (
@@ -46,17 +53,37 @@ function GoogleIcon() {
   )
 }
 
+const emailSchema = z.object({
+  email: z.string().email("Please provide a valid email address"),
+})
+
 export function LoginForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
   const router = useRouter()
+  const queryClient = useQueryClient()
+  const [isRedirecting, setIsRedirecting] = useState(false)
+  const [showPasswordDialog, setShowPasswordDialog] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
+  const [emailToLogin, setEmailToLogin] = useState("")
 
   const {
-    register,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-    setValue,
+    register: registerEmail,
+    handleSubmit: handleEmailSubmit,
+    formState: { errors: emailErrors },
+  } = useForm<z.infer<typeof emailSchema>>({
+    resolver: zodResolver(emailSchema),
+    defaultValues: {
+      email: "",
+    },
+  })
+
+  const {
+    register: registerPassword,
+    handleSubmit: handlePasswordSubmit,
+    formState: { errors: passwordErrors },
+    setValue: setPasswordValue,
   } = useForm<z.infer<typeof loginFormSchema>>({
     resolver: zodResolver(loginFormSchema),
     defaultValues: {
@@ -64,10 +91,38 @@ export function LoginForm({
       password: "",
     },
   })
-  const queryClient = useQueryClient()
-  const [isRedirecting, setIsRedirecting] = useState(false)
 
-  const mutation = useMutation({
+  const checkEmailMutation = useMutation({
+    mutationFn: async (data: z.infer<typeof emailSchema>) => {
+      const res = await fetch("/api/auth/check-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: data.email }),
+      })
+      if (!res.ok) {
+        throw new Error("Failed to check email")
+      }
+      return res.json() as Promise<{ status: "not_registered" | "set_pw" | "enter_pw" | "error" }>
+    },
+    onSuccess: (data, variables) => {
+      if (data.status === "not_registered") {
+        toast.error("This email is not registered. Please sign up first.")
+      } else if (data.status === "set_pw") {
+        toast.info("This email is registered with Google. Please click 'Continue with Google' to sign in and set your password.", { duration: 6000 })
+      } else if (data.status === "enter_pw") {
+        setEmailToLogin(variables.email)
+        setPasswordValue("email", variables.email)
+        setShowPasswordDialog(true)
+      } else {
+        toast.error("Something went wrong, please try again")
+      }
+    },
+    onError: () => {
+      toast.error("Something went wrong, please try again")
+    },
+  })
+
+  const loginMutation = useMutation({
     mutationFn: async (formData: z.infer<typeof loginFormSchema>) => {
       return await authClient.signIn.email({
         email: formData.email,
@@ -77,12 +132,12 @@ export function LoginForm({
     onSuccess: (result) => {
       if (result.error) {
         toast.error(result.error.message || "Invalid email or password.")
-        setValue("password", "", { shouldValidate: false })
-        setValue("email", "", { shouldValidate: false })
+        setPasswordValue("password", "", { shouldValidate: false })
         return
       }
       toast.success("Signed in successfully!")
       queryClient.invalidateQueries({ queryKey: ["account", "user"] })
+      setShowPasswordDialog(false)
       setIsRedirecting(true)
       router.push("/")
     },
@@ -91,15 +146,31 @@ export function LoginForm({
     },
   })
 
-  const submitHandler = (data: z.infer<typeof loginFormSchema>) => {
-    mutation.mutate(data)
+  const googleMutation = useMutation({
+    mutationFn: async () => {
+      return await authClient.signIn.social({
+        provider: "google",
+        callbackURL: "/callback",
+      })
+    },
+    onError: () => {
+      toast.error("Failed to connect to Google. Please try again.")
+    },
+  })
+
+  const onEmailSubmit = (data: z.infer<typeof emailSchema>) => {
+    checkEmailMutation.mutate(data)
   }
 
-  const busy = mutation.isPending || isSubmitting || isRedirecting
+  const onPasswordSubmit = (data: z.infer<typeof loginFormSchema>) => {
+    loginMutation.mutate(data)
+  }
+
+  const busy = checkEmailMutation.isPending || isRedirecting || googleMutation.isPending
 
   return (
     <div className={cn("w-full max-w-md", className)} {...props}>
-      <Card className="overflow-hidden rounded-2xl ring-1 ring-border/60 shadow-xl shadow-black/5 dark:shadow-black/20">
+      <Card className="overflow-hidden rounded-2xl ring-1 ring-border/60 shadow-xl shadow-black/5 dark:shadow-black/20 animate-in fade-in slide-in-from-bottom-4 duration-700 ease-out">
         <CardContent className="flex flex-col items-center px-8 py-4">
           <h1 className="font-heading text-2xl font-semibold tracking-tight text-foreground mb-2">
             Welcome back
@@ -108,7 +179,7 @@ export function LoginForm({
             Sign in to your UNIFIÉE account
           </p>
 
-          <form onSubmit={handleSubmit(submitHandler)} className="flex w-full flex-col gap-4" noValidate>
+          <form onSubmit={handleEmailSubmit(onEmailSubmit)} className="flex w-full flex-col gap-4" noValidate>
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="email" className="text-xs text-muted-foreground">
                 Email
@@ -119,41 +190,16 @@ export function LoginForm({
                 autoComplete="email"
                 placeholder="you@company.com"
                 className="h-10 rounded-lg text-sm"
-                aria-invalid={!!errors.email}
-                {...register("email")}
+                aria-invalid={!!emailErrors.email}
+                {...registerEmail("email")}
               />
-              {errors.email && (
-                <p className="text-xs text-destructive">{errors.email.message}</p>
+              {emailErrors.email && (
+                <p className="text-[11px] font-medium text-destructive animate-in fade-in slide-in-from-top-1">{emailErrors.email.message}</p>
               )}
             </div>
 
-            <div className="flex flex-col gap-1.5">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="password" className="text-xs text-muted-foreground">
-                  Password
-                </Label>
-                <Link
-                  href="#"
-                  className="text-xs text-muted-foreground hover:text-foreground underline-offset-4 hover:underline transition-colors"
-                >
-                  Forgot password?
-                </Link>
-              </div>
-              <Input
-                id="password"
-                type="password"
-                autoComplete="current-password"
-                className="h-10 rounded-lg text-sm"
-                aria-invalid={!!errors.password}
-                {...register("password")}
-              />
-              {errors.password && (
-                <p className="text-xs text-destructive">{errors.password.message}</p>
-              )}
-            </div>
-
-            <Button disabled={busy} type="submit">
-              {busy ? <Loader2 className="animate-spin" /> : "Sign In"}
+            <Button disabled={busy} type="submit" className="transition-all active:scale-[0.98]">
+              {checkEmailMutation.isPending ? <Loader2 className="animate-spin" /> : "Continue"}
             </Button>
 
             <div className="relative flex items-center gap-3 text-xs text-muted-foreground">
@@ -162,8 +208,8 @@ export function LoginForm({
               <Separator className="flex-1" />
             </div>
 
-            <Button disabled={busy} variant="outline" type="button" className="gap-2.5">
-              <GoogleIcon />
+            <Button disabled={busy} variant="outline" type="button" className="gap-2.5 transition-all hover:bg-muted/50 active:scale-[0.98]" onClick={() => googleMutation.mutate()}>
+              {googleMutation.isPending ? <Loader2 className="animate-spin size-4" /> : <GoogleIcon />}
               Continue with Google
             </Button>
           </form>
@@ -176,6 +222,61 @@ export function LoginForm({
           </p>
         </CardContent>
       </Card>
+
+      <Dialog open={showPasswordDialog} onOpenChange={setShowPasswordDialog}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Enter your password</DialogTitle>
+            <DialogDescription>
+              Sign in to continue.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handlePasswordSubmit(onPasswordSubmit)} className="flex flex-col gap-4 mt-4" noValidate>
+            <div className="flex flex-col gap-1 p-3 rounded-xl bg-muted/30 ring-1 ring-border/50">
+              <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Signing in as</span>
+              <span className="text-sm font-medium text-foreground truncate">{emailToLogin}</span>
+            </div>
+            
+            <div className="flex flex-col gap-1.5">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="password" className="text-xs text-muted-foreground">
+                  Password
+                </Label>
+                <Link
+                  href="#"
+                  className="text-xs text-muted-foreground hover:text-foreground underline-offset-4 hover:underline transition-colors"
+                >
+                  Forgot password?
+                </Link>
+              </div>
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  autoComplete="current-password"
+                  className="h-10 rounded-lg text-sm pr-10"
+                  aria-invalid={!!passwordErrors.password}
+                  {...registerPassword("password")}
+                />
+                <button 
+                  type="button" 
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                >
+                  {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                </button>
+              </div>
+              {passwordErrors.password && (
+                <p className="text-[11px] font-medium text-destructive animate-in fade-in slide-in-from-top-1">{passwordErrors.password.message}</p>
+              )}
+            </div>
+
+            <Button disabled={loginMutation.isPending || isRedirecting} type="submit" className="mt-2 transition-all active:scale-[0.98]">
+              {(loginMutation.isPending || isRedirecting) ? <Loader2 className="animate-spin" /> : "Sign In"}
+            </Button>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
