@@ -52,11 +52,11 @@ export default function SetPasswordForm() {
       if (session?.user) {
          const userCreatedAt = new Date(session.user.createdAt).getTime()
          if (Date.now() - userCreatedAt < 60000) {
-             router.push("/onboarding")
+             window.location.href = "/onboarding"
              return
          }
       }
-      router.push("/")
+      window.location.href = "/"
     },
     onError: (error) => {
       toast.error(error.message)

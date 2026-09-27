@@ -139,7 +139,7 @@ export function LoginForm({
       queryClient.invalidateQueries({ queryKey: ["account", "user"] })
       setShowPasswordDialog(false)
       setIsRedirecting(true)
-      router.push("/")
+      window.location.href = "/"
     },
     onError: () => {
       toast.error("Something went wrong. Please check your connection and try again.")

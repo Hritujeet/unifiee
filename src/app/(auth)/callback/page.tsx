@@ -15,13 +15,13 @@ export default function AuthCallbackPage() {
         const { data, error } = await authClient.getSession()
         
         if (error || !data) {
-          router.push("/sign-in")
+          window.location.href = "/sign-in"
           return
         }
         
         const hasPw = await checkHasPasswordAction()
         if (!hasPw) {
-          router.push("/set-password")
+          window.location.href = "/set-password"
           return
         }
         
@@ -30,13 +30,13 @@ export default function AuthCallbackPage() {
         
         // If the account was created less than 1 minute ago, consider it new
         if (now - userCreatedAt < 60000) {
-          router.push("/onboarding")
+          window.location.href = "/onboarding"
         } else {
-          router.push("/")
+          window.location.href = "/"
         }
       } catch (err) {
         console.error("Error checking session:", err)
-        router.push("/sign-in")
+        window.location.href = "/sign-in"
       }
     }
     

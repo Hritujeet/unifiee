@@ -123,7 +123,7 @@ export function SignupForm({
       queryClient.invalidateQueries({ queryKey: ["account", "user"] })
       setShowPasswordDialog(false)
       setIsRedirecting(true)
-      router.push("/onboarding")
+      window.location.href = "/onboarding"
     },
     onError: () => {
       toast.error("Something went wrong. Please check your connection and try again.")
