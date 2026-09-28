@@ -1,4 +1,5 @@
 import { pgEnum, pgTable, text, timestamp, uuid, varchar } from "drizzle-orm/pg-core";
+import { user } from "./auth-schema";
 
 export const VENDOR_TYPE = pgEnum("vendor_type", [
     "manufacturer",
@@ -9,6 +10,7 @@ export const VENDOR_TYPE = pgEnum("vendor_type", [
 
 export const vendorTable = pgTable("vendor", {
     id: uuid("id").primaryKey().unique().notNull(),
+    userId: text("user_id").notNull().unique().references(() => user.id, { onDelete: "cascade" }),
     name: varchar("name", { length: 255 }).notNull(),
     fullName: varchar("fullname", { length: 300 }).notNull(),
     companyName: varchar("companyname", { length: 500 }).notNull(),

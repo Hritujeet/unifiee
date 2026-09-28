@@ -27,6 +27,11 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { businessOnboardingSchema } from "@/lib/zod-schema"
 import { z } from "zod"
 import { toast } from "sonner"
+import { useMutation } from "@tanstack/react-query"
+import { registerBusinessAction } from "@/actions/business-registration"
+import { useRouter } from "next/navigation"
+import { useEffect } from "react"
+import { authClient } from "@/lib/auth-client"
 
 const business_types = [
     { label: "Café", value: "cafe" },
@@ -54,9 +59,11 @@ const social_platforms = [
 ]
 
 export default function BusinessOnboardingForm() {
+    const router = useRouter()
     const [termsAccepted, setTermsAccepted] = useState(false)
+    const { data: session } = authClient.useSession()
 
-    const { register, control, handleSubmit, formState: { errors, isSubmitting }, reset } = useForm<z.infer<typeof businessOnboardingSchema>>({
+    const { register, control, handleSubmit, formState: { errors, isSubmitting }, reset, setValue } = useForm<z.infer<typeof businessOnboardingSchema>>({
         resolver: zodResolver(businessOnboardingSchema),
         defaultValues: {
             fullname: "",
@@ -73,17 +80,38 @@ export default function BusinessOnboardingForm() {
         }
     })
 
+    // Auto-fill email from signed-in account
+    useEffect(() => {
+        if (session?.user?.email) {
+            setValue("email", session.user.email, { shouldValidate: false })
+        }
+    }, [session, setValue])
+
     const { fields: socialFields, append: appendSocial, remove: removeSocial } = useFieldArray({
         control,
         name: "socials"
     })
 
-    const submitHandler = async (data: z.infer<typeof businessOnboardingSchema>) => {
-        console.log("Business data:", data)
-        await new Promise((resolve) => setTimeout(resolve, 1500))
-        toast.success("Registered as business successfully")
-        reset()
-        setTermsAccepted(false)
+    const mutation = useMutation({
+        mutationFn: async (data: z.infer<typeof businessOnboardingSchema>) => {
+            const result = await registerBusinessAction(data);
+            if (!result.success) {
+                throw new Error(result.error);
+            }
+            return result;
+        },
+        onSuccess: () => {
+            toast.success("Registered as business successfully! Redirecting to your dashboard...");
+            // hard navigate so the server layout re-runs and sees the new business row
+            window.location.href = "/business";
+        },
+        onError: (error: any) => {
+            toast.error(error.message || "Failed to register business");
+        }
+    });
+
+    const submitHandler = (data: z.infer<typeof businessOnboardingSchema>) => {
+        mutation.mutate(data)
     }
 
     const errorHandler = () => {
@@ -198,9 +226,13 @@ export default function BusinessOnboardingForm() {
                                 <Input
                                     id="email"
                                     type="email"
-                                    placeholder="email@example.com"
+                                    readOnly
+                                    className="bg-muted/50 cursor-not-allowed"
                                     {...register("email")}
                                 />
+                                <FieldDescription className="text-xs text-muted-foreground">
+                                    Pre-filled from your signed-in account.
+                                </FieldDescription>
                                 {errors.email && <p className="text-xs text-destructive">{errors.email.message}</p>}
                             </Field>
 
@@ -350,8 +382,8 @@ export default function BusinessOnboardingForm() {
                         </label>
                     </div>
 
-                    <Button type="submit" disabled={!termsAccepted || isSubmitting} className="w-full">
-                        {isSubmitting ? <Loader2 className="animate-spin" /> : "Register as Business"}
+                    <Button type="submit" disabled={!termsAccepted || mutation.isPending} className="w-full">
+                        {mutation.isPending ? <Loader2 className="animate-spin" /> : "Register as Business"}
                     </Button>
                 </FieldGroup>
             </form>

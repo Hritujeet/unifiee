@@ -1,29 +1,24 @@
-"use client"
-import { authClient } from "@/lib/auth-client"
-import { useRouter } from "next/navigation"
-import { useEffect } from "react"
-import { Loader2 } from "lucide-react"
-import OnboardingForm from "@/components/site/onboarding-form"
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
+import { redirect } from "next/navigation";
+import { userHasPassword } from "@/lib/auth/has-password";
+import { getUserRole } from "@/actions/get-user-role";
+import OnboardingForm from "@/components/site/onboarding-form";
 
-const OnboardingPage = () => {
-    const router = useRouter()
-    const { data: session, isPending } = authClient.useSession()
+export default async function OnboardingPage() {
+    // 1. Must be signed in
+    const session = await auth.api.getSession({ headers: await headers() });
+    if (!session?.user) redirect("/sign-in");
 
-    useEffect(() => {
-        if (!isPending && !session) {
-            router.replace("/sign-in")
-        }
-    }, [session, isPending, router])
+    // 2. Must have a password set
+    const hasPw = await userHasPassword(session.user.id);
+    if (!hasPw) redirect("/set-password");
 
-    if (isPending || !session) {
-        return (
-            <div className="flex min-h-[calc(100vh-4rem)] w-full items-center justify-center">
-                <Loader2 className="size-8 animate-spin text-muted-foreground" />
-            </div>
-        )
-    }
+    // 3. If already registered, redirect to the correct dashboard
+    const role = await getUserRole();
+    if (role === "vendor") redirect("/vendor");
+    if (role === "business") redirect("/business");
 
-    return <OnboardingForm />
+    // 4. Not yet registered — show the onboarding selector
+    return <OnboardingForm />;
 }
-
-export default OnboardingPage

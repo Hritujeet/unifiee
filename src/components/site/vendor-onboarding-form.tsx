@@ -21,6 +21,11 @@ import { vendorOnboardingSchema } from "@/lib/zod-schema"
 import { z } from "zod"
 import { toast } from "sonner"
 import Link from "next/link"
+import { useMutation } from "@tanstack/react-query"
+import { registerVendorAction } from "@/actions/vendor-registration"
+import { useRouter } from "next/navigation"
+import { useEffect } from "react"
+import { authClient } from "@/lib/auth-client"
 
 const vendor_type = [
     { label: "Manufacturer", value: "manufacturer" },
@@ -43,9 +48,11 @@ const social_platforms = [
 type FormValues = z.infer<typeof vendorOnboardingSchema>
 
 export default function VendorOnboardingForm() {
+    const router = useRouter()
     const [termsAccepted, setTermsAccepted] = useState(false)
+    const { data: session } = authClient.useSession()
 
-    const { register, control, handleSubmit, formState: { errors, isSubmitting }, reset } = useForm<FormValues>({
+    const { register, control, handleSubmit, formState: { errors }, reset, setValue } = useForm<FormValues>({
         resolver: zodResolver(vendorOnboardingSchema),
         defaultValues: {
             fullname: "",
@@ -60,6 +67,13 @@ export default function VendorOnboardingForm() {
         }
     })
 
+    // Auto-fill email from signed-in account
+    useEffect(() => {
+        if (session?.user?.email) {
+            setValue("email", session.user.email, { shouldValidate: false })
+        }
+    }, [session, setValue])
+
     const { fields: serviceFields, append: appendService, remove: removeService } = useFieldArray({
         control,
         name: "services"
@@ -70,22 +84,26 @@ export default function VendorOnboardingForm() {
         name: "socials"
     })
 
-    const submitHandler = async (data: FormValues) => {
-        // Filter out empty services and socials before sending
-        const cleaned = {
-            ...data,
-            services: data.services
-                ?.map((s) => s.value.trim())
-                .filter(Boolean),
-            socials: data.socials
-                ?.filter((s) => s.platform && s.url)
-                .map((s) => ({ platform: s.platform, url: s.url })),
+    const mutation = useMutation({
+        mutationFn: async (data: FormValues) => {
+            const result = await registerVendorAction(data);
+            if (!result.success) {
+                throw new Error(result.error);
+            }
+            return result;
+        },
+        onSuccess: () => {
+            toast.success("Registered as vendor successfully! Redirecting to your dashboard...");
+            // hard navigate so the server layout re-runs and sees the new vendor row
+            window.location.href = "/vendor";
+        },
+        onError: (error: any) => {
+            toast.error(error.message || "Failed to register vendor");
         }
-        console.log("Vendor data:", cleaned)
-        await new Promise((resolve) => setTimeout(resolve, 1500))
-        toast.success("Registered as vendor successfully")
-        reset()
-        setTermsAccepted(false)
+    });
+
+    const submitHandler = (data: FormValues) => {
+        mutation.mutate(data)
     }
 
     const errorHandler = () => {
@@ -138,9 +156,13 @@ export default function VendorOnboardingForm() {
                                 <Input
                                     id="email"
                                     type="email"
-                                    placeholder="email@example.com"
+                                    readOnly
+                                    className="bg-muted/50 cursor-not-allowed"
                                     {...register("email")}
                                 />
+                                <FieldDescription className="text-xs text-muted-foreground">
+                                    Pre-filled from your signed-in account.
+                                </FieldDescription>
                                 {errors.email && <p className="text-xs text-destructive">{errors.email.message}</p>}
                             </Field>
                             <Field>
@@ -319,8 +341,8 @@ export default function VendorOnboardingForm() {
                         </label>
                     </div>
 
-                    <Button type="submit" disabled={!termsAccepted || isSubmitting} className="w-full">
-                        {isSubmitting ? <Loader2 className="animate-spin" /> : "Register as Vendor"}
+                    <Button type="submit" disabled={!termsAccepted || mutation.isPending} className="w-full">
+                        {mutation.isPending ? <Loader2 className="animate-spin" /> : "Register as Vendor"}
                     </Button>
                 </FieldGroup>
             </form>

@@ -6,6 +6,7 @@ import {
     uuid,
     varchar,
 } from "drizzle-orm/pg-core";
+import { user } from "./auth-schema";
 
 export const BUSINESS_TYPE = pgEnum("businesstype", [
     "cafe",
@@ -19,6 +20,7 @@ export const ROLE = pgEnum("role", ["owner", "manager", "procurement"]);
 
 export const business = pgTable("business", {
     id: uuid("id").primaryKey().unique().notNull(),
+    userId: text("user_id").notNull().unique().references(() => user.id, { onDelete: "cascade" }),
     name: varchar("name", { length: 255 }).notNull(),
     fullName: varchar("fullname", { length: 300 }).notNull(),
     ownerName: varchar("ownername", { length: 300 }).notNull(),
