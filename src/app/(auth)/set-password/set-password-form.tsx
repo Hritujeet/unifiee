@@ -40,17 +40,12 @@ export default function SetPasswordForm() {
       }
       return result
     },
-    onSuccess: (result) => {
+    onSuccess: () => {
       toast.success("Password set successfully!")
       setIsRedirecting(true)
-
-      if (result.userCreatedAt) {
-        if (Date.now() - result.userCreatedAt < 60000) {
-          window.location.href = "/onboarding"
-          return
-        }
-      }
-      window.location.href = "/"
+      // Let the server callback page decide where to send the user
+      // (new user → /onboarding, existing vendor → /vendor, existing business → /business)
+      window.location.href = "/callback"
     },
     onError: (error) => {
       toast.error(error.message)
@@ -70,13 +65,13 @@ export default function SetPasswordForm() {
           <h1 className="font-heading text-2xl font-semibold tracking-tight text-foreground mb-2">
             Set Password
           </h1>
-          <p className="text-sm text-muted-foreground mb-6 text-center">
+          <div className="text-sm text-muted-foreground mb-6 text-center">
             <ul className="my-2 text-left list-disc ml-6">
               <li>Password must be at least 6 characters long</li>
-              <li>You will use this password to be able to access to ccess your account using google as well as using email id.</li>
+              <li>You will use this password to access your account using Google as well as your email id.</li>
               <li>It's recommended to pick a strong password</li>
             </ul>
-          </p>
+          </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="flex w-full flex-col gap-4" noValidate>
             <div className="flex flex-col gap-1.5">

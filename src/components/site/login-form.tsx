@@ -135,7 +135,7 @@ export function LoginForm({
       toast.success("Signed in successfully!")
       setShowPasswordDialog(false)
       setIsRedirecting(true)
-      window.location.href = "/"
+      window.location.href = "/callback"
     },
     onError: () => {
       toast.error("Something went wrong. Please check your connection and try again.")

@@ -1,15 +1,18 @@
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { userHasPassword } from "@/lib/auth/has-password";
+import { getUserRole } from "@/actions/get-user-role";
 import { redirect } from "next/navigation";
 
 /**
- * Server-side OAuth callback handler.
- *
- * Previously this was a "use client" page that used useEffect + two extra
- * client→server round-trips (getSession then checkHasPasswordAction) before
- * deciding where to redirect. Now all logic runs on the server in a single
- * render, eliminating the extra round-trips and the visible loading flash.
+ * Server-side OAuth / sign-in callback handler.
+ * Routing logic:
+ *   no session          → /sign-in
+ *   no password         → /set-password
+ *   new user (<60s)     → /onboarding
+ *   existing vendor     → /vendor
+ *   existing business   → /business
+ *   everyone else       → /
  */
 export default async function AuthCallbackPage() {
   const session = await auth.api.getSession({
@@ -20,15 +23,25 @@ export default async function AuthCallbackPage() {
     redirect("/sign-in");
   }
 
-  const hasPw = await userHasPassword(session.user.id);
+  const [hasPw, role] = await Promise.all([
+    userHasPassword(session.user.id),
+    getUserRole(),
+  ]);
+
   if (!hasPw) {
     redirect("/set-password");
   }
 
+  // New account just created — no role yet — send to onboarding
   const userCreatedAt = new Date(session.user.createdAt).getTime();
   if (Date.now() - userCreatedAt < 60000) {
     redirect("/onboarding");
   }
 
-  redirect("/");
+  // Returning registered users go straight to their dashboard
+  if (role === "vendor") redirect("/vendor");
+  if (role === "business") redirect("/business");
+
+  // Registered but not yet onboarded
+  redirect("/onboarding");
 }

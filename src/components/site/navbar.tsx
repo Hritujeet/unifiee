@@ -3,7 +3,9 @@
 import { Button, buttonVariants } from "@/components/ui/button";
 import { authClient } from "@/lib/auth-client";
 import { cn } from "@/lib/utils";
-import { Loader2, LogOut, Menu, X } from "lucide-react";
+import { getUserRole } from "@/actions/get-user-role";
+import { useUserRoleStore } from "@/lib/stores/user-role-store";
+import { Loader2, LogOut, Menu, X, LayoutDashboard } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import LogoLight from "@/img/LogoLight.png";
@@ -27,6 +29,21 @@ export function Navbar() {
   const [isSigningOut, setIsSigningOut] = useState(false);
   const { data: session, isPending } = authClient.useSession();
 
+  // Role state — populated from Zustand store (hydrated by RoleProvider on dashboard pages)
+  // or fetched directly here for the public landing navbar
+  const storeRole = useUserRoleStore((s) => s.role);
+  const setRole = useUserRoleStore((s) => s.setRole);
+
+  // Fetch role whenever session changes (so navbar always knows the role on landing pages too)
+  useEffect(() => {
+    if (session?.user && storeRole === null) {
+      getUserRole().then(setRole);
+    }
+    if (!session?.user) {
+      setRole(null);
+    }
+  }, [session, storeRole, setRole]);
+
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 16);
     window.addEventListener("scroll", onScroll, { passive: true });
@@ -39,11 +56,24 @@ export function Navbar() {
 
   const handleSignOut = async () => {
     setIsSigningOut(true);
+    setRole(null);
     await authClient.signOut();
     toast.success("Signed out successfully");
     router.push("/sign-in");
     router.refresh();
   };
+
+  // Derive dashboard link based on role
+  const dashboardHref =
+    storeRole === "vendor" ? "/vendor" :
+    storeRole === "business" ? "/business" :
+    session?.user ? "/onboarding" : null;
+
+  const dashboardLabel =
+    storeRole === null ? <Loader2 className="size-3.5 animate-spin" /> :
+    storeRole === "vendor" ? "Vendor Dashboard" :
+    storeRole === "business" ? "Business Dashboard" :
+    "Get Started";
 
   const AuthButton = () => {
     if (isPending) {
@@ -138,12 +168,20 @@ export function Navbar() {
 
           {/* Desktop right */}
           <div className="hidden md:flex items-center gap-3">
-            <Link
-              href="/onboarding"
-              className={buttonVariants({ variant: "outline", size: "sm" })}
-            >
-              Admin
-            </Link>
+            {/* Dashboard / Get Started — shown only when signed in */}
+            {session && dashboardHref && (
+              <Link
+                href={storeRole === null ? "#" : dashboardHref}
+                className={cn(
+                  buttonVariants({ variant: "outline", size: "sm" }),
+                  "gap-2",
+                  storeRole === null && "pointer-events-none w-28"
+                )}
+              >
+                {storeRole !== null && <LayoutDashboard className="size-3.5" />}
+                {dashboardLabel}
+              </Link>
+            )}
             <a
               id="nav-survey-link"
               href="https://docs.google.com/forms/d/e/1FAIpQLSfnqzq5UKUFp_rlQgw7518s-6Gi9Ryu4rXV316FxmEZSeI8HQ/viewform"
@@ -194,12 +232,20 @@ export function Navbar() {
               </Link>
             ))}
             <div className="pt-4 flex flex-col gap-3">
-              <Link
-                href="/onboarding"
-                className={cn(buttonVariants({ variant: "outline" }), "w-full justify-center")}
-              >
-                Admin
-              </Link>
+              {/* Dashboard / Get Started in mobile */}
+              {session && dashboardHref && (
+                <Link
+                  href={storeRole === null ? "#" : dashboardHref}
+                  className={cn(
+                    buttonVariants({ variant: "outline" }), 
+                    "w-full justify-center gap-2",
+                    storeRole === null && "pointer-events-none"
+                  )}
+                >
+                  {storeRole !== null && <LayoutDashboard className="size-3.5" />}
+                  {dashboardLabel}
+                </Link>
+              )}
               <a
                 href="https://docs.google.com/forms/d/e/1FAIpQLSfnqzq5UKUFp_rlQgw7518s-6Gi9Ryu4rXV316FxmEZSeI8HQ/viewform"
                 target="_blank"
