@@ -30,7 +30,6 @@ export const business = pgTable("business", {
     role: ROLE("role").notNull(),
     gstin: varchar("gstin", { length: 15 }),
     website: varchar("website", { length: 500 }),
-    storeImage: varchar("storeimage", { length: 500 }),
     socials: varchar("social", { length: 500 }).array(),
     createdAt: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at")

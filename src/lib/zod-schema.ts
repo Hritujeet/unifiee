@@ -52,7 +52,6 @@ export const businessOnboardingSchema = z.object({
     phone: z.string().min(10, "Phone number must be at least 10 digits"),
     gstin: z.string().max(15, "GSTIN cannot exceed 15 characters").optional().or(z.literal('')),
     website: z.string().url("Please provide a valid URL").optional().or(z.literal('')),
-    storeImage: z.any().optional(),
     socials: z.array(socialEntrySchema).optional(),
     businessAddress: z.string().min(10, "Please provide a complete address")
 })

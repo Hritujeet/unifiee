@@ -244,38 +244,6 @@ export default function BusinessOnboardingForm() {
                                 {errors.website && <p className="text-xs text-destructive">{errors.website.message}</p>}
                             </Field>
 
-                            <Field>
-                                <FieldLabel htmlFor="storeImage">
-                                    Store Image{" "}
-                                    <span className="text-muted-foreground font-normal text-xs">(optional)</span>
-                                </FieldLabel>
-                                <label
-                                    htmlFor="storeImage"
-                                    className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-input rounded-lg cursor-pointer bg-muted/30 hover:bg-muted/50 transition-colors"
-                                >
-                                    <div className="flex flex-col items-center justify-center gap-1 text-muted-foreground pointer-events-none">
-                                        <svg xmlns="http://www.w3.org/2000/svg" className="size-7 mb-1 opacity-60" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                                            <polyline points="17 8 12 3 7 8" />
-                                            <line x1="12" y1="3" x2="12" y2="15" />
-                                        </svg>
-                                        <span className="text-sm font-medium">Click to upload</span>
-                                        <span className="text-xs">PNG, JPG, WEBP up to 5 MB</span>
-                                    </div>
-                                    <Input
-                                        id="storeImage"
-                                        type="file"
-                                        accept="image/png,image/jpeg,image/webp"
-                                        className="hidden"
-                                        {...register("storeImage")}
-                                    />
-                                </label>
-                                {errors.storeImage && <p className="text-xs text-destructive">{errors.storeImage.message?.toString()}</p>}
-                                <FieldDescription>
-                                    A photo of your store or outlet for your profile.
-                                </FieldDescription>
-                            </Field>
-
                             {/* ── Socials ── */}
                             <Field>
                                 <div className="flex items-center justify-between">

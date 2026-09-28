@@ -20,6 +20,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { vendorOnboardingSchema } from "@/lib/zod-schema"
 import { z } from "zod"
 import { toast } from "sonner"
+import Link from "next/link"
 
 const vendor_type = [
     { label: "Manufacturer", value: "manufacturer" },
@@ -311,9 +312,9 @@ export default function VendorOnboardingForm() {
                         />
                         <label htmlFor="vendor-terms" className="text-sm text-muted-foreground leading-snug cursor-pointer select-none">
                             I have read and agree to the{" "}
-                            <a href="/terms" className="underline underline-offset-4 text-foreground hover:text-primary transition-colors">Terms of Service</a>
+                            <Link href="/terms" className="underline underline-offset-4 text-foreground hover:text-primary transition-colors">Terms of Service</Link>
                             {" and "}
-                            <a href="/privacy" className="underline underline-offset-4 text-foreground hover:text-primary transition-colors">Privacy Policy</a>.
+                            <Link href="/privacy" className="underline underline-offset-4 text-foreground hover:text-primary transition-colors">Privacy Policy</Link>.
                             {" By registering, you confirm that all information provided is accurate."}
                         </label>
                     </div>
