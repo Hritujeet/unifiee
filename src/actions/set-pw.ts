@@ -15,9 +15,12 @@ export async function setPasswordAction(data: z.infer<typeof setPasswordSchema>)
     
     const validatedData = result.data;
     
+    // Resolve headers once and reuse
+    const reqHeaders = await headers();
+
     // Get session
     const session = await auth.api.getSession({
-      headers: await headers()
+      headers: reqHeaders
     });
     
     if (!session || !session.user) {
@@ -29,7 +32,7 @@ export async function setPasswordAction(data: z.infer<typeof setPasswordSchema>)
       body: {
         newPassword: validatedData.password
       },
-      headers: await headers()
+      headers: reqHeaders
     });
     
     return { success: true, userCreatedAt: session.user.createdAt.getTime() };

@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import SetPasswordForm from "./set-password-form";
 
 export default async function SetPasswordPage() {
+  // userHasPassword depends on the session userId, so these must be sequential
   const session = await auth.api.getSession({
     headers: await headers(),
   });
@@ -14,17 +15,14 @@ export default async function SetPasswordPage() {
     redirect("/sign-in");
   }
 
-  // 2. Session exists but userHasPassword is true -> redirect to the existing onboarding/home route
+  // 2. Session exists but already has a password -> skip to onboarding/home
   const hasPw = await userHasPassword(session.user.id);
   if (hasPw) {
     const userCreatedAt = new Date(session.user.createdAt).getTime();
-    const now = Date.now();
-    
-    if (now - userCreatedAt < 60000) {
+    if (Date.now() - userCreatedAt < 60000) {
       redirect("/onboarding");
-    } else {
-      redirect("/");
     }
+    redirect("/");
   }
 
   // 3. Otherwise render the form

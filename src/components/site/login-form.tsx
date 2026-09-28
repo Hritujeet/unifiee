@@ -9,9 +9,8 @@ import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
 import { loginFormSchema } from "@/lib/zod-schema"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { useMutation } from "@tanstack/react-query"
 import { Loader2, Eye, EyeOff } from "lucide-react"
-import { useRouter } from "next/navigation"
 import { useForm } from "react-hook-form"
 import { toast } from "sonner"
 import { z } from "zod"
@@ -61,8 +60,6 @@ export function LoginForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
-  const router = useRouter()
-  const queryClient = useQueryClient()
   const [isRedirecting, setIsRedirecting] = useState(false)
   const [showPasswordDialog, setShowPasswordDialog] = useState(false)
   const [showPassword, setShowPassword] = useState(false)

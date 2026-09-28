@@ -17,9 +17,10 @@ export async function checkHasPasswordAction() {
     }
     
     const userAccounts = await db
-      .select()
+      .select({ password: account.password })
       .from(account)
-      .where(and(eq(account.userId, session.user.id), eq(account.providerId, "credential")));
+      .where(and(eq(account.userId, session.user.id), eq(account.providerId, "credential")))
+      .limit(1);
       
     if (userAccounts.length === 0) {
       return false;

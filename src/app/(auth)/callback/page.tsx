@@ -1,52 +1,34 @@
-"use client"
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
+import { userHasPassword } from "@/lib/auth/has-password";
+import { redirect } from "next/navigation";
 
-import { useEffect } from "react"
-import { useRouter } from "next/navigation"
-import { authClient } from "@/lib/auth-client"
-import { Loader2 } from "lucide-react"
-import { checkHasPasswordAction } from "@/actions/check-pw"
+/**
+ * Server-side OAuth callback handler.
+ *
+ * Previously this was a "use client" page that used useEffect + two extra
+ * client→server round-trips (getSession then checkHasPasswordAction) before
+ * deciding where to redirect. Now all logic runs on the server in a single
+ * render, eliminating the extra round-trips and the visible loading flash.
+ */
+export default async function AuthCallbackPage() {
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
 
-export default function AuthCallbackPage() {
-  const router = useRouter()
+  if (!session?.user) {
+    redirect("/sign-in");
+  }
 
-  useEffect(() => {
-    const checkUser = async () => {
-      try {
-        const { data, error } = await authClient.getSession()
-        
-        if (error || !data) {
-          window.location.href = "/sign-in"
-          return
-        }
-        
-        const hasPw = await checkHasPasswordAction()
-        if (!hasPw) {
-          window.location.href = "/set-password"
-          return
-        }
-        
-        const userCreatedAt = new Date(data.user.createdAt).getTime()
-        const now = Date.now()
-        
-        // If the account was created less than 1 minute ago, consider it new
-        if (now - userCreatedAt < 60000) {
-          window.location.href = "/onboarding"
-        } else {
-          window.location.href = "/"
-        }
-      } catch (err) {
-        console.error("Error checking session:", err)
-        window.location.href = "/sign-in"
-      }
-    }
-    
-    checkUser()
-  }, [router])
+  const hasPw = await userHasPassword(session.user.id);
+  if (!hasPw) {
+    redirect("/set-password");
+  }
 
-  return (
-    <div className="flex w-full flex-col items-center justify-center min-h-[50vh] gap-4">
-      <Loader2 className="size-8 animate-spin text-primary" />
-      <p className="text-sm text-muted-foreground animate-pulse">Completing sign in...</p>
-    </div>
-  )
+  const userCreatedAt = new Date(session.user.createdAt).getTime();
+  if (Date.now() - userCreatedAt < 60000) {
+    redirect("/onboarding");
+  }
+
+  redirect("/");
 }

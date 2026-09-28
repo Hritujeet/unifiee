@@ -5,14 +5,15 @@ import { eq, and } from "drizzle-orm";
 export async function userHasPassword(userId: string): Promise<boolean> {
   try {
     const userAccounts = await db
-      .select()
+      .select({ password: account.password })
       .from(account)
       .where(
         and(
           eq(account.userId, userId),
           eq(account.providerId, "credential")
         )
-      );
+      )
+      .limit(1);
 
     if (userAccounts.length === 0) {
       return false;

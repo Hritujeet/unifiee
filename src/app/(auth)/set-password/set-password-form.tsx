@@ -1,8 +1,8 @@
 "use client"
 
 import { useState } from "react"
-import { useRouter, useSearchParams } from "next/navigation"
-import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { useSearchParams } from "next/navigation"
+import { useMutation } from "@tanstack/react-query"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
@@ -14,14 +14,11 @@ import { Button } from "@/components/ui/button"
 import { Loader2 } from "lucide-react"
 import { toast } from "sonner"
 import { setPasswordAction } from "@/actions/set-pw"
-import { authClient } from "@/lib/auth-client"
 
 export default function SetPasswordForm() {
-  const router = useRouter()
   const searchParams = useSearchParams()
   const email = searchParams.get("email")
   const [isRedirecting, setIsRedirecting] = useState(false)
-  const queryClient = useQueryClient()
 
   const {
     register,
@@ -46,12 +43,12 @@ export default function SetPasswordForm() {
     onSuccess: (result) => {
       toast.success("Password set successfully!")
       setIsRedirecting(true)
-      
+
       if (result.userCreatedAt) {
-         if (Date.now() - result.userCreatedAt < 60000) {
-             window.location.href = "/onboarding"
-             return
-         }
+        if (Date.now() - result.userCreatedAt < 60000) {
+          window.location.href = "/onboarding"
+          return
+        }
       }
       window.location.href = "/"
     },
@@ -74,8 +71,11 @@ export default function SetPasswordForm() {
             Set Password
           </h1>
           <p className="text-sm text-muted-foreground mb-6 text-center">
-            {email ? `You signed up with ${email}. ` : ""}
-            Please set a password to enable email sign in.
+            <ul className="my-2 text-left list-disc ml-6">
+              <li>Password must be at least 6 characters long</li>
+              <li>You will use this password to be able to access to ccess your account using google as well as using email id.</li>
+              <li>It's recommended to pick a strong password</li>
+            </ul>
           </p>
 
           <form onSubmit={handleSubmit(onSubmit)} className="flex w-full flex-col gap-4" noValidate>
