@@ -1,4 +1,11 @@
 import React from "react"
+import type { Metadata } from "next"
+
+export const metadata: Metadata = {
+  title: "Terms & Conditions — UNIFIÉE",
+  description:
+    "Review UNIFIÉE's Terms & Conditions governing your access to and use of the UNIFIÉE platform, including packaging procurement workflows and beta services.",
+};
 
 export default function TermsAndConditionsPage() {
     return (

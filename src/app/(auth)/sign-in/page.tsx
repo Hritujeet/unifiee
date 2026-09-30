@@ -1,4 +1,11 @@
+import type { Metadata } from "next";
 import { auth } from "@/lib/auth";
+
+export const metadata: Metadata = {
+  title: "Sign In — UNIFIÉE",
+  description: "Sign in to your UNIFIÉE account to manage your packaging procurement, orders, and supplier quotations.",
+  robots: { index: false },
+};
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { LoginForm } from "@/components/site/login-form";

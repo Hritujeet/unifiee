@@ -1,4 +1,11 @@
+import type { Metadata } from "next";
 import { auth } from "@/lib/auth";
+
+export const metadata: Metadata = {
+  title: "Set Password — UNIFIÉE",
+  description: "Set a password for your UNIFIÉE account to secure your procurement dashboard.",
+  robots: { index: false },
+};
 import { headers } from "next/headers";
 import { userHasPassword } from "@/lib/auth/has-password";
 import { getUserRole } from "@/actions/get-user-role";

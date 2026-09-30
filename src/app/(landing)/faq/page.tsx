@@ -1,4 +1,11 @@
 import React from "react"
+import type { Metadata } from "next"
+
+export const metadata: Metadata = {
+  title: "FAQ — UNIFIÉE",
+  description:
+    "Answers to common questions about UNIFIÉE — the B2B platform simplifying packaging procurement for food and beverage businesses in India.",
+};
 import {
   Accordion,
   AccordionContent,

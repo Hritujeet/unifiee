@@ -1,4 +1,11 @@
+import type { Metadata } from "next";
 import { auth } from "@/lib/auth";
+
+export const metadata: Metadata = {
+  title: "Get Started — UNIFIÉE",
+  description: "Choose your role on UNIFIÉE — set up as a packaging vendor or an F&B business to get started with the platform.",
+  robots: { index: false },
+};
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { userHasPassword } from "@/lib/auth/has-password";

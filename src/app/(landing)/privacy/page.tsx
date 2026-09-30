@@ -1,4 +1,11 @@
 import React from "react"
+import type { Metadata } from "next"
+
+export const metadata: Metadata = {
+  title: "Privacy Policy — UNIFIÉE",
+  description:
+    "Read UNIFIÉE's Privacy Policy. Learn how we collect, use, and protect your personal information when you interact with our B2B packaging procurement platform.",
+};
 
 export default function PrivacyPolicyPage() {
     return (
