@@ -6,7 +6,8 @@ import { db } from "@/lib/db";
 import { vendorTable } from "@/lib/db/schema/vendor";
 import { eq } from "drizzle-orm";
 import RoleProvider from "@/components/providers/role-provider";
-
+import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
+import AppSidebar from "@/components/vendors/app-sidebar";
 export default async function VendorLayout({ children }: { children: React.ReactNode }) {
     // 1. Must be signed in
     const session = await auth.api.getSession({ headers: await headers() });
@@ -30,8 +31,17 @@ export default async function VendorLayout({ children }: { children: React.React
 
     return (
         <RoleProvider>
-            {/* TODO: Add vendor header and sidebar */}
-            {children}
+            <SidebarProvider>
+                <AppSidebar />
+                <SidebarInset>
+                    <header className="flex h-14 shrink-0 items-center gap-2 border-b px-4 lg:h-16">
+                        <SidebarTrigger className="-ml-1" />
+                    </header>
+                    <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-6">
+                        {children}
+                    </main>
+                </SidebarInset>
+            </SidebarProvider>
         </RoleProvider>
     );
 }

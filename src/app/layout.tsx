@@ -6,6 +6,7 @@ import { ThemeProvider } from "next-themes";
 import { Toaster } from "@/components/ui/sonner";
 import TanstackQueryProvider from "@/components/providers/tanstack-query-providers";
 import NextTopLoader from "nextjs-toploader";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 const dmSansHeading = DM_Sans({ subsets: ['latin'], variable: '--font-heading' });
 
@@ -43,8 +44,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           disableTransitionOnChange
         >
           <TanstackQueryProvider>
-            <Toaster />
-            {children}
+            <TooltipProvider>
+              <Toaster />
+              {children}
+            </TooltipProvider>
           </TanstackQueryProvider>
         </ThemeProvider>
       </body>
