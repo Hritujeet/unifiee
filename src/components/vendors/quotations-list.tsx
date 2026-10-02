@@ -432,7 +432,7 @@ export function QuotationsList() {
                                         <DetailRow icon={Clock} label="Valid Until" value={formatDate(selected.validUntil)} />
                                     </div>
 
-                                    <Separator />
+                                    <Separator className="-mx-5 w-[calc(100%+40px)]" />
 
                                     {/* Amount highlight */}
                                     <div className="flex items-center justify-between rounded-xl bg-muted/60 px-4 py-3.5">
@@ -543,7 +543,7 @@ export function QuotationsList() {
                                     </div>
                                 </div>
 
-                                <Separator />
+                                <Separator className="-mx-5 w-[calc(100%+40px)]" />
 
                                 {/* ─ Notes (maps to quotationTable.notes) ─ */}
                                     <div>
