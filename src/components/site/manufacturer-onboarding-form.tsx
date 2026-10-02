@@ -17,22 +17,17 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { PlusIcon, XIcon, Loader2 } from "lucide-react"
 import { useForm, useFieldArray, Controller } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { vendorOnboardingSchema } from "@/lib/zod-schema"
+import { manufacturerOnboardingSchema } from "@/lib/zod-schema"
 import { z } from "zod"
 import { toast } from "sonner"
 import Link from "next/link"
 import { useMutation } from "@tanstack/react-query"
-import { registerVendorAction } from "@/actions/vendor-registration"
+import { registerManufacturerAction } from "@/actions/manufacturer-registration"
 import { useRouter } from "next/navigation"
 import { useEffect } from "react"
 import { authClient } from "@/lib/auth-client"
 
-const vendor_type = [
-    { label: "Manufacturer", value: "manufacturer" },
-    { label: "Printer", value: "printer" },
-    { label: "Supplier", value: "supplier" },
-    { label: "Distributor", value: "distributor" },
-]
+
 
 const social_platforms = [
     { label: "Instagram", value: "instagram" },
@@ -45,22 +40,21 @@ const social_platforms = [
     { label: "Other", value: "other" },
 ]
 
-type FormValues = z.infer<typeof vendorOnboardingSchema>
+type FormValues = z.infer<typeof manufacturerOnboardingSchema>
 
-export default function VendorOnboardingForm() {
+export default function ManufacturerOnboardingForm() {
     const router = useRouter()
     const [termsAccepted, setTermsAccepted] = useState(false)
     const { data: session } = authClient.useSession()
 
     const { register, control, handleSubmit, formState: { errors }, reset, setValue } = useForm<FormValues>({
-        resolver: zodResolver(vendorOnboardingSchema),
+        resolver: zodResolver(manufacturerOnboardingSchema),
         defaultValues: {
             fullname: "",
             companyFirmName: "",
             gstin: "",
             email: "",
             mobile: "",
-            vendorType: undefined,
             services: [{ value: "" }],
             socials: [{ platform: "", url: "" }],
             address: ""
@@ -86,19 +80,19 @@ export default function VendorOnboardingForm() {
 
     const mutation = useMutation({
         mutationFn: async (data: FormValues) => {
-            const result = await registerVendorAction(data);
+            const result = await registerManufacturerAction(data);
             if (!result.success) {
                 throw new Error(result.error);
             }
             return result;
         },
         onSuccess: () => {
-            toast.success("Registered as vendor successfully! Redirecting to your dashboard...");
-            // hard navigate so the server layout re-runs and sees the new vendor row
-            window.location.href = "/vendor";
+            toast.success("Registered as manufacturer successfully! Redirecting to your dashboard...");
+            // hard navigate so the server layout re-runs and sees the new manufacturer row
+            window.location.href = "/manufacturer";
         },
         onError: (error: any) => {
-            toast.error(error.message || "Failed to register vendor");
+            toast.error(error.message || "Failed to register manufacturer");
         }
     });
 
@@ -115,9 +109,9 @@ export default function VendorOnboardingForm() {
             <form onSubmit={handleSubmit(submitHandler, errorHandler)}>
                 <FieldGroup>
                     <FieldSet>
-                        <FieldLegend className="text-2xl font-bold">Register as a Vendor</FieldLegend>
+                        <FieldLegend className="text-2xl font-bold">Register as a Manufacturer</FieldLegend>
                         <FieldDescription>
-                            Fill the given information to register yourself as a vendor and start providing your services.
+                            Fill the given information to register yourself as a manufacturer and start providing your services.
                         </FieldDescription>
                         <FieldGroup>
                             <Field>
@@ -174,30 +168,7 @@ export default function VendorOnboardingForm() {
                                 />
                                 {errors.mobile && <p className="text-xs text-destructive">{errors.mobile.message}</p>}
                             </Field>
-                            <Field>
-                                <FieldLabel htmlFor="vendorType">Vendor Type</FieldLabel>
-                                <Controller
-                                    name="vendorType"
-                                    control={control}
-                                    render={({ field }) => (
-                                        <Select onValueChange={field.onChange} value={field.value ?? ""}>
-                                            <SelectTrigger id="vendorType" className="w-full">
-                                                <SelectValue placeholder="Select Vendor Type" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectGroup>
-                                                    {vendor_type.map((item) => (
-                                                        <SelectItem key={item.value} value={item.value}>
-                                                            {item.label}
-                                                        </SelectItem>
-                                                    ))}
-                                                </SelectGroup>
-                                            </SelectContent>
-                                        </Select>
-                                    )}
-                                />
-                                {errors.vendorType && <p className="text-xs text-destructive">{errors.vendorType.message}</p>}
-                            </Field>
+
 
                             {/* ── Services ── */}
                             <Field>
@@ -327,12 +298,12 @@ export default function VendorOnboardingForm() {
 
                     <div className="flex items-start gap-3 rounded-xl border border-border bg-muted/30 px-4 py-3.5">
                         <Checkbox
-                            id="vendor-terms"
+                            id="manufacturer-terms"
                             checked={termsAccepted}
                             onCheckedChange={(checked) => setTermsAccepted(checked === true)}
                             className="mt-0.5 shrink-0"
                         />
-                        <label htmlFor="vendor-terms" className="text-sm text-muted-foreground leading-snug cursor-pointer select-none">
+                        <label htmlFor="manufacturer-terms" className="text-sm text-muted-foreground leading-snug cursor-pointer select-none">
                             I have read and agree to the{" "}
                             <Link href="/terms" className="underline underline-offset-4 text-foreground hover:text-primary transition-colors">Terms of Service</Link>
                             {" and "}
@@ -342,7 +313,7 @@ export default function VendorOnboardingForm() {
                     </div>
 
                     <Button type="submit" disabled={!termsAccepted || mutation.isPending} className="w-full">
-                        {mutation.isPending ? <Loader2 className="animate-spin" /> : "Register as Vendor"}
+                        {mutation.isPending ? <Loader2 className="animate-spin" /> : "Register as Manufacturer"}
                     </Button>
                 </FieldGroup>
             </form>

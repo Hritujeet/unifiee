@@ -23,7 +23,8 @@ export default async function OnboardingPage() {
 
     // 3. If already registered, redirect to the correct dashboard
     const role = await getUserRole();
-    if (role === "vendor") redirect("/vendor");
+    if (role === "manufacturer") redirect("/manufacturer");
+    if (role === "designer") redirect("/designer");
     if (role === "business") redirect("/business");
 
     // 4. Not yet registered — show the onboarding selector

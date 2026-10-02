@@ -3,12 +3,12 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { userHasPassword } from "@/lib/auth/has-password";
 import { db } from "@/lib/db";
-import { vendorTable } from "@/lib/db/schema/vendor";
+import { manufacturerTable } from "@/lib/db/schema/manufacturer";
 import { eq } from "drizzle-orm";
 import RoleProvider from "@/components/providers/role-provider";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
-import AppSidebar from "@/components/vendors/app-sidebar";
-export default async function VendorLayout({ children }: { children: React.ReactNode }) {
+import AppSidebar from "@/components/manufacturer/app-sidebar";
+export default async function ManufacturerLayout({ children }: { children: React.ReactNode }) {
     // 1. Must be signed in
     const session = await auth.api.getSession({ headers: await headers() });
     if (!session?.user) redirect("/sign-in");
@@ -17,14 +17,14 @@ export default async function VendorLayout({ children }: { children: React.React
     const hasPw = await userHasPassword(session.user.id);
     if (!hasPw) redirect("/set-password");
 
-    // 3. Must be a registered vendor
-    const vendorRows = await db
-        .select({ id: vendorTable.id })
-        .from(vendorTable)
-        .where(eq(vendorTable.userId, session.user.id))
+    // 3. Must be a registered manufacturer
+    const manufacturerRows = await db
+        .select({ id: manufacturerTable.id })
+        .from(manufacturerTable)
+        .where(eq(manufacturerTable.userId, session.user.id))
         .limit(1);
 
-    if (vendorRows.length === 0) {
+    if (manufacturerRows.length === 0) {
         // Signed in but not a vendor — send them to onboarding
         redirect("/onboarding");
     }

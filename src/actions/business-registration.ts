@@ -4,7 +4,8 @@ import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { db } from "@/lib/db";
 import { business } from "@/lib/db/schema/business";
-import { vendorTable } from "@/lib/db/schema/vendor";
+import { manufacturerTable } from "@/lib/db/schema/manufacturer";
+import { packagingDesignerTable } from "@/lib/db/schema/packaging-designer";
 import { businessOnboardingSchema } from "@/lib/zod-schema";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
@@ -21,15 +22,16 @@ export async function registerBusinessAction(data: z.infer<typeof businessOnboar
         const userId = session.user.id;
 
         // 2. Prevent double-registration
-        const [existingBusiness, existingVendor] = await Promise.all([
+        const [existingBusiness, existingManufacturer, existingDesigner] = await Promise.all([
             db.select({ id: business.id }).from(business).where(eq(business.userId, userId)).limit(1),
-            db.select({ id: vendorTable.id }).from(vendorTable).where(eq(vendorTable.userId, userId)).limit(1),
+            db.select({ id: manufacturerTable.id }).from(manufacturerTable).where(eq(manufacturerTable.userId, userId)).limit(1),
+            db.select({ id: packagingDesignerTable.id }).from(packagingDesignerTable).where(eq(packagingDesignerTable.userId, userId)).limit(1),
         ]);
 
         if (existingBusiness.length > 0) {
             return { success: false, error: "You are already registered as a business" };
         }
-        if (existingVendor.length > 0) {
+        if (existingManufacturer.length > 0 || existingDesigner.length > 0) {
             return { success: false, error: "You are already registered as a vendor and cannot register as a business" };
         }
 

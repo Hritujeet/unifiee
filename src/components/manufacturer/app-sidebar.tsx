@@ -19,13 +19,13 @@ import { useState } from 'react'
 import { toast } from 'sonner'
 
 const navRoutes = [
-    { title: "Dashboard", url: "/vendor", icon: LayoutDashboard },
-    { title: "Orders", url: "/vendor/order-dashboard", icon: ShoppingCart },
-    { title: "My Quotations", url: "/vendor/quotations", icon: ClipboardList },
-    { title: "Submit Quotation", url: "/vendor/submit-quotation", icon: FileText },
+    { title: "Dashboard", url: "/manufacturer", icon: LayoutDashboard },
+    { title: "Orders", url: "/manufacturer/order-dashboard", icon: ShoppingCart },
+    { title: "My Quotations", url: "/manufacturer/quotations", icon: ClipboardList },
+    { title: "Submit Quotation", url: "/manufacturer/submit-quotation", icon: FileText },
 ]
 
-export default function VendorAppSidebar() {
+export default function ManufacturerAppSidebar() {
     const pathname = usePathname()
     const router = useRouter()
     const [signingOut, setSigningOut] = useState(false)
@@ -45,13 +45,13 @@ export default function VendorAppSidebar() {
                 <SidebarMenu>
                     <SidebarMenuItem>
                         <SidebarMenuButton size="lg" asChild className="hover:bg-transparent hover:text-foreground">
-                            <Link href="/vendor">
+                            <Link href="/manufacturer">
                                 <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground text-sm font-bold shadow-sm">
-                                    V
+                                    M
                                 </div>
                                 <div className="flex flex-col leading-tight gap-0.5">
                                     <span className="text-sm font-bold tracking-tight">Unifiée</span>
-                                    <span className="text-[11px] text-muted-foreground font-medium uppercase tracking-wider">Vendor</span>
+                                    <span className="text-[11px] text-muted-foreground font-medium uppercase tracking-wider">Manufacturer</span>
                                 </div>
                             </Link>
                         </SidebarMenuButton>
@@ -66,8 +66,8 @@ export default function VendorAppSidebar() {
                         <SidebarMenu className="gap-1.5">
                             {navRoutes.map((route) => {
                                 const isActive =
-                                    route.url === "/vendor"
-                                        ? pathname === "/vendor"
+                                    route.url === "/manufacturer"
+                                        ? pathname === "/manufacturer"
                                         : pathname.startsWith(route.url)
                                 return (
                                     <SidebarMenuItem key={route.title}>
@@ -96,10 +96,10 @@ export default function VendorAppSidebar() {
                     <SidebarMenuItem>
                         <SidebarMenuButton
                             asChild
-                            isActive={pathname.startsWith("/vendor/your-profile")}
+                            isActive={pathname.startsWith("/manufacturer/your-profile")}
                             tooltip="Your Profile"
                         >
-                            <Link href="/vendor/your-profile">
+                            <Link href="/manufacturer/your-profile">
                                 <UserCircle />
                                 <span>Your Profile</span>
                             </Link>
