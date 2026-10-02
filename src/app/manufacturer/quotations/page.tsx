@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { QuotationsList } from '@/components/vendors/quotations-list'
+import { QuotationsList } from '@/components/manufacturer/quotations-list'
 
 export const metadata: Metadata = {
     title: "My Quotations — UNIFIÉE Vendor",

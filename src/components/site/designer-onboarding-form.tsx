@@ -26,7 +26,6 @@ import { registerDesignerAction } from "@/actions/designer-registration"
 import { useRouter } from "next/navigation"
 import { useEffect } from "react"
 import { authClient } from "@/lib/auth-client"
-import { MultiSelect } from "@/components/ui/multi-select" // assuming this exists or I'll use standard select/input for MVP
 
 const pricingModels = [
     { label: "Per Project", value: "per_project" },
@@ -62,7 +61,7 @@ export default function DesignerOnboardingForm() {
     const { data: session } = authClient.useSession()
 
     const { register, control, handleSubmit, formState: { errors }, setValue } = useForm<FormValues>({
-        resolver: zodResolver(designerOnboardingSchema),
+        resolver: zodResolver(designerOnboardingSchema) as any,
         defaultValues: {
             fullName: "",
             displayName: "",

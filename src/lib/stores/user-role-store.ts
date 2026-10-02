@@ -1,6 +1,6 @@
 import { create } from "zustand";
 
-export type UserRole = "vendor" | "business" | "none" | null; // null = not yet loaded
+export type UserRole = "manufacturer" | "designer" | "business" | "none" | null; // null = not yet loaded
 
 interface UserRoleState {
     role: UserRole;

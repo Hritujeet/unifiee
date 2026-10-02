@@ -41,7 +41,7 @@ export default function ManufacturerAppSidebar() {
     return (
         <Sidebar collapsible="icon">
             {/* Brand */}
-            <SidebarHeader className="h-16 justify-center px-4 pt-4 pb-2 group-data-[collapsible=icon]:h-14 group-data-[collapsible=icon]:px-2 group-data-[collapsible=icon]:py-0">
+            <SidebarHeader className="h-16 justify-center px-4 pt-4 pb-2 group-data-[collapsible=icon]:h-14 group-data-[collapsible=icon]:px-2 group-data-[collapsible=icon]:py-0 border-b border-sidebar-border">
                 <SidebarMenu>
                     <SidebarMenuItem>
                         <SidebarMenuButton size="lg" asChild className="hover:bg-transparent hover:text-foreground">
@@ -91,7 +91,7 @@ export default function ManufacturerAppSidebar() {
             </SidebarContent>
 
             {/* Footer: Profile + Sign out */}
-            <SidebarFooter className="px-3 py-4 group-data-[collapsible=icon]:px-2 group-data-[collapsible=icon]:py-2">
+            <SidebarFooter className="px-3 py-4 group-data-[collapsible=icon]:px-2 group-data-[collapsible=icon]:py-2 border-t border-sidebar-border">
                 <SidebarMenu className="gap-1.5">
                     <SidebarMenuItem>
                         <SidebarMenuButton

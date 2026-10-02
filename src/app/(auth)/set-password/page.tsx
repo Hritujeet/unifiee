@@ -26,7 +26,8 @@ export default async function SetPasswordPage() {
   const hasPw = await userHasPassword(session.user.id);
   if (hasPw) {
     const role = await getUserRole();
-    if (role === "vendor") redirect("/vendor");
+    if (role === "manufacturer") redirect("/manufacturer");
+    if (role === "designer") redirect("/manufacturer"); // temporary redirect until designer dashboard exists
     if (role === "business") redirect("/business");
 
     const userCreatedAt = new Date(session.user.createdAt).getTime();

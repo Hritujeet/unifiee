@@ -39,7 +39,8 @@ export default async function AuthCallbackPage() {
   }
 
   // Returning registered users go straight to their dashboard
-  if (role === "vendor") redirect("/vendor");
+  if (role === "manufacturer") redirect("/manufacturer");
+  if (role === "designer") redirect("/manufacturer"); // temporary redirect until designer dashboard exists
   if (role === "business") redirect("/business");
 
   // Registered but not yet onboarded

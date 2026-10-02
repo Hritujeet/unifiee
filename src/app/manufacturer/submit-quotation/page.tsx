@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { SubmitQuotationForm } from '@/components/vendors/submit-quotation-form'
+import { SubmitQuotationForm } from '@/components/manufacturer/submit-quotation-form'
 import { FileText } from 'lucide-react'
 
 export const metadata: Metadata = {

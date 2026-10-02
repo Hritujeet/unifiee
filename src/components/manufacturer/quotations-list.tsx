@@ -400,7 +400,7 @@ export function QuotationsList() {
 
             {/* ── Detail sheet ── */}
             <Sheet open={sheetOpen} onOpenChange={open => { setSheetOpen(open); if (!open) setIsEditing(false) }}>
-                <SheetContent side="right" className="flex w-full flex-col gap-0 p-0 sm:max-w-md">
+                <SheetContent side="right" className="flex w-full sm:max-w-md flex-col gap-0 p-0 inset-y-0 right-0 h-full">
                     {selected && (
                         <>
                             <SheetHeader className="shrink-0 border-b px-5 pb-4 pt-5">
@@ -432,7 +432,7 @@ export function QuotationsList() {
                                         <DetailRow icon={Clock} label="Valid Until" value={formatDate(selected.validUntil)} />
                                     </div>
 
-                                    <Separator className="-mx-5 w-[calc(100%+40px)]" />
+                                    <Separator />
 
                                     {/* Amount highlight */}
                                     <div className="flex items-center justify-between rounded-xl bg-muted/60 px-4 py-3.5">
@@ -540,12 +540,12 @@ export function QuotationsList() {
                                                 </tr>
                                             </tfoot>
                                         </table>
+                                        </div>
                                     </div>
-                                </div>
 
-                                <Separator className="-mx-5 w-[calc(100%+40px)]" />
+                                    <Separator />
 
-                                {/* ─ Notes (maps to quotationTable.notes) ─ */}
+                                    {/* ─ Notes (maps to quotationTable.notes) ─ */}
                                     <div>
                                         <p className="mb-2.5 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                                             <MessageSquare className="size-3.5" />
@@ -594,8 +594,6 @@ export function QuotationsList() {
                                     )}
                                 </div>
                             </div>
-
-                            {/* ─ Footer actions ─ */}
                             <SheetFooter className="shrink-0 border-t bg-muted/30 px-5 py-4">
                                 {isEditing ? (
                                     <div className="flex w-full gap-2.5">
