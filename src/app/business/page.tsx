@@ -3,7 +3,7 @@ import React from 'react'
 
 export const metadata: Metadata = {
     title: "Dashboard — UNIFIÉE Business",
-    description: "Manage your packaging procurement on UNIFIÉE — track orders, review quotations, and manage your F&B brand profile.",
+    description: "Manage your packaging procurement on UNIFIÉE — track orders and manage your F&B brand profile.",
     robots: { index: false },
 }
 

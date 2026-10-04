@@ -1,6 +1,7 @@
 "use client";
 
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Button } from "@/components/ui/button";
 import {
     Field,
     FieldContent,
@@ -392,19 +393,21 @@ const OnboardingForm = () => {
 
 function BackButton({ onBack, text = "Back" }: { onBack: () => void, text?: string }) {
     return (
-        <motion.button
-            onClick={onBack}
+        <motion.div
             initial={{ opacity: 0, x: -12 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.4, delay: 0.15, ease: customEase }}
-            className="flex items-center gap-2 mb-8 text-sm text-muted-foreground hover:text-foreground transition-colors duration-200 group cursor-pointer"
+            className="mb-8"
         >
-            <ArrowLeft
-                size={15}
-                className="group-hover:-translate-x-1 transition-transform duration-200"
-            />
-            <span className="font-mono tracking-wide uppercase text-xs">{text}</span>
-        </motion.button>
+            <Button
+                type="button"
+                onClick={onBack}
+                className="group gap-2 shadow-sm"
+            >
+                <ArrowLeft className="transition-transform duration-200 group-hover:-translate-x-1" />
+                {text}
+            </Button>
+        </motion.div>
     );
 }
 

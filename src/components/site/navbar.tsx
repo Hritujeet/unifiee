@@ -63,11 +63,13 @@ export function Navbar() {
   // Dashboard href & label derived from role
   const dashboardHref =
     storeRole === "manufacturer" ? "/manufacturer" :
+    storeRole === "designer" ? "/designer" :
     storeRole === "business" ? "/business" :
     session?.user ? "/onboarding" : null;
 
   const dashboardLabel =
     storeRole === "manufacturer" ? "Manufacturer Dashboard" :
+    storeRole === "designer" ? "Designer Dashboard" :
     storeRole === "business" ? "Business Dashboard" :
     "Get Started";
 

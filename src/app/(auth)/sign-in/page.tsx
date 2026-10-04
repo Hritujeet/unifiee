@@ -3,7 +3,7 @@ import { auth } from "@/lib/auth";
 
 export const metadata: Metadata = {
   title: "Sign In — UNIFIÉE",
-  description: "Sign in to your UNIFIÉE account to manage your packaging procurement, orders, and supplier quotations.",
+  description: "Sign in to your UNIFIÉE account to manage your packaging procurement, orders, and supplier offerings.",
   robots: { index: false },
 };
 import { headers } from "next/headers";

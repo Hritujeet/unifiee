@@ -1,21 +1,21 @@
-# Unifiée: Vendor Types & Quotation Specification
+# Unifiée: Vendor Types & Offering Specification
 
-A **quotation** is a listing a vendor publishes (like a product on Amazon). F&B businesses browse quotations and place orders for whatever quantity suits them.
+A **offering** is a listing a vendor publishes (like a product on Amazon). F&B businesses browse offerings and place orders for whatever quantity suits them.
 
-This document defines, for each vendor type, the quotation types allowed and the details to collect. It is written to drive the design of the `quotations` table.
+This document defines, for each vendor type, the offering types allowed and the details to collect. It is written to drive the design of the `offerings` table.
 
 ---
 
-## 0. Common fields (every quotation, every vendor type)
+## 0. Common fields (every offering, every vendor type)
 
-These become real columns on the `quotations` table.
+These become real columns on the `offerings` table.
 
 | Field                                       | Type                | Required | Notes                                                                      |
 | ------------------------------------------- | ------------------- | -------- | -------------------------------------------------------------------------- |
 | `id`                                        | uuid                | yes      | Primary key                                                                |
-| `vendor_id`                                 | uuid (FK)           | yes      | The vendor user/profile that owns the quotation                            |
+| `vendor_id`                                 | uuid (FK)           | yes      | The vendor user/profile that owns the offering                             |
 | `vendor_type`                               | enum                | yes      | `manufacturer`, `supplier`, `vendor`, `distributor`                        |
-| `quotation_type`                            | text/enum           | yes      | e.g. `paper_cup`, `pizza_box` (see sections below)                         |
+| `offering_type`                             | text/enum           | yes      | e.g. `paper_cup`, `pizza_box` (see sections below)                         |
 | `title`                                     | text                | yes      | Listing title shown to buyers                                              |
 | `description`                               | text                | yes      | Free-text details                                                          |
 | `images`                                    | array / child table | no       | Product or sample images                                                   |
@@ -45,12 +45,12 @@ These become real columns on the `quotations` table.
 | `payment_terms`                             | enum                | yes      | `advance_100`, `advance_50`, `on_delivery`, `net_15`, `net_30`             |
 | `sample_available`                          | boolean             | no       |                                                                            |
 | `sample_price`                              | numeric             | no       |                                                                            |
-| `valid_from` / `valid_until`                | timestamp           | yes      | Quotation validity window                                                  |
+| `valid_from` / `valid_until`                | timestamp           | yes      | Offering validity window                                                   |
 | `status`                                    | enum                | yes      | `draft`, `active`, `paused`, `expired`, `archived`                         |
 | `attributes`                                | jsonb               | yes      | Type-specific fields (listed below)                                        |
 | `created_at` / `updated_at`                 | timestamp           | yes      |                                                                            |
 
-Everything listed under each quotation type below goes into the `attributes` JSON, unless noted otherwise.
+Everything listed under each offering type below goes into the `attributes` JSON, unless noted otherwise.
 
 ---
 
@@ -341,35 +341,35 @@ Moves goods in bulk from manufacturers or brands to businesses, typically multi-
 
 ---
 
-## 5. Directions for setting up the `quotations` table
+## 5. Directions for setting up the `offerings` table
 
 Do not write code yet. Follow these design directions when building the schema.
 
-1. **Use one `quotations` table for all four vendor types.** Do not create a separate table per vendor type or per quotation type. A single table keeps browsing, search, cart and ordering simple.
+1. **Use one `offerings` table for all four vendor types.** Do not create a separate table per vendor type or per offering type. A single table keeps browsing, search, cart and ordering simple.
 
 2. **Put the common fields (Section 0) as real columns.** These are the fields you filter, sort, price and validate on, so they need proper types, constraints and indexes.
 
-3. **Store type-specific fields in one `attributes` JSONB column.** Everything listed under each quotation type in Sections 1 to 4 goes here. This avoids dozens of mostly empty columns and lets you add new quotation types without migrations.
+3. **Store type-specific fields in one `attributes` JSONB column.** Everything listed under each offering type in Sections 1 to 4 goes here. This avoids dozens of mostly empty columns and lets you add new offering types without migrations.
 
-4. **Create a `quotation_types` reference table.** Each row holds: the type key (`paper_cup`), display name, owning `vendor_type`, and a field definition list (field name, label, data type, required, allowed options, unit). The vendor's "create quotation" form is generated from this definition. Server-side validation of `attributes` uses the same definition.
+4. **Create an `offering_types` reference table.** Each row holds: the type key (`paper_cup`), display name, owning `vendor_type`, and a field definition list (field name, label, data type, required, allowed options, unit). The vendor's "create offering" form is generated from this definition. Server-side validation of `attributes` uses the same definition.
 
 5. **Use enums or constrained text for fixed value sets.** This applies to `vendor_type`, `status`, `fulfilment_mode`, `unit_of_measure`, `shipping_terms` and `payment_terms`. Add check constraints so bad values cannot be stored.
 
-6. **Validate that `quotation_type` belongs to the vendor's `vendor_type`.** For example, a Distributor must not be able to create a `paper_cup` quotation. Enforce this in application logic and, if possible, with a database constraint or foreign key through `quotation_types`.
+6. **Validate that `offering_type` belongs to the vendor's `vendor_type`.** For example, a Distributor must not be able to create a `paper_cup` offering. Enforce this in application logic and, if possible, with a database constraint or foreign key through `offering_types`.
 
-7. **Model price tiers as a child table.** Create `quotation_price_tiers` with `quotation_id`, `min_quantity`, `max_quantity` and `unit_price`. Add a constraint so tiers for one quotation do not overlap.
+7. **Model price tiers as a child table.** Create `offering_price_tiers` with `offering_id`, `min_quantity`, `max_quantity` and `unit_price`. Add a constraint so tiers for one offering do not overlap.
 
 8. **Model images as a child table or an array.** Include display order and mark one as primary. Store file URLs only, never file contents.
 
-9. **Link `vendor_id` with a foreign key to your vendor or user table.** Choose the delete behavior deliberately: restrict deletion, or soft-delete quotations when a vendor is removed.
+9. **Link `vendor_id` with a foreign key to your vendor or user table.** Choose the delete behavior deliberately: restrict deletion, or soft-delete offerings when a vendor is removed.
 
 10. **Enforce ordering rules with check constraints.** Examples: `min_order_quantity > 0`; `max_order_quantity >= min_order_quantity`; `unit_price >= 0`; `valid_until > valid_from`; `lead_time_days_max >= lead_time_days_min`.
 
-11. **Plan for orders referencing quotations.** An order line must snapshot the price, unit, tax and key terms at the time of purchase. A vendor editing a quotation later must never change existing orders. Consider a `version` column on quotations, or copy the values into the order line.
+11. **Plan for orders referencing offerings.** An order line must snapshot the price, unit, tax and key terms at the time of purchase. A vendor editing an offering later must never change existing orders. Consider a `version` column on offerings, or copy the values into the order line.
 
-12. **Handle status and expiry explicitly.** Only `active` quotations inside their validity window are orderable. Run a scheduled job, or check at read time, to flip expired quotations to `expired`.
+12. **Handle status and expiry explicitly.** Only `active` offerings inside their validity window are orderable. Run a scheduled job, or check at read time, to flip expired offerings to `expired`.
 
-13. **Add indexes for how buyers search.** Index `vendor_id`, `vendor_type`, `quotation_type`, `status` and `valid_until`. Add a GIN index on `attributes` for filtering on type-specific fields. Add a full-text index on `title` and `description`. Consider a partial index on active quotations only.
+13. **Add indexes for how buyers search.** Index `vendor_id`, `vendor_type`, `offering_type`, `status` and `valid_until`. Add a GIN index on `attributes` for filtering on type-specific fields. Add a full-text index on `title` and `description`. Consider a partial index on active offerings only.
 
 14. **Add audit and housekeeping columns.** Include `created_at`, `updated_at`, `created_by`, and a soft-delete column (`deleted_at`). Update `updated_at` automatically.
 
@@ -377,6 +377,6 @@ Do not write code yet. Follow these design directions when building the schema.
 
 16. **Decide on stock handling early.** For `ready_stock` items, decide whether stock is decremented on order placement or on confirmation. For `made_to_order` and `service` items, leave `stock_available` null.
 
-17. **Store the vendor's full address as structured columns, not one text blob.** Use the address fields in Section 0. Pre-fill them from the vendor's profile when a quotation is created, but let the vendor override them, since one vendor may ship from several warehouses. Index `state` and `city` for location filters.
+17. **Store the vendor's full address as structured columns, not one text blob.** Use the address fields in Section 0. Pre-fill them from the vendor's profile when an offering is created, but let the vendor override them, since one vendor may ship from several warehouses. Index `state` and `city` for location filters.
 
-18. **Plan for future fields.** Keep a `schema_version` on `quotation_types` and store it on each quotation, so older quotations still validate if a type's field list changes.
+18. **Plan for future fields.** Keep a `schema_version` on `offering_types` and store it on each offering, so older offerings still validate if a type's field list changes.

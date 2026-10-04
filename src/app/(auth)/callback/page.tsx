@@ -10,7 +10,8 @@ import { redirect } from "next/navigation";
  *   no session          → /sign-in
  *   no password         → /set-password
  *   new user (<60s)     → /onboarding
- *   existing vendor     → /vendor
+ *   existing manufacturer → /manufacturer
+ *   existing designer  → /designer
  *   existing business   → /business
  *   everyone else       → /
  */
@@ -40,7 +41,7 @@ export default async function AuthCallbackPage() {
 
   // Returning registered users go straight to their dashboard
   if (role === "manufacturer") redirect("/manufacturer");
-  if (role === "designer") redirect("/manufacturer"); // temporary redirect until designer dashboard exists
+  if (role === "designer") redirect("/designer");
   if (role === "business") redirect("/business");
 
   // Registered but not yet onboarded

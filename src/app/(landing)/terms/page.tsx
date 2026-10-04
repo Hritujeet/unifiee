@@ -40,13 +40,13 @@ export default function TermsAndConditionsPage() {
                 <ul>
                     <li>UNIFIÉE may facilitate connections or interactions between F&amp;B businesses and packaging manufacturers, suppliers, designers, logistics providers, or other third parties.</li>
                     <li>Unless expressly stated otherwise, UNIFIÉE does not itself manufacture packaging products.</li>
-                    <li>Third-party suppliers are responsible for the products, quotations, specifications, quality, availability, delivery, warranties, and other commitments they provide.</li>
+                    <li>Third-party suppliers are responsible for the products, offerings, specifications, quality, availability, delivery, warranties, and other commitments they provide.</li>
                     <li>Users should independently review and confirm commercial terms with the relevant supplier before entering into a transaction.</li>
                 </ul>
 
                 <h2>4. No Guarantee of Commercial Outcomes</h2>
                 <ul>
-                    <li>UNIFIÉE does not guarantee that a user will receive a particular quotation, supplier match, price, product, minimum order quantity, delivery date, or commercial outcome.</li>
+                    <li>UNIFIÉE does not guarantee that a user will receive a particular offering, supplier match, price, product, minimum order quantity, delivery date, or commercial outcome.</li>
                     <li>Any examples, estimates, demonstrations, or indicative information shown on the website are provided for informational purposes unless expressly identified as a confirmed commercial offer.</li>
                 </ul>
 

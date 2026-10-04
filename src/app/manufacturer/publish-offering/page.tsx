@@ -1,14 +1,14 @@
 import type { Metadata } from 'next'
-import { SubmitQuotationForm } from '@/components/manufacturer/submit-quotation-form'
+import { PublishOfferingForm } from '@/components/manufacturer/publish-offering-form'
 import { FileText } from 'lucide-react'
 
 export const metadata: Metadata = {
-    title: "Submit Quotation — UNIFIÉE Vendor",
-    description: "Submit a pricing quotation for an open packaging order on the UNIFIÉE vendor platform.",
+    title: "Publish Offering — UNIFIÉE Vendor",
+    description: "Publish a packaging offering on the UNIFIÉE vendor platform.",
     robots: { index: false },
 }
 
-export default function SubmitQuotationPage() {
+export default function PublishOfferingPage() {
     return (
         <div className="mx-auto max-w-2xl">
             {/* Page header */}
@@ -17,14 +17,14 @@ export default function SubmitQuotationPage() {
                     <FileText className="size-5" />
                 </div>
                 <div>
-                    <h1 className="font-heading text-xl font-semibold text-foreground">Submit a Quotation</h1>
+                    <h1 className="font-heading text-xl font-semibold text-foreground">Publish an Offering</h1>
                     <p className="mt-0.5 text-sm text-muted-foreground">
-                        Fill in the details below to send a competitive quote to the business.
+                        Fill in the details below to publish your offering for businesses.
                     </p>
                 </div>
             </div>
 
-            <SubmitQuotationForm />
+            <PublishOfferingForm />
         </div>
     )
 }

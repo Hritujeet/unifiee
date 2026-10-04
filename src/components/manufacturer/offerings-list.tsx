@@ -56,12 +56,12 @@ import {
 } from "lucide-react"
 
 // ─── Schema-derived types ─────────────────────────────────────────────────────
-// Mirroring quotation.ts exactly so this component is ready to accept real DB rows.
+// Mirroring the offering data shape so this component is ready to accept real DB rows.
 
-type QuotationStatus = "pending" | "under_review" | "accepted" | "rejected"
-type QuotationCurrency = "INR" | "USD" | "EUR"
+type OfferingStatus = "pending" | "under_review" | "accepted" | "rejected"
+type OfferingCurrency = "INR" | "USD" | "EUR"
 
-interface QuotationLineItem {
+interface OfferingLineItem {
     name: string
     description?: string
     qty: number
@@ -69,28 +69,28 @@ interface QuotationLineItem {
     unitPrice: number
 }
 
-// Maps to quotationTable.$inferSelect (minus DB-only fields like vendorId)
-interface Quotation {
+// Maps to the offering table shape (minus DB-only fields like vendorId)
+interface Offering {
     id: string
     orderRef: string
     businessId: string
     businessName: string    // denormalised for display; join from business table
-    currency: QuotationCurrency
+    currency: OfferingCurrency
     totalAmount: string     // Drizzle numeric → string
-    lineItems: QuotationLineItem[]
+    lineItems: OfferingLineItem[]
     notes: string | null
     validFrom: string
     validUntil: string
-    status: QuotationStatus
+    status: OfferingStatus
     rejectionReason: string | null
     createdAt: string
 }
 
 // ─── Mock data (schema-accurate shape) ───────────────────────────────────────
 
-const MOCK_QUOTATIONS: Quotation[] = [
+const MOCK_OFFERINGS: Offering[] = [
     {
-        id: "QT-2026-001",
+        id: "OFR-2026-001",
         orderRef: "ORD-5512",
         businessId: "biz-uuid-1",
         businessName: "The Brew House Café",
@@ -109,7 +109,7 @@ const MOCK_QUOTATIONS: Quotation[] = [
         ],
     },
     {
-        id: "QT-2026-002",
+        id: "OFR-2026-002",
         orderRef: "ORD-5489",
         businessId: "biz-uuid-2",
         businessName: "Spice Route Restaurant",
@@ -128,7 +128,7 @@ const MOCK_QUOTATIONS: Quotation[] = [
         ],
     },
     {
-        id: "QT-2026-003",
+        id: "OFR-2026-003",
         orderRef: "ORD-5461",
         businessId: "biz-uuid-3",
         businessName: "Cloud Kitchen Co.",
@@ -138,7 +138,7 @@ const MOCK_QUOTATIONS: Quotation[] = [
         validUntil: "2026-10-20T09:00:00Z",
         status: "rejected",
         notes: "Standard terms apply. GST will be added at actuals.",
-        rejectionReason: "Price was higher than competing quotations received.",
+        rejectionReason: "Price was higher than competing offerings received.",
         createdAt: "2026-09-20T09:00:00Z",
         lineItems: [
             { name: "Insulated Delivery Bags", qty: 100, unit: "pcs", unitPrice: 180 },
@@ -146,7 +146,7 @@ const MOCK_QUOTATIONS: Quotation[] = [
         ],
     },
     {
-        id: "QT-2026-004",
+        id: "OFR-2026-004",
         orderRef: "ORD-5598",
         businessId: "biz-uuid-4",
         businessName: "Crust & Crumble Bakery",
@@ -165,9 +165,9 @@ const MOCK_QUOTATIONS: Quotation[] = [
     },
 ]
 
-// ─── Status config (mirrors QUOTATION_STATUS enum values) ────────────────────
+// ─── Status config ────────────────────────────────────────────────────────────
 
-const STATUS_CONFIG: Record<QuotationStatus, {
+const STATUS_CONFIG: Record<OfferingStatus, {
     label: string
     icon: React.ElementType
     className: string
@@ -201,7 +201,7 @@ const STATUS_CONFIG: Record<QuotationStatus, {
 
 // ─── Currency icon map ─────────────────────────────────────────────────────────
 
-const CurrencyIcon: Record<QuotationCurrency, React.ElementType> = {
+const CurrencyIcon: Record<OfferingCurrency, React.ElementType> = {
     INR: IndianRupee,
     USD: DollarSign,
     EUR: DollarSign, // lucide doesn't have € — use generic
@@ -209,7 +209,7 @@ const CurrencyIcon: Record<QuotationCurrency, React.ElementType> = {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function StatusBadge({ status }: { status: QuotationStatus }) {
+function StatusBadge({ status }: { status: OfferingStatus }) {
     const cfg = STATUS_CONFIG[status]
     const Icon = cfg.icon
     return (
@@ -223,7 +223,7 @@ function StatusBadge({ status }: { status: QuotationStatus }) {
     )
 }
 
-function formatAmount(amount: string, currency: QuotationCurrency) {
+function formatAmount(amount: string, currency: OfferingCurrency) {
     return new Intl.NumberFormat("en-IN", {
         style: "currency",
         currency,
@@ -253,9 +253,9 @@ function DetailRow({ icon: Icon, label, value }: { icon: React.ElementType; labe
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
-export function QuotationsList() {
-    const [quotations, setQuotations] = useState<Quotation[]>(MOCK_QUOTATIONS)
-    const [selected, setSelected] = useState<Quotation | null>(null)
+export function OfferingsList() {
+    const [offerings, setOfferings] = useState<Offering[]>(MOCK_OFFERINGS)
+    const [selected, setSelected] = useState<Offering | null>(null)
     const [sheetOpen, setSheetOpen] = useState(false)
     const [isEditing, setIsEditing] = useState(false)
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
@@ -263,9 +263,9 @@ export function QuotationsList() {
 
     // Edit state mirrors schema fields editable by vendor
     const [editNotes, setEditNotes] = useState("")
-    const [editItems, setEditItems] = useState<QuotationLineItem[]>([])
+    const [editItems, setEditItems] = useState<OfferingLineItem[]>([])
 
-    const openSheet = (q: Quotation) => {
+    const openSheet = (q: Offering) => {
         setSelected(q)
         setIsEditing(false)
         setSheetOpen(true)
@@ -283,27 +283,27 @@ export function QuotationsList() {
         const newTotal = editItems
             .reduce((s, i) => s + i.qty * i.unitPrice, 0)
             .toFixed(2)
-        const updated = quotations.map(q =>
+        const updated = offerings.map(q =>
             q.id === selected.id
                 ? { ...q, notes: editNotes, lineItems: editItems, totalAmount: newTotal }
                 : q
         )
-        setQuotations(updated)
+        setOfferings(updated)
         setSelected(updated.find(q => q.id === selected.id) ?? null)
         setIsEditing(false)
     }
 
-    const deleteQuotation = () => {
+    const deleteOffering = () => {
         if (!selected) return
-        setQuotations(prev => prev.filter(q => q.id !== selected.id))
+        setOfferings(prev => prev.filter(q => q.id !== selected.id))
         setDeleteDialogOpen(false)
         setSheetOpen(false)
         setSelected(null)
     }
 
     const filtered = filterStatus === "all"
-        ? quotations
-        : quotations.filter(q => q.status === filterStatus)
+        ? offerings
+        : offerings.filter(q => q.status === filterStatus)
 
     // Editable only while the business hasn't acted on it
     const canEdit = selected &&
@@ -315,9 +315,9 @@ export function QuotationsList() {
             {/* ── Toolbar ── */}
             <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
-                    <h1 className="font-heading text-xl font-semibold text-foreground">My Quotations</h1>
+                    <h1 className="font-heading text-xl font-semibold text-foreground">My Offerings</h1>
                     <p className="mt-0.5 text-sm text-muted-foreground">
-                        {quotations.length} quotation{quotations.length !== 1 ? "s" : ""} submitted
+                        {offerings.length} offering{offerings.length !== 1 ? "s" : ""} published
                     </p>
                 </div>
                 <Select value={filterStatus} onValueChange={setFilterStatus}>
@@ -338,16 +338,16 @@ export function QuotationsList() {
             {filtered.length === 0 && (
                 <div className="flex flex-col items-center justify-center rounded-xl border border-dashed py-16 text-center">
                     <FileText className="mb-3 size-10 text-muted-foreground/40" />
-                    <p className="text-sm font-medium text-foreground">No quotations found</p>
+                    <p className="text-sm font-medium text-foreground">No offerings found</p>
                     <p className="mt-1 text-xs text-muted-foreground">
                         {filterStatus === "all"
-                            ? "You haven't submitted any quotations yet."
-                            : `No quotations with status "${STATUS_CONFIG[filterStatus as QuotationStatus]?.label ?? filterStatus}".`}
+                            ? "You haven't published any offerings yet."
+                            : `No offerings with status "${STATUS_CONFIG[filterStatus as OfferingStatus]?.label ?? filterStatus}".`}
                     </p>
                 </div>
             )}
 
-            {/* ── Quotation cards ── */}
+            {/* ── Offering cards ── */}
             <div className="grid gap-3">
                 {filtered.map(q => {
                     const CIcon = CurrencyIcon[q.currency]
@@ -426,7 +426,7 @@ export function QuotationsList() {
 
                                     {/* ─ Quick info grid ─ */}
                                     <div className="grid grid-cols-2 gap-x-4 gap-y-4">
-                                        <DetailRow icon={Hash} label="Quotation ID" value={selected.id} />
+                                        <DetailRow icon={Hash} label="Offering ID" value={selected.id} />
                                         <DetailRow icon={Building2} label="Business" value={selected.businessName} />
                                         <DetailRow icon={CalendarDays} label="Submitted" value={formatDate(selected.createdAt)} />
                                         <DetailRow icon={Clock} label="Valid Until" value={formatDate(selected.validUntil)} />
@@ -545,7 +545,7 @@ export function QuotationsList() {
 
                                     <Separator />
 
-                                    {/* ─ Notes (maps to quotationTable.notes) ─ */}
+                                    {/* ─ Notes ─ */}
                                     <div>
                                         <p className="mb-2.5 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                                             <MessageSquare className="size-3.5" />
@@ -566,7 +566,7 @@ export function QuotationsList() {
                                         )}
                                     </div>
 
-                                    {/* ─ Rejection reason (maps to quotationTable.rejectionReason) ─ */}
+                                    {/* ─ Rejection reason ─ */}
                                     {selected.status === "rejected" && selected.rejectionReason && (
                                         <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 dark:border-red-800 dark:bg-red-900/20">
                                             <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-red-700 dark:text-red-400">
@@ -587,8 +587,8 @@ export function QuotationsList() {
                                             {(() => { const Icon = STATUS_CONFIG[selected.status].icon; return <Icon className="mt-0.5 size-4 shrink-0" /> })()}
                                             <span className="leading-relaxed">
                                                 {selected.status === "accepted"
-                                                    ? "This quotation has been accepted. Contact the business to confirm next steps."
-                                                    : "This quotation was not accepted. You can only delete it."}
+                                                    ? "This offering has been accepted. Contact the business to confirm next steps."
+                                                    : "This offering was not accepted. You can only delete it."}
                                             </span>
                                         </div>
                                     )}
@@ -611,7 +611,7 @@ export function QuotationsList() {
                                                 variant="destructive"
                                                 size="icon"
                                                 onClick={() => setDeleteDialogOpen(true)}
-                                                title="Delete quotation"
+                                                title="Delete offering"
                                             >
                                                 <Trash2 className="size-4" />
                                             </Button>
@@ -619,11 +619,11 @@ export function QuotationsList() {
                                         {canEdit ? (
                                             <Button variant="outline" className="flex-1" onClick={startEditing}>
                                                 <Pencil className="size-4" />
-                                                Edit Quotation
+                                                Edit Offering
                                             </Button>
                                         ) : !canDelete ? (
                                             <p className="flex-1 text-center text-xs text-muted-foreground">
-                                                No actions available for this quotation.
+                                                No actions available for this offering.
                                             </p>
                                         ) : null}
                                     </div>
@@ -638,9 +638,9 @@ export function QuotationsList() {
             <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle>Delete Quotation?</DialogTitle>
+                        <DialogTitle>Delete Offering?</DialogTitle>
                         <DialogDescription>
-                            This will permanently remove quotation&nbsp;
+                            This will permanently remove offering&nbsp;
                             <span className="font-medium text-foreground">{selected?.id}</span>&nbsp;for&nbsp;
                             <span className="font-medium text-foreground">{selected?.businessName}</span>.
                             This action cannot be undone.
@@ -648,7 +648,7 @@ export function QuotationsList() {
                     </DialogHeader>
                     <DialogFooter>
                         <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
-                        <Button variant="destructive" onClick={deleteQuotation}>Delete</Button>
+                        <Button variant="destructive" onClick={deleteOffering}>Delete</Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>

@@ -21,8 +21,8 @@ import { toast } from 'sonner'
 const navRoutes = [
     { title: "Dashboard", url: "/manufacturer", icon: LayoutDashboard },
     { title: "Orders", url: "/manufacturer/order-dashboard", icon: ShoppingCart },
-    { title: "My Quotations", url: "/manufacturer/quotations", icon: ClipboardList },
-    { title: "Submit Quotation", url: "/manufacturer/submit-quotation", icon: FileText },
+    { title: "My Offerings", url: "/manufacturer/offerings", icon: ClipboardList },
+    { title: "Publish Offering", url: "/manufacturer/publish-offering", icon: FileText },
 ]
 
 export default function ManufacturerAppSidebar() {

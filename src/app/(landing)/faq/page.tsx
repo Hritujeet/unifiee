@@ -53,7 +53,7 @@ const faqs = [
   },
   {
     question: "Who is responsible for the quality of the packaging?",
-    answer: "The relevant manufacturer or supplier is responsible for the products they provide, subject to the applicable commercial agreement. Users should review specifications, samples, quotations, and supplier terms before confirming an order."
+    answer: "The relevant manufacturer or supplier is responsible for the products they provide, subject to the applicable commercial agreement. Users should review specifications, samples, offerings, and supplier terms before confirming an order."
   },
   {
     question: "Is UNIFIÉE currently a fully commercial platform?",

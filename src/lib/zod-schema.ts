@@ -67,7 +67,7 @@ export const designerOnboardingSchema = z.object({
 export const businessOnboardingSchema = z.object({
     fullname: z.string().min(2, "Name must be at least 2 characters long"),
     ownerName: z.string().min(2, "Owner name must be at least 2 characters long"),
-    role: z.enum(["owner", "manager", "procurement"] as const, {
+    role: z.enum(["owner", "manager"] as const, {
         error: "Please select your role",
     }),
     businessName: z.string().min(2, "Business name must be at least 2 characters long"),

@@ -44,7 +44,7 @@ export default function SetPasswordForm() {
       toast.success("Password set successfully!")
       setIsRedirecting(true)
       // Let the server callback page decide where to send the user
-      // (new user → /onboarding, existing vendor → /vendor, existing business → /business)
+      // (new user → /onboarding, or an existing role's dashboard)
       window.location.href = "/callback"
     },
     onError: (error) => {

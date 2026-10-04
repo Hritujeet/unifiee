@@ -11,7 +11,7 @@ import {
     SidebarGroup,
     SidebarGroupContent,
 } from '@/components/ui/sidebar'
-import { LayoutDashboard, ShoppingCart, FileText, UserCircle, LogOut, Loader2 } from 'lucide-react'
+import { Compass, LayoutDashboard, Search, ShoppingCart, UserCircle, LogOut, Loader2 } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { authClient } from '@/lib/auth-client'
@@ -21,7 +21,8 @@ import { toast } from 'sonner'
 const navRoutes = [
     { title: "Dashboard", url: "/business", icon: LayoutDashboard },
     { title: "Orders", url: "/business/orders", icon: ShoppingCart },
-    { title: "Quotations", url: "/business/quotations", icon: FileText },
+    { title: "Explore", url: "/business/explore", icon: Compass },
+    { title: "Search", url: "/business/search", icon: Search },
 ]
 
 export default function BusinessAppSidebar() {

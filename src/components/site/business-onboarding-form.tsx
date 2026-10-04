@@ -44,7 +44,6 @@ const business_types = [
 const roles = [
     { label: "Owner", value: "owner" },
     { label: "Manager", value: "manager" },
-    { label: "Procurement", value: "procurement" },
 ]
 
 const social_platforms = [

@@ -43,13 +43,13 @@ const metrics = [
     stat: "COSTS",
     label: "4 — Hidden",
     description:
-      "The quoted price is rarely the whole picture. Design, printing, minimum quantities, delivery and coordination can add costs across different vendors.",
+      "The offered price is rarely the whole picture. Design, printing, minimum quantities, delivery and coordination can add costs across different vendors.",
   },
   {
     stat: "FOLLOW-UPS",
     label: "5 — Endless",
     description:
-      "One order turns into calls, WhatsApp messages, quote comparisons and status checks — because nothing sits in one place.",
+      "One order turns into calls, WhatsApp messages, offering comparisons and status checks — because nothing sits in one place.",
   },
 ];
 

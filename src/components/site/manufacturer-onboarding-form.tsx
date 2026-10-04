@@ -123,7 +123,7 @@ export default function ManufacturerOnboardingForm() {
                                 />
                                 {errors.fullname && <p className="text-xs text-destructive">{errors.fullname.message}</p>}
                                 <FieldDescription>
-                                    Your full name will be displayed on your profile and the quotations you publish.
+                                    Your full name will be displayed on your profile and the offerings you publish.
                                 </FieldDescription>
                             </Field>
                             <Field>
