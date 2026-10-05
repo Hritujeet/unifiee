@@ -1,0 +1,1 @@
+ALTER TABLE "packaging_designers" ADD COLUMN "packaging_design_specializations" json;

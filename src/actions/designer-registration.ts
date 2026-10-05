@@ -62,6 +62,7 @@ export async function registerDesignerAction(data: z.infer<typeof designerOnboar
             bio: validData.bio || null,
             yearsOfExperience: validData.yearsOfExperience || 0,
             specializations: validData.specializations,
+            packagingDesignSpecializations: validData.packagingDesignSpecializations,
             softwareTools: validData.softwareTools,
             industriesServed: validData.industriesServed || [],
             portfolioUrl: validData.portfolioUrl,

@@ -24,13 +24,76 @@ const socialEntrySchema = z.object({
     url: z.string().optional().or(z.literal(''))
 })
 
+export const manufacturerPackagingCategoryValues = [
+    "paper-cups",
+    "food-boxes",
+    "paper-bags",
+    "corrugated-boxes",
+    "stickers-labels",
+    "cutlery",
+    "others",
+] as const
+
+export const manufacturerPackagingCategories = [
+    { label: "Paper Cups", value: "paper-cups" },
+    { label: "Food Boxes", value: "food-boxes" },
+    { label: "Paper Bags", value: "paper-bags" },
+    { label: "Corrugated Boxes", value: "corrugated-boxes" },
+    { label: "Stickers/Labels", value: "stickers-labels" },
+    { label: "Cutlery", value: "cutlery" },
+    { label: "Others", value: "others" },
+] as const
+
+export const manufacturerCapabilityValues = [
+    "flexographic-printing",
+    "offset-printing",
+    "digital-printing",
+    "corrugation",
+    "die-cutting",
+    "lamination",
+    "custom-printing",
+] as const
+
+export const manufacturerCapabilities = [
+    { label: "Flexographic Printing", value: "flexographic-printing" },
+    { label: "Offset Printing", value: "offset-printing" },
+    { label: "Digital Printing", value: "digital-printing" },
+    { label: "Corrugation", value: "corrugation" },
+    { label: "Die Cutting", value: "die-cutting" },
+    { label: "Lamination", value: "lamination" },
+    { label: "Custom Printing", value: "custom-printing" },
+] as const
+
+export const designerPackagingSpecializationValues = [
+    "food-boxes",
+    "paper-cups",
+    "paper-bags",
+    "labels-stickers",
+    "corrugated-packaging",
+    "takeaway-packaging",
+    "flexible-packaging",
+    "other",
+] as const
+
+export const designerPackagingSpecializations = [
+    { label: "Food Boxes", value: "food-boxes" },
+    { label: "Paper Cups", value: "paper-cups" },
+    { label: "Paper Bags", value: "paper-bags" },
+    { label: "Labels/Stickers", value: "labels-stickers" },
+    { label: "Corrugated Packaging", value: "corrugated-packaging" },
+    { label: "Takeaway Packaging", value: "takeaway-packaging" },
+    { label: "Flexible Packaging", value: "flexible-packaging" },
+    { label: "Other", value: "other" },
+] as const
+
 export const manufacturerOnboardingSchema = z.object({
     fullname: z.string().min(2, "Name must be at least 2 characters long"),
     companyFirmName: z.string().min(2, "Company/Firm name must be at least 2 characters long"),
     gstin: z.string().length(15, "GSTIN must be exactly 15 characters"),
     email: z.string().email("Please provide a valid email address"),
     mobile: z.string().min(10, "Mobile number must be at least 10 digits"),
-    services: z.array(z.object({ value: z.string() })).optional(),
+    packagingCategories: z.array(z.enum(manufacturerPackagingCategoryValues)).min(1, "Select at least one packaging category"),
+    capabilities: z.array(z.enum(manufacturerCapabilityValues)).min(1, "Select at least one capability"),
     socials: z.array(socialEntrySchema).optional(),
     address: z.string().min(10, "Please provide a complete address")
 })
@@ -47,6 +110,7 @@ export const designerOnboardingSchema = z.object({
     bio: z.string().optional(),
     yearsOfExperience: z.coerce.number().min(0, "Years of experience must be 0 or more"),
     specializations: z.array(z.string()).min(1, "Select at least one specialization"),
+    packagingDesignSpecializations: z.array(z.enum(designerPackagingSpecializationValues)).min(1, "Select at least one packaging design specialization"),
     softwareTools: z.array(z.string()).min(1, "Select at least one tool"),
     industriesServed: z.array(z.string()).optional(),
 

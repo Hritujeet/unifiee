@@ -49,7 +49,8 @@ export async function registerManufacturerAction(data: z.infer<typeof manufactur
             companyName: validData.companyFirmName,
             email: validData.email.toLowerCase(),
             phone: validData.mobile,
-            services: validData.services?.map((s) => s.value).filter(Boolean) || [],
+            packagingCategories: validData.packagingCategories,
+            capabilities: validData.capabilities,
             manufacturerAddress: validData.address,
             gstin: validData.gstin || null,
             socials: validData.socials

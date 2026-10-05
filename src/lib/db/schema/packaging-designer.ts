@@ -32,6 +32,7 @@ export const packagingDesignerTable = pgTable("packaging_designers", {
     bio: text("bio"),
     yearsOfExperience: integer("years_of_experience"),
     specializations: json("specializations").$type<string[]>(),
+    packagingDesignSpecializations: json("packaging_design_specializations").$type<string[]>(),
     softwareTools: json("software_tools").$type<string[]>(),
     languages: json("languages").$type<string[]>(),
     industriesServed: json("industries_served").$type<string[]>(),

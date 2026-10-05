@@ -17,7 +17,11 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { PlusIcon, XIcon, Loader2 } from "lucide-react"
 import { useForm, useFieldArray, Controller } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { manufacturerOnboardingSchema } from "@/lib/zod-schema"
+import {
+    manufacturerCapabilities,
+    manufacturerOnboardingSchema,
+    manufacturerPackagingCategories,
+} from "@/lib/zod-schema"
 import { z } from "zod"
 import { toast } from "sonner"
 import Link from "next/link"
@@ -55,7 +59,8 @@ export default function ManufacturerOnboardingForm() {
             gstin: "",
             email: "",
             mobile: "",
-            services: [{ value: "" }],
+            packagingCategories: [],
+            capabilities: [],
             socials: [{ platform: "", url: "" }],
             address: ""
         }
@@ -67,11 +72,6 @@ export default function ManufacturerOnboardingForm() {
             setValue("email", session.user.email, { shouldValidate: false })
         }
     }, [session, setValue])
-
-    const { fields: serviceFields, append: appendService, remove: removeService } = useFieldArray({
-        control,
-        name: "services"
-    })
 
     const { fields: socialFields, append: appendSocial, remove: removeSocial } = useFieldArray({
         control,
@@ -111,7 +111,7 @@ export default function ManufacturerOnboardingForm() {
                     <FieldSet>
                         <FieldLegend className="text-2xl font-bold">Register as a Manufacturer</FieldLegend>
                         <FieldDescription>
-                            Fill the given information to register yourself as a manufacturer and start providing your services.
+                            Fill in the information below to register as a manufacturer and set up your profile.
                         </FieldDescription>
                         <FieldGroup>
                             <Field>
@@ -169,51 +169,58 @@ export default function ManufacturerOnboardingForm() {
                                 {errors.mobile && <p className="text-xs text-destructive">{errors.mobile.message}</p>}
                             </Field>
 
-
-                            {/* ── Services ── */}
                             <Field>
-                                <div className="flex items-center justify-between">
-                                    <FieldLabel>Services Offered</FieldLabel>
-                                    <Button
-                                        type="button"
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() => appendService({ value: "" })}
-                                        className="h-7 gap-1 text-xs"
-                                    >
-                                        <PlusIcon className="size-3.5" />
-                                        Add Service
-                                    </Button>
-                                </div>
-                                <FieldDescription>
-                                    List the services your business provides (e.g. Flexo Printing, Corrugation).
-                                </FieldDescription>
-                                <div className="flex flex-col gap-2 mt-1">
-                                    {serviceFields.map((field, index) => (
-                                        <div key={field.id} className="flex gap-2">
-                                            <div className="flex flex-col gap-1 w-full">
-                                                <Input
-                                                    id={`service-${index}`}
-                                                    placeholder={`Service ${index + 1}`}
-                                                    {...register(`services.${index}.value`)}
-                                                />
-                                                {errors.services?.[index]?.value && <p className="text-xs text-destructive">{errors.services[index]?.value?.message}</p>}
-                                            </div>
-                                            {serviceFields.length > 1 && (
-                                                <Button
-                                                    type="button"
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    onClick={() => removeService(index)}
-                                                    className="shrink-0 text-muted-foreground hover:text-destructive"
-                                                    aria-label="Remove service"
-                                                >
-                                                    <XIcon className="size-4" />
-                                                </Button>
-                                            )}
+                                <FieldLabel>Packaging Categories</FieldLabel>
+                                <FieldDescription>Select all packaging categories your business manufactures.</FieldDescription>
+                                <Controller
+                                    name="packagingCategories"
+                                    control={control}
+                                    render={({ field }) => (
+                                        <div className="grid gap-3 sm:grid-cols-2">
+                                            {manufacturerPackagingCategories.map((category) => (
+                                                <label key={category.value} className="flex items-center gap-2 text-sm">
+                                                    <Checkbox
+                                                        checked={field.value.includes(category.value)}
+                                                        onCheckedChange={(checked) => field.onChange(
+                                                            checked
+                                                                ? [...field.value, category.value]
+                                                                : field.value.filter((value) => value !== category.value)
+                                                        )}
+                                                    />
+                                                    {category.label}
+                                                </label>
+                                            ))}
                                         </div>
-                                    ))}
-                                </div>
+                                    )}
+                                />
+                                {errors.packagingCategories && <p className="text-xs text-destructive">{errors.packagingCategories.message}</p>}
+                            </Field>
+
+                            <Field>
+                                <FieldLabel>Capabilities</FieldLabel>
+                                <FieldDescription>Select the manufacturing and printing capabilities your business provides.</FieldDescription>
+                                <Controller
+                                    name="capabilities"
+                                    control={control}
+                                    render={({ field }) => (
+                                        <div className="grid gap-3 sm:grid-cols-2">
+                                            {manufacturerCapabilities.map((capability) => (
+                                                <label key={capability.value} className="flex items-center gap-2 text-sm">
+                                                    <Checkbox
+                                                        checked={field.value.includes(capability.value)}
+                                                        onCheckedChange={(checked) => field.onChange(
+                                                            checked
+                                                                ? [...field.value, capability.value]
+                                                                : field.value.filter((value) => value !== capability.value)
+                                                        )}
+                                                    />
+                                                    {capability.label}
+                                                </label>
+                                            ))}
+                                        </div>
+                                    )}
+                                />
+                                {errors.capabilities && <p className="text-xs text-destructive">{errors.capabilities.message}</p>}
                             </Field>
 
                             {/* ── Socials ── */}

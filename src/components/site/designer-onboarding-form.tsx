@@ -17,7 +17,10 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Loader2 } from "lucide-react"
 import { useForm, Controller } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { designerOnboardingSchema } from "@/lib/zod-schema"
+import {
+    designerOnboardingSchema,
+    designerPackagingSpecializations,
+} from "@/lib/zod-schema"
 import { z } from "zod"
 import { toast } from "sonner"
 import Link from "next/link"
@@ -73,6 +76,7 @@ export default function DesignerOnboardingForm() {
             bio: "",
             yearsOfExperience: 0,
             specializations: [],
+            packagingDesignSpecializations: [],
             softwareTools: [],
             portfolioUrl: "",
             pricingModel: "per_project",
@@ -176,7 +180,6 @@ export default function DesignerOnboardingForm() {
                                 {errors.portfolioUrl && <p className="text-xs text-destructive">{errors.portfolioUrl.message}</p>}
                             </Field>
 
-                            {/* Assuming for now we just use a CSV input for specializations and tools if multi-select is complex to integrate without checking UI components, but wait, I can just use a text input for simplicity or native select */}
                             <Field>
                                 <FieldLabel>Specializations (comma separated for now)</FieldLabel>
                                 <Input 
@@ -184,6 +187,33 @@ export default function DesignerOnboardingForm() {
                                     onChange={(e) => setValue("specializations", e.target.value.split(",").map(s => s.trim()).filter(Boolean))} 
                                 />
                                 {errors.specializations && <p className="text-xs text-destructive">{errors.specializations.message}</p>}
+                            </Field>
+
+                            <Field>
+                                <FieldLabel>Packaging Design Specialization</FieldLabel>
+                                <FieldDescription>Select one or more packaging types you specialize in designing.</FieldDescription>
+                                <Controller
+                                    name="packagingDesignSpecializations"
+                                    control={control}
+                                    render={({ field }) => (
+                                        <div className="grid gap-3 sm:grid-cols-2">
+                                            {designerPackagingSpecializations.map((specialization) => (
+                                                <label key={specialization.value} className="flex items-center gap-2 text-sm">
+                                                    <Checkbox
+                                                        checked={field.value.includes(specialization.value)}
+                                                        onCheckedChange={(checked) => field.onChange(
+                                                            checked
+                                                                ? [...field.value, specialization.value]
+                                                                : field.value.filter((value) => value !== specialization.value)
+                                                        )}
+                                                    />
+                                                    {specialization.label}
+                                                </label>
+                                            ))}
+                                        </div>
+                                    )}
+                                />
+                                {errors.packagingDesignSpecializations && <p className="text-xs text-destructive">{errors.packagingDesignSpecializations.message}</p>}
                             </Field>
 
                             <Field>

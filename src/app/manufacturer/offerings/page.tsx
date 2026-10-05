@@ -1,5 +1,4 @@
 import type { Metadata } from 'next'
-import { OfferingsList } from '@/components/manufacturer/offerings-list'
 
 export const metadata: Metadata = {
     title: "My Offerings — UNIFIÉE Vendor",
@@ -9,8 +8,11 @@ export const metadata: Metadata = {
 
 export default function ViewOfferingsPage() {
     return (
-        <div className="mx-auto max-w-3xl space-y-6">
-            <OfferingsList />
+        <div className="mx-auto max-w-3xl">
+            <h1 className="text-3xl font-bold tracking-tight">My Offerings</h1>
+            <p className="text-muted-foreground">
+                View, edit, and manage all offerings you have published on the UNIFIÉE vendor platform.
+            </p>
         </div>
     )
-}
+}   
