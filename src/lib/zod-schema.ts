@@ -93,7 +93,9 @@ export const manufacturerOnboardingSchema = z.object({
     email: z.string().email("Please provide a valid email address"),
     mobile: z.string().min(10, "Mobile number must be at least 10 digits"),
     packagingCategories: z.array(z.enum(manufacturerPackagingCategoryValues)).min(1, "Select at least one packaging category"),
-    capabilities: z.array(z.enum(manufacturerCapabilityValues)).min(1, "Select at least one capability"),
+    capabilities: z.array(z.enum(manufacturerCapabilityValues))
+        .min(1, "Select at least one capability")
+        .refine((capabilities) => capabilities.includes("custom-printing"), "Custom Printing is mandatory"),
     socials: z.array(socialEntrySchema).optional(),
     address: z.string().min(10, "Please provide a complete address")
 })

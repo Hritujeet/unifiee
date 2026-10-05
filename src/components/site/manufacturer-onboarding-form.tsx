@@ -60,7 +60,7 @@ export default function ManufacturerOnboardingForm() {
             email: "",
             mobile: "",
             packagingCategories: [],
-            capabilities: [],
+            capabilities: ["custom-printing"],
             socials: [{ platform: "", url: "" }],
             address: ""
         }
@@ -199,6 +199,9 @@ export default function ManufacturerOnboardingForm() {
                             <Field>
                                 <FieldLabel>Capabilities</FieldLabel>
                                 <FieldDescription>Select the manufacturing and printing capabilities your business provides.</FieldDescription>
+                                <FieldDescription className="rounded-md border border-primary/20 bg-primary/5 px-3 py-2 text-foreground">
+                                    Custom Printing is mandatory for all manufacturers and is preselected below.
+                                </FieldDescription>
                                 <Controller
                                     name="capabilities"
                                     control={control}
@@ -210,8 +213,12 @@ export default function ManufacturerOnboardingForm() {
                                                         checked={field.value.includes(capability.value)}
                                                         onCheckedChange={(checked) => field.onChange(
                                                             checked
-                                                                ? [...field.value, capability.value]
-                                                                : field.value.filter((value) => value !== capability.value)
+                                                                ? field.value.includes(capability.value)
+                                                                    ? field.value
+                                                                    : [...field.value, capability.value]
+                                                                : capability.value === "custom-printing"
+                                                                    ? field.value
+                                                                    : field.value.filter((value) => value !== capability.value)
                                                         )}
                                                     />
                                                     {capability.label}
