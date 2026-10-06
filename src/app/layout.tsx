@@ -1,10 +1,10 @@
 import { cn } from "@/lib/utils";
 import type { Metadata } from "next";
-import { DM_Sans, Geist_Mono, Roboto, Inter, Geist } from "next/font/google";
+import { DM_Sans, Geist_Mono, Geist } from "next/font/google";
 import "./globals.css";
-import { ThemeProvider } from "next-themes";
 import { Toaster } from "@/components/ui/sonner";
 import TanstackQueryProvider from "@/components/providers/tanstack-query-providers";
+import { ThemeProvider } from "@/components/providers/theme-provider";
 import NextTopLoader from "nextjs-toploader";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
@@ -37,12 +37,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body>
         <NextTopLoader color="#2563eb" showSpinner={false} height={1.5} />
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
+        <ThemeProvider>
           <TanstackQueryProvider>
             <TooltipProvider>
               <Toaster />

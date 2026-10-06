@@ -1,28 +1,18 @@
 "use client";
 
-import { useTheme } from "next-themes";
+import { useTheme } from "@/components/providers/theme-provider";
 import { Sun, Moon, Monitor } from "lucide-react";
-import { useEffect, useState } from "react";
 
 export function ThemeToggle() {
   const { theme, setTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
 
-  useEffect(() => {
-    if (!mounted) setMounted(true);
-  }, []);
-
-  if (!mounted) {
-    return <div className="size-8" />;
-  }
-
-  const cycles: Record<string, string> = {
+  const cycles = {
     light: "dark",
     dark: "system",
     system: "light",
-  };
+  } as const;
 
-  const next = cycles[theme ?? "system"] ?? "light";
+  const next = cycles[theme];
 
   return (
     <button
