@@ -14,6 +14,8 @@ import {
     DialogTrigger,
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { designerPackagingSpecializations } from "@/lib/zod-schema"
 import { LoaderCircle, PencilLine } from "lucide-react"
@@ -117,6 +119,8 @@ function ListField({
 export function DesignerProfileEditor({ designer }: { designer: DesignerProfile }) {
     const [open, setOpen] = useState(false)
     const [saving, setSaving] = useState(false)
+    const [availabilityStatus, setAvailabilityStatus] = useState(designer.availabilityStatus ?? "available")
+    const [pricingModel, setPricingModel] = useState(designer.pricingModel ?? "per_project")
     const router = useRouter()
 
     async function handleSubmit(formData: FormData) {
@@ -162,18 +166,20 @@ export function DesignerProfileEditor({ designer }: { designer: DesignerProfile 
                             <Field label="State" name="state" defaultValue={designer.state} />
                             <Field label="Country" name="country" defaultValue={designer.country} />
                         </div>
-                        <label className="block space-y-2 text-sm font-medium">
-                            Availability
-                            <select
-                                name="availabilityStatus"
-                                defaultValue={designer.availabilityStatus ?? "available"}
-                                className="h-9 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
-                            >
-                                <option value="available">Available for work</option>
-                                <option value="limited">Limited availability</option>
-                                <option value="unavailable">Not taking projects</option>
-                            </select>
-                        </label>
+                        <div className="space-y-2">
+                            <Label htmlFor="availability-status">Availability</Label>
+                            <Select value={availabilityStatus} onValueChange={(value) => value && setAvailabilityStatus(value)}>
+                                <SelectTrigger id="availability-status" className="w-full">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="available">Available for work</SelectItem>
+                                    <SelectItem value="limited">Limited availability</SelectItem>
+                                    <SelectItem value="unavailable">Not taking projects</SelectItem>
+                                </SelectContent>
+                            </Select>
+                            <input type="hidden" name="availabilityStatus" value={availabilityStatus} />
+                        </div>
                         <Field label="Professional headline" name="headline" defaultValue={designer.headline} placeholder="Packaging designer for growing food brands" />
                         <label className="block space-y-2 text-sm font-medium">
                             About you
@@ -232,18 +238,20 @@ export function DesignerProfileEditor({ designer }: { designer: DesignerProfile 
                     <section className="space-y-4">
                         <h3 className="border-b pb-2 font-heading font-semibold">Pricing and delivery</h3>
                         <div className="grid gap-4 sm:grid-cols-2">
-                            <label className="block space-y-2 text-sm font-medium">
-                                Pricing model
-                                <select
-                                    name="pricingModel"
-                                    defaultValue={designer.pricingModel ?? "per_project"}
-                                    className="h-9 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
-                                >
-                                    <option value="per_project">Per project</option>
-                                    <option value="per_design">Per design</option>
-                                    <option value="hourly">Hourly</option>
-                                </select>
-                            </label>
+                            <div className="space-y-2">
+                                <Label htmlFor="pricing-model">Pricing model</Label>
+                                <Select value={pricingModel} onValueChange={(value) => value && setPricingModel(value)}>
+                                    <SelectTrigger id="pricing-model" className="w-full">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="per_project">Per project</SelectItem>
+                                        <SelectItem value="per_design">Per design</SelectItem>
+                                        <SelectItem value="hourly">Hourly</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                                <input type="hidden" name="pricingModel" value={pricingModel} />
+                            </div>
                             <Field label="Starting price (INR)" name="startingPrice" defaultValue={designer.startingPrice} type="number" min={0} />
                             <Field label="Hourly rate (INR)" name="hourlyRate" defaultValue={designer.hourlyRate} type="number" min={0} />
                             <Field label="Typical turnaround" name="turnaroundTime" defaultValue={designer.turnaroundTime} placeholder="5–7 business days" />

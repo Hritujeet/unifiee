@@ -110,6 +110,12 @@ export default async function PublicDesignerProfilePage({ params }: PublicDesign
                             )}
                             <div className="pb-1">
                                 <h1 className="font-heading text-2xl font-semibold tracking-tight sm:text-3xl">{name}</h1>
+                                {location && (
+                                    <p className="mt-1 flex items-center gap-1.5 text-sm text-muted-foreground">
+                                        <MapPin className="size-4" />
+                                        {location}
+                                    </p>
+                                )}
                             </div>
                         </div>
                         <AvailabilityBadge status={designer.availabilityStatus} />
