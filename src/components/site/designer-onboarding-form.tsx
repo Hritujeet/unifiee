@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Loader2 } from "lucide-react"
 import { useForm, Controller } from "react-hook-form"
@@ -23,7 +23,6 @@ import {
 } from "@/lib/zod-schema"
 import { z } from "zod"
 import { toast } from "sonner"
-import Link from "next/link"
 import { useMutation } from "@tanstack/react-query"
 import { registerDesignerAction } from "@/actions/designer-registration"
 import { useRouter } from "next/navigation"
@@ -42,18 +41,20 @@ const availabilityStatuses = [
     { label: "Unavailable", value: "unavailable" }
 ]
 
-const specOptions = [
-    { label: "Label Design", value: "label_design" },
-    { label: "Box Packaging", value: "box_packaging" },
-    { label: "3D Rendering", value: "3d_rendering" },
-    { label: "Brand Identity", value: "brand_identity" }
+const experienceOptions = [
+    { label: "Less than 1 year", value: "0" },
+    { label: "1-3 years", value: "2" },
+    { label: "4-6 years", value: "5" },
+    { label: "7-10 years", value: "8" },
+    { label: "10+ years", value: "11" },
 ]
 
-const toolOptions = [
-    { label: "Adobe Illustrator", value: "illustrator" },
-    { label: "Adobe Photoshop", value: "photoshop" },
-    { label: "Figma", value: "figma" },
-    { label: "Blender", value: "blender" }
+const turnaroundOptions = [
+    { label: "1-3 business days", value: "1-3 business days" },
+    { label: "4-7 business days", value: "4-7 business days" },
+    { label: "8-14 business days", value: "8-14 business days" },
+    { label: "2-4 weeks", value: "2-4 weeks" },
+    { label: "Custom / by project", value: "Custom / by project" },
 ]
 
 type FormValues = z.infer<typeof designerOnboardingSchema>
@@ -64,7 +65,7 @@ export default function DesignerOnboardingForm() {
     const { data: session } = authClient.useSession()
 
     const { register, control, handleSubmit, formState: { errors }, setValue } = useForm<FormValues>({
-        resolver: zodResolver(designerOnboardingSchema) as any,
+        resolver: zodResolver(designerOnboardingSchema),
         defaultValues: {
             fullName: "",
             displayName: "",
@@ -80,6 +81,8 @@ export default function DesignerOnboardingForm() {
             softwareTools: [],
             portfolioUrl: "",
             pricingModel: "per_project",
+            turnaroundTime: "4-7 business days",
+            revisionsIncluded: 2,
             availabilityStatus: "available",
         }
     })
@@ -100,10 +103,10 @@ export default function DesignerOnboardingForm() {
         },
         onSuccess: () => {
             toast.success("Registered as designer successfully! Redirecting to dashboard...");
-            window.location.href = "/designer";
+            router.push("/designer");
         },
-        onError: (error: any) => {
-            toast.error(error.message || "Failed to register designer");
+        onError: (error: unknown) => {
+            toast.error(error instanceof Error ? error.message : "Failed to register designer");
         }
     });
 
@@ -159,7 +162,7 @@ export default function DesignerOnboardingForm() {
 
                             <Field>
                                 <FieldLabel htmlFor="headline">Headline</FieldLabel>
-                                <FieldDescription>A short punchy title (e.g. "Premium F&B Packaging Expert")</FieldDescription>
+                                <FieldDescription>A short punchy title (e.g. “Premium F&B Packaging Expert”)</FieldDescription>
                                 <Input id="headline" placeholder="Headline" {...register("headline")} />
                                 {errors.headline && <p className="text-xs text-destructive">{errors.headline.message}</p>}
                             </Field>
@@ -170,8 +173,51 @@ export default function DesignerOnboardingForm() {
                             
                             <Field>
                                 <FieldLabel htmlFor="yearsOfExperience">Years of Experience</FieldLabel>
-                                <Input id="yearsOfExperience" type="number" min="0" {...register("yearsOfExperience")} />
+                                <Controller
+                                    name="yearsOfExperience"
+                                    control={control}
+                                    render={({ field }) => (
+                                        <Select value={String(field.value ?? 0)} onValueChange={(value) => field.onChange(Number(value))}>
+                                            <SelectTrigger id="yearsOfExperience" className="w-full">
+                                                <SelectValue placeholder="Select experience" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {experienceOptions.map((item) => (
+                                                    <SelectItem key={item.value} value={item.value}>{item.label}</SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    )}
+                                />
                                 {errors.yearsOfExperience && <p className="text-xs text-destructive">{errors.yearsOfExperience.message}</p>}
+                            </Field>
+
+                            <Field>
+                                <FieldLabel htmlFor="turnaroundTime">Average delivery time</FieldLabel>
+                                <Controller
+                                    name="turnaroundTime"
+                                    control={control}
+                                    render={({ field }) => (
+                                        <Select value={field.value ?? ""} onValueChange={field.onChange}>
+                                            <SelectTrigger id="turnaroundTime" className="w-full">
+                                                <SelectValue placeholder="Select average delivery time" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {turnaroundOptions.map((item) => (
+                                                    <SelectItem key={item.value} value={item.value}>{item.label}</SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    )}
+                                />
+                                <FieldDescription>Share the typical turnaround buyers can expect for your design projects.</FieldDescription>
+                                {errors.turnaroundTime && <p className="text-xs text-destructive">{errors.turnaroundTime.message}</p>}
+                            </Field>
+
+                            <Field>
+                                <FieldLabel htmlFor="revisionsIncluded">Revisions Included</FieldLabel>
+                                <Input id="revisionsIncluded" type="number" min="0" max="20" {...register("revisionsIncluded")} />
+                                {errors.revisionsIncluded && <p className="text-xs text-destructive">{errors.revisionsIncluded.message}</p>}
                             </Field>
 
                             <Field>
