@@ -2,6 +2,8 @@ import { and, desc, eq } from "drizzle-orm"
 import { db } from "@/lib/db"
 import { designerServiceTable } from "@/lib/db/schema/designer-service"
 import { packagingDesignerTable } from "@/lib/db/schema/packaging-designer"
+import { businessHiredServiceTable } from "@/lib/db/schema/business-hired-service"
+import { business } from "@/lib/db/schema/business"
 
 export type DesignerListing = {
     designerId: string
@@ -24,6 +26,32 @@ export type DesignerListing = {
     revisionsIncluded: number
     deliverables: string[]
     sampleImages: string[]
+}
+
+export type HiredDesignerService = {
+    id: string
+    serviceId: string | null
+    designerId: string | null
+    serviceTitle: string
+    designerName: string
+    designerEmail: string
+    price: string
+    pricingModel: string
+    turnaroundDays: number
+    sampleImage: string | null
+    status: "active" | "completed"
+    hiredAt: Date
+    completedAt: Date | null
+}
+
+async function getBusinessId(userId: string) {
+    const [profile] = await db
+        .select({ id: business.id })
+        .from(business)
+        .where(eq(business.userId, userId))
+        .limit(1)
+
+    return profile?.id
 }
 
 export async function getDesignerListings(): Promise<DesignerListing[]> {
@@ -67,4 +95,44 @@ export async function getDesignerListings(): Promise<DesignerListing[]> {
         deliverables: listing.deliverables ?? [],
         sampleImages: listing.sampleImages ?? [],
     }))
+}
+
+export async function getBusinessHiredServices(userId: string): Promise<HiredDesignerService[]> {
+    const businessId = await getBusinessId(userId)
+    if (!businessId) return []
+
+    return db
+        .select({
+            id: businessHiredServiceTable.id,
+            serviceId: businessHiredServiceTable.serviceId,
+            designerId: businessHiredServiceTable.designerId,
+            serviceTitle: businessHiredServiceTable.serviceTitle,
+            designerName: businessHiredServiceTable.designerName,
+            designerEmail: businessHiredServiceTable.designerEmail,
+            price: businessHiredServiceTable.price,
+            pricingModel: businessHiredServiceTable.pricingModel,
+            turnaroundDays: businessHiredServiceTable.turnaroundDays,
+            sampleImage: businessHiredServiceTable.sampleImage,
+            status: businessHiredServiceTable.status,
+            hiredAt: businessHiredServiceTable.hiredAt,
+            completedAt: businessHiredServiceTable.completedAt,
+        })
+        .from(businessHiredServiceTable)
+        .where(eq(businessHiredServiceTable.businessId, businessId))
+        .orderBy(desc(businessHiredServiceTable.hiredAt))
+}
+
+export async function getTrackedDesignerServiceIds(userId: string): Promise<string[]> {
+    const businessId = await getBusinessId(userId)
+    if (!businessId) return []
+
+    const tracked = await db
+        .select({ serviceId: businessHiredServiceTable.serviceId })
+        .from(businessHiredServiceTable)
+        .where(and(
+            eq(businessHiredServiceTable.businessId, businessId),
+            eq(businessHiredServiceTable.status, "active"),
+        ))
+
+    return tracked.flatMap(({ serviceId }) => serviceId ? [serviceId] : [])
 }

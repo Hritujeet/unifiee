@@ -1,7 +1,7 @@
 import type { Metadata } from "next"
 import Link from "next/link"
 import { and, count, eq } from "drizzle-orm"
-import { ArrowRight, ArrowUpRight, BriefcaseBusiness, Building2, Heart, PackageSearch, Palette, ShoppingBag, Sparkles } from "lucide-react"
+import { ArrowRight, ArrowUpRight, BriefcaseBusiness, Building2, PackageSearch, Palette, ShoppingBag, Sparkles } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { DesignerMarketplace } from "@/components/business/designer-marketplace"
 import { PageHeading, SectionHeading, StatCard } from "@/components/designer/dashboard-components"
@@ -11,7 +11,7 @@ import { business } from "@/lib/db/schema/business"
 import { designerServiceTable } from "@/lib/db/schema/designer-service"
 import { manufacturerTable } from "@/lib/db/schema/manufacturer"
 import { packagingDesignerTable } from "@/lib/db/schema/packaging-designer"
-import { getDesignerListings } from "@/lib/business/marketplace"
+import { getBusinessHiredServices, getDesignerListings, getTrackedDesignerServiceIds } from "@/lib/business/marketplace"
 import { headers } from "next/headers"
 
 export const metadata: Metadata = {
@@ -23,7 +23,7 @@ export const metadata: Metadata = {
 export default async function BusinessDashboardPage() {
     const session = await auth.api.getSession({ headers: await headers() })
     const userId = session?.user.id
-    const [businessProfile, vendorCount, designerCount, serviceCount, listings] = await Promise.all([
+    const [businessProfile, vendorCount, designerCount, serviceCount, listings, hiredServices, trackedServiceIds] = await Promise.all([
         userId
             ? db.select({ businessName: business.businessName, fullName: business.fullName })
                 .from(business)
@@ -40,6 +40,8 @@ export default async function BusinessDashboardPage() {
                 eq(packagingDesignerTable.isActive, true),
             )),
         getDesignerListings(),
+        userId ? getBusinessHiredServices(userId) : Promise.resolve([]),
+        userId ? getTrackedDesignerServiceIds(userId) : Promise.resolve([]),
     ])
 
     const profile = businessProfile[0]
@@ -96,15 +98,15 @@ export default async function BusinessDashboardPage() {
                 <StatCard label="Manufacturers" value={String(vendorTotal)} detail="Registered packaging partners" icon={Building2} />
                 <StatCard label="Designers" value={String(designerTotal)} detail="Active creative profiles" icon={BriefcaseBusiness} tone="secondary" />
                 <StatCard label="Design services" value={String(serviceTotal)} detail="Available services to explore" icon={ShoppingBag} tone="accent" />
-                <Link href="/business/favorites" className="group rounded-xl border bg-card p-5 text-card-foreground transition-colors hover:bg-accent/50">
+                <Link href="/business/hired-services" className="group rounded-xl border bg-card p-5 text-card-foreground transition-colors hover:bg-accent/50">
                     <div className="flex items-start justify-between gap-3">
                         <div>
-                            <p className="text-sm font-medium text-muted-foreground">Saved services</p>
-                            <p className="mt-2 font-heading text-3xl font-semibold tracking-tight text-foreground">Favorites</p>
+                            <p className="text-sm font-medium text-muted-foreground">Active projects</p>
+                            <p className="mt-2 font-heading text-3xl font-semibold tracking-tight text-foreground">{hiredServices.filter((service) => service.status === "active").length}</p>
                         </div>
-                        <span className="flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary"><Heart className="size-5" /></span>
+                        <span className="flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary"><BriefcaseBusiness className="size-5" /></span>
                     </div>
-                    <p className="mt-3 text-xs text-muted-foreground">Keep your shortlisted designers close.</p>
+                    <p className="mt-3 text-xs text-muted-foreground">Manage your hired designer services.</p>
                 </Link>
             </section>
 
@@ -116,7 +118,7 @@ export default async function BusinessDashboardPage() {
                         href="/business/designers"
                         linkText="Browse all"
                     />
-                    <DesignerMarketplace listings={recentServices} limit={3} />
+                    <DesignerMarketplace listings={recentServices} trackedServiceIds={trackedServiceIds} limit={3} />
                 </div>
                 <aside className="space-y-4">
                     <div className="rounded-xl border bg-card p-5">
@@ -133,14 +135,14 @@ export default async function BusinessDashboardPage() {
                     </div>
                     <div className="rounded-xl border bg-muted/40 p-5">
                         <div className="flex items-center gap-2">
-                            <Heart className="size-4 text-primary" />
-                            <h2 className="font-heading font-semibold">Shortlist your favorites</h2>
+                            <BriefcaseBusiness className="size-4 text-primary" />
+                            <h2 className="font-heading font-semibold">Manage hired designers</h2>
                         </div>
                         <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                            Save design services while comparing prices, turnaround times, and deliverables.
+                            Track active projects and keep your designer’s contact details close.
                         </p>
-                        <Link href="/business/favorites" className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-primary hover:underline">
-                            View favorites <ArrowRight className="size-4" />
+                        <Link href="/business/hired-services" className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-primary hover:underline">
+                            Manage services <ArrowRight className="size-4" />
                         </Link>
                     </div>
                 </aside>

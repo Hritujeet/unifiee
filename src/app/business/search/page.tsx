@@ -5,6 +5,9 @@ import { PageHeading } from "@/components/designer/dashboard-components"
 import { DesignerMarketplace } from "@/components/business/designer-marketplace"
 import { Button } from "@/components/ui/button"
 import { getDesignerListings } from "@/lib/business/marketplace"
+import { getTrackedDesignerServiceIds } from "@/lib/business/marketplace"
+import { auth } from "@/lib/auth"
+import { headers } from "next/headers"
 
 export const metadata: Metadata = {
     title: "Search UNIFIÉE — Business",
@@ -13,7 +16,11 @@ export const metadata: Metadata = {
 }
 
 export default async function SearchMarketplacePage() {
-    const listings = await getDesignerListings()
+    const session = await auth.api.getSession({ headers: await headers() })
+    const [listings, trackedServiceIds] = await Promise.all([
+        getDesignerListings(),
+        session?.user ? getTrackedDesignerServiceIds(session.user.id) : Promise.resolve([]),
+    ])
 
     return (
         <div className="mx-auto w-full max-w-[1440px] space-y-7">
@@ -33,7 +40,7 @@ export default async function SearchMarketplacePage() {
                     Search results update as you type. Use a specialty filter to narrow the list.
                 </div>
             </div>
-            <DesignerMarketplace listings={listings} />
+            <DesignerMarketplace listings={listings} trackedServiceIds={trackedServiceIds} />
         </div>
     )
 }

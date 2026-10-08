@@ -11,7 +11,7 @@ import {
     SidebarGroup,
     SidebarGroupContent,
 } from '@/components/ui/sidebar'
-import { Bookmark, BriefcaseBusiness, Compass, LayoutDashboard, Search, ShoppingCart, UserCircle, LogOut, Loader2 } from 'lucide-react'
+import { BriefcaseBusiness, Compass, LayoutDashboard, Search, ShoppingCart, UserCircle, LogOut, Loader2 } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { authClient } from '@/lib/auth-client'
@@ -22,7 +22,7 @@ const navRoutes = [
     { title: "Dashboard", url: "/business", icon: LayoutDashboard },
     { title: "Packaging vendors", url: "/business/explore", icon: Compass },
     { title: "Hire designers", url: "/business/designers", icon: BriefcaseBusiness },
-    { title: "Saved services", url: "/business/favorites", icon: Bookmark },
+    { title: "Hired services", url: "/business/hired-services", icon: BriefcaseBusiness },
     { title: "Orders", url: "/business/orders", icon: ShoppingCart },
     { title: "Search services", url: "/business/search", icon: Search },
 ]
