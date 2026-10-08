@@ -57,14 +57,15 @@ const turnaroundOptions = [
     { label: "Custom / by project", value: "Custom / by project" },
 ]
 
-type FormValues = z.infer<typeof designerOnboardingSchema>
+type FormInput = z.input<typeof designerOnboardingSchema>
+type FormValues = z.output<typeof designerOnboardingSchema>
 
 export default function DesignerOnboardingForm() {
     const router = useRouter()
     const [termsAccepted, setTermsAccepted] = useState(false)
     const { data: session } = authClient.useSession()
 
-    const { register, control, handleSubmit, formState: { errors }, setValue } = useForm<FormValues>({
+    const { register, control, handleSubmit, formState: { errors }, setValue } = useForm<FormInput, unknown, FormValues>({
         resolver: zodResolver(designerOnboardingSchema),
         defaultValues: {
             fullName: "",

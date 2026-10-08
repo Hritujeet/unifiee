@@ -92,7 +92,7 @@ export default async function PublicDesignerProfilePage({ params }: PublicDesign
     return (
         <div className="mx-auto w-full max-w-6xl space-y-8 px-4 py-8 sm:px-6 lg:px-8">
             <section className="overflow-hidden rounded-2xl border bg-card text-card-foreground">
-                <div className="h-36 bg-gradient-to-r from-muted via-accent to-secondary sm:h-48" />
+                <div className="h-36 bg-linear-to-r from-muted via-accent to-secondary sm:h-48" />
                 <div className="px-5 pb-7 sm:px-8">
                     <div className="-mt-10 flex flex-col justify-between gap-5 sm:-mt-12 sm:flex-row sm:items-end">
                         <div className="flex items-end gap-4">
