@@ -147,7 +147,7 @@ const OnboardingForm = () => {
                             transition={{ duration: 0.4, ease: customEase }}
                             className="mt-4 text-base text-muted-foreground leading-relaxed"
                         >
-                            Select your vendor category to get the right tools for your business.
+                            Select  your vendor category to get to set up your profile according to your role
                         </motion.p>
                     )}
                     {(step !== "select" && step !== "vendor-type") && (
