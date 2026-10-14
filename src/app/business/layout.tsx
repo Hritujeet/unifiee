@@ -32,13 +32,17 @@ export default async function BusinessLayout({ children }: { children: React.Rea
 
     return (
         <RoleProvider>
-            <SidebarProvider>
+            <SidebarProvider defaultOpen={true}>
                 <BusinessAppSidebar />
-                <SidebarInset>
-                    <header className="flex h-14 shrink-0 items-center gap-2 border-b px-4 lg:h-16">
-                        <SidebarTrigger className="-ml-1" />
+                <SidebarInset className="min-w-0 bg-background text-foreground">
+                    {/* Mobile header with sidebar trigger */}
+                    <header className="flex h-14 shrink-0 items-center justify-between border-b border-border/40 px-4 md:hidden">
+                        <div className="flex items-center gap-2">
+                            <SidebarTrigger className="-ml-1" />
+                            <span className="text-sm font-semibold tracking-tight">Unifiée Business</span>
+                        </div>
                     </header>
-                    <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-6">
+                    <main className="flex flex-1 flex-col p-4 md:p-6 lg:p-8 min-w-0">
                         {children}
                     </main>
                 </SidebarInset>
