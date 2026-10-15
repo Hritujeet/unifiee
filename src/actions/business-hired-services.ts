@@ -69,7 +69,7 @@ export async function trackHiredDesignerService(serviceId: string): Promise<Hire
             price: listing.price,
             pricingModel: listing.pricingModel,
             turnaroundDays: listing.turnaroundDays,
-            sampleImage: listing.sampleImage[0] ?? null,
+            sampleImage: listing.sampleImage?.[0] ?? null,
         })
     } catch (error) {
         if (typeof error === "object" && error !== null && "code" in error && error.code === "23505") {
@@ -81,6 +81,53 @@ export async function trackHiredDesignerService(serviceId: string): Promise<Hire
 
     revalidatePath("/business")
     revalidatePath("/business/designers")
+    revalidatePath("/business/hired-services")
+    return { success: true }
+}
+
+const customProjectSchema = z.object({
+    serviceTitle: z.string().trim().min(3, "Project title must be at least 3 characters.").max(160),
+    designerName: z.string().trim().min(2, "Designer name is required.").max(300),
+    designerEmail: z.string().trim().email("Valid designer email is required."),
+    price: z.coerce.number().positive("Price must be greater than zero."),
+    pricingModel: z.enum(["per_project", "hourly", "per_design"]),
+    turnaroundDays: z.coerce.number().int().min(1).max(365),
+})
+
+export async function trackCustomProject(data: {
+    serviceTitle: string
+    designerName: string
+    designerEmail: string
+    price: number | string
+    pricingModel: "per_project" | "hourly" | "per_design"
+    turnaroundDays: number | string
+}): Promise<HireActionResult> {
+    const parsed = customProjectSchema.safeParse(data)
+    if (!parsed.success) {
+        return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid project details." }
+    }
+
+    const businessProfile = await getCurrentBusiness()
+    if (!businessProfile) return { success: false, error: "Sign in with a business account to track hired services." }
+
+    try {
+        await db.insert(businessHiredServiceTable).values({
+            id: crypto.randomUUID(),
+            businessId: businessProfile.id,
+            serviceTitle: parsed.data.serviceTitle,
+            designerName: parsed.data.designerName,
+            designerEmail: parsed.data.designerEmail,
+            price: parsed.data.price.toFixed(2),
+            pricingModel: parsed.data.pricingModel,
+            turnaroundDays: parsed.data.turnaroundDays,
+            status: "active",
+        })
+    } catch (error) {
+        console.error("Could not add custom hired project:", error)
+        return { success: false, error: "Could not track this project. Please try again." }
+    }
+
+    revalidatePath("/business")
     revalidatePath("/business/hired-services")
     return { success: true }
 }

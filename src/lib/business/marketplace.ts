@@ -91,7 +91,9 @@ export async function getDesignerListings(): Promise<DesignerListing[]> {
     return listings.map((listing) => ({
         ...listing,
         designerName: listing.displayName || listing.fullName,
-        specializations: listing.specializations ?? [],
+        specializations: (listing.specializations && listing.specializations.length > 0)
+            ? listing.specializations
+            : [listing.serviceType],
         deliverables: listing.deliverables ?? [],
         sampleImages: listing.sampleImages ?? [],
     }))

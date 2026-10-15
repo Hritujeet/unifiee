@@ -4,6 +4,7 @@ import { useState } from "react"
 import Link from "next/link"
 import {
     ArrowRight,
+    Briefcase,
     Building2,
     CheckCircle2,
     ExternalLink,
@@ -18,6 +19,7 @@ import {
     CardHeader,
     CardTitle,
 } from "@/components/ui/card"
+import { Textarea } from "@/components/ui/textarea"
 import {
     Dialog,
     DialogContent,
@@ -26,30 +28,12 @@ import {
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog"
-import { useWorkflowStore } from "@/lib/business-workflow-store"
+import { useWorkflowStore, selectPendingOffersCount } from "@/lib/business-workflow-store"
+import { CLIENT_STAGES, mapBackendToClientStage, getClientStageIndex } from "@/lib/constants/stages"
 import { toast } from "sonner"
 
 export interface BusinessDashboardProps {
     businessName: string
-}
-
-const getStageIndex = (status: string): number => {
-    switch (status) {
-        case "Requirement Received":
-            return 1
-        case "Quoted":
-            return 2
-        case "Order Confirmed":
-            return 3
-        case "In Production":
-            return 4
-        case "Shipped":
-            return 5
-        case "Delivered":
-            return 6
-        default:
-            return 3
-    }
 }
 
 export default function BusinessDashboardView({ businessName }: BusinessDashboardProps) {
@@ -57,32 +41,55 @@ export default function BusinessDashboardView({ businessName }: BusinessDashboar
     const quotations = useWorkflowStore((s) => s.quotations)
     const orders = useWorkflowStore((s) => s.orders)
     const acceptQuote = useWorkflowStore((s) => s.acceptQuote)
+    const updateOrderStatus = useWorkflowStore((s) => s.updateOrderStatus)
 
     const [isOffersModalOpen, setIsOffersModalOpen] = useState(false)
     const [isProofModalOpen, setIsProofModalOpen] = useState(false)
     const [proofApproved, setProofApproved] = useState(false)
+    const [isRequestingRevision, setIsRequestingRevision] = useState(false)
+    const [revisionComment, setRevisionComment] = useState("")
 
     const pendingOffers = quotations.filter((q) => q.status === "pending")
+    const pendingOffersCount = selectPendingOffersCount(quotations)
     const activeOrders = orders.filter((o) => o.status !== "Delivered")
     const openRequirements = requirements.filter(
         (r) => r.status === "Requirement Received" || r.status === "Quoted"
     )
 
+    // Order awaiting artwork proof approval (Item 2 & 3: Single source of truth from order record)
+    const proofOrder = orders.find((o) => o.requirementTitle.toLowerCase().includes("paper cup")) || orders[0]
+
     // Calculate dynamic review queue items per Component 3 of Dashboard memo
-    const hasPendingOffers = pendingOffers.length > 0
-    const hasPendingProof = !proofApproved
+    const hasPendingOffers = pendingOffersCount > 0
+    const hasPendingProof = !proofApproved && Boolean(proofOrder)
     const reviewItemsCount = (hasPendingOffers ? 1 : 0) + (hasPendingProof ? 1 : 0)
 
-    // Total spend this month
-    const totalSpend = orders
+    // Metric: "Ordered this month" (Phase 1 Item 5)
+    // Computes gross sum of confirmed orders placed in the current calendar month.
+    // Secondary figure displays total settled/paid amount.
+    const orderedThisMonth = orders.reduce((acc, curr) => {
+        const num = parseInt(curr.totalPrice.replace(/[^0-9]/g, ""), 10) || 0
+        return acc + num
+    }, 0)
+
+    const paidThisMonth = orders
         .filter((o) => o.paid)
         .reduce((acc, curr) => {
             const num = parseInt(curr.totalPrice.replace(/[^0-9]/g, ""), 10) || 0
             return acc + num
         }, 0)
 
-    const formattedSpend =
-        totalSpend > 0 ? `₹${totalSpend.toLocaleString("en-IN")}` : "₹0"
+    const formattedOrdered = `₹${orderedThisMonth.toLocaleString("en-IN")}`
+    const formattedPaid = `₹${paidThisMonth.toLocaleString("en-IN")}`
+
+    // Phase 1 Item 4: Time-based greeting using local time
+    const getGreeting = () => {
+        const hour = new Date().getHours()
+        if (hour < 12) return "Good morning"
+        if (hour < 17) return "Good afternoon"
+        if (hour < 21) return "Good evening"
+        return "Welcome back"
+    }
 
     return (
         <div className="mx-auto w-full max-w-6xl space-y-7 text-foreground">
@@ -90,7 +97,7 @@ export default function BusinessDashboardView({ businessName }: BusinessDashboar
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
                     <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground font-heading">
-                        Good morning, {businessName || "Unifiée"}
+                        {getGreeting()}, {businessName || "Unifiée"}
                     </h1>
                     <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
                         {reviewItemsCount > 0
@@ -156,13 +163,16 @@ export default function BusinessDashboardView({ businessName }: BusinessDashboar
                                 <div className="flex items-center gap-2.5 min-w-0">
                                     <Palette className="size-3.5 sm:size-4 text-amber-500 shrink-0" />
                                     <span className="truncate text-foreground font-medium">
-                                        Artwork proof ready for Paper cups 8 oz
+                                        Artwork proof ready for {proofOrder?.requirementTitle || "Paper cups 8 oz"} • {proofOrder?.vendorName || "GreenCup Solutions"}
                                     </span>
                                 </div>
                                 <Button
                                     variant="outline"
                                     size="sm"
-                                    onClick={() => setIsProofModalOpen(true)}
+                                    onClick={() => {
+                                        setIsRequestingRevision(false)
+                                        setIsProofModalOpen(true)
+                                    }}
                                     className="h-7 px-3 text-xs font-medium rounded-md border-amber-500/40 text-amber-500 hover:bg-amber-500/10 hover:text-amber-400 shrink-0"
                                 >
                                     Review proof
@@ -192,7 +202,7 @@ export default function BusinessDashboardView({ businessName }: BusinessDashboar
                             Offers to review
                         </span>
                         <div className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
-                            {pendingOffers.length}
+                            {pendingOffersCount}
                         </div>
                     </Link>
                 </Card>
@@ -211,11 +221,14 @@ export default function BusinessDashboardView({ businessName }: BusinessDashboar
                 <Card className="p-4 hover:border-border transition-all">
                     <Link href="/business/orders" className="block space-y-1">
                         <span className="text-xs text-muted-foreground font-normal">
-                            Spend this month
+                            Ordered this month
                         </span>
                         <div className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
-                            {formattedSpend}
+                            {formattedOrdered}
                         </div>
+                        <p className="text-[11px] text-muted-foreground">
+                            Paid: {formattedPaid}
+                        </p>
                     </Link>
                 </Card>
             </div>
@@ -240,21 +253,26 @@ export default function BusinessDashboardView({ businessName }: BusinessDashboar
                         </CardHeader>
 
                         <CardContent className="px-4 sm:px-5 pb-4 pt-0">
-                            {/* Sub-header labels */}
-                            <div className="hidden sm:grid grid-cols-[1.2fr_2fr_90px] gap-4 pb-2.5 text-[11px] text-muted-foreground font-medium border-b border-border/40">
+                            {/* Sub-header labels: Item 10 single client stage list & Item 19 widened column */}
+                            <div className="hidden sm:grid grid-cols-[1.2fr_2fr_130px] gap-4 pb-2.5 text-[11px] text-muted-foreground font-medium border-b border-border/40">
                                 <span>Order</span>
-                                <span>Requirement • Offers • Order • Production • QC • Delivery</span>
-                                <span className="text-right">Status</span>
+                                <span>Requirement • Offers • Order Confirmed • In Production • Shipped • Delivered</span>
+                                <span className="text-right whitespace-nowrap">Status</span>
                             </div>
 
                             {/* Orders list */}
                             <div className="divide-y divide-border/40">
                                 {orders.slice(0, 5).map((order) => {
-                                    const stageIndex = getStageIndex(order.status)
+                                    // Item 3: if proof is pending on this order, do not show In Production
+                                    const effectiveStatus = (order.id === proofOrder?.id && !proofApproved && order.status === "In Production")
+                                        ? "Order Confirmed"
+                                        : order.status
+                                    const stageIndex = getClientStageIndex(effectiveStatus)
+
                                     return (
                                         <div
                                             key={order.id}
-                                            className="py-3 flex flex-col sm:grid sm:grid-cols-[1.2fr_2fr_90px] gap-2.5 sm:gap-4 sm:items-center text-xs"
+                                            className="py-3 flex flex-col sm:grid sm:grid-cols-[1.2fr_2fr_130px] gap-2.5 sm:gap-4 sm:items-center text-xs"
                                         >
                                             {/* Column 1: Order name & vendor */}
                                             <div className="min-w-0">
@@ -269,7 +287,8 @@ export default function BusinessDashboardView({ businessName }: BusinessDashboar
                                             {/* Column 2: 6-segment stage bar */}
                                             <div className="space-y-1">
                                                 <div className="flex items-center gap-1 w-full">
-                                                    {[1, 2, 3, 4, 5, 6].map((step) => {
+                                                    {CLIENT_STAGES.map((_, idx) => {
+                                                        const step = idx + 1
                                                         const isFilled = step <= stageIndex
                                                         return (
                                                             <span
@@ -288,13 +307,9 @@ export default function BusinessDashboardView({ businessName }: BusinessDashboar
                                                 </div>
                                             </div>
 
-                                            {/* Column 3: Status label */}
-                                            <div className="text-left sm:text-right font-medium text-foreground text-xs">
-                                                {order.status === "In Production"
-                                                    ? "In production"
-                                                    : order.status === "Quoted"
-                                                    ? "Offers in"
-                                                    : order.status}
+                                            {/* Column 3: Status label (Item 19: whitespace-nowrap) */}
+                                            <div className="text-left sm:text-right font-medium text-foreground text-xs whitespace-nowrap">
+                                                {effectiveStatus}
                                             </div>
                                         </div>
                                     )
@@ -364,12 +379,23 @@ export default function BusinessDashboardView({ businessName }: BusinessDashboar
                             </Link>
 
                             <Link
-                                href="/business/explore"
+                                href="/business/designers"
                                 className="flex items-center justify-between text-xs text-muted-foreground hover:text-foreground transition-colors group"
                             >
                                 <span className="flex items-center gap-2">
                                     <Palette className="size-3.5 text-muted-foreground group-hover:text-foreground" />
                                     <span>Explore designers</span>
+                                </span>
+                                <ArrowRight className="size-3 text-muted-foreground group-hover:translate-x-0.5 transition-transform" />
+                            </Link>
+
+                            <Link
+                                href="/business/hired-services"
+                                className="flex items-center justify-between text-xs text-muted-foreground hover:text-foreground transition-colors group"
+                            >
+                                <span className="flex items-center gap-2">
+                                    <Briefcase className="size-3.5 text-muted-foreground group-hover:text-foreground" />
+                                    <span>Hired services</span>
                                 </span>
                                 <ArrowRight className="size-3 text-muted-foreground group-hover:translate-x-0.5 transition-transform" />
                             </Link>
@@ -466,57 +492,169 @@ export default function BusinessDashboardView({ businessName }: BusinessDashboar
             </Dialog>
 
             {/* MODAL 2: ARTWORK PROOF REVIEW DIALOG */}
-            <Dialog open={isProofModalOpen} onOpenChange={setIsProofModalOpen}>
-                <DialogContent className="sm:max-w-md">
+            <Dialog
+                open={isProofModalOpen}
+                onOpenChange={(open) => {
+                    setIsProofModalOpen(open)
+                    if (!open) {
+                        setIsRequestingRevision(false)
+                        setRevisionComment("")
+                    }
+                }}
+            >
+                <DialogContent className="sm:max-w-lg">
                     <DialogHeader>
                         <DialogTitle className="text-base font-semibold">
                             Artwork Proof Review
                         </DialogTitle>
                         <DialogDescription className="text-xs text-muted-foreground">
-                            Paper cups 8 oz • EcoPack Solutions
+                            {proofOrder?.requirementTitle || "Paper cups 8 oz"} • {proofOrder?.vendorName || "GreenCup Solutions"}
                         </DialogDescription>
                     </DialogHeader>
 
-                    <div className="space-y-3 py-2 text-xs">
-                        <div className="rounded-xl border border-border/60 bg-muted/30 p-4 space-y-2">
+                    <div className="space-y-3.5 py-1 text-xs">
+                        {/* Visual Artwork Preview Box (Mock Dieline / Canvas) */}
+                        <div className="relative rounded-xl border border-border/80 bg-neutral-950/60 p-4 overflow-hidden flex flex-col items-center justify-center min-h-[160px] text-center select-none shadow-inner">
+                            {/* Subtle Grid Background */}
+                            <div
+                                className="absolute inset-0 opacity-15 pointer-events-none"
+                                style={{
+                                    backgroundImage: "radial-gradient(#ffffff 1px, transparent 1px)",
+                                    backgroundSize: "14px 14px",
+                                }}
+                            />
+
+                            {/* Badge Indicators */}
+                            <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5">
+                                <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                                    Vector Dieline · 300 DPI
+                                </span>
+                                <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-neutral-800 text-neutral-300 border border-border/60">
+                                    Bleed: +3mm
+                                </span>
+                            </div>
+
+                            <div className="absolute top-2.5 right-2.5">
+                                <span className="text-[10px] text-muted-foreground font-mono">
+                                    Scale: 1:1 Actual Size
+                                </span>
+                            </div>
+
+                            {/* Dieline Visual representation (Curved Paper Cup Wrap) */}
+                            <div className="relative w-full max-w-[280px] h-20 mt-4 border border-dashed border-sky-400/60 rounded-t-[40px] rounded-b-[8px] flex items-center justify-center bg-sky-500/5 px-4 shadow-sm">
+                                <div className="text-center space-y-0.5">
+                                    <div className="text-[11px] font-semibold text-neutral-200 tracking-wider uppercase font-mono">
+                                        UNIFIÉE ROASTERY CAFE
+                                    </div>
+                                    <div className="text-[9px] text-neutral-400 font-mono">
+                                        FRONT FACING • EMBOSSED LOGO ZONE
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="mt-2 text-[10px] text-muted-foreground flex items-center gap-2">
+                                <span>Trim box: 80mm rim × 92mm height</span>
+                                <span>•</span>
+                                <span>Double-wall overlap: 6mm</span>
+                            </div>
+                        </div>
+
+                        {/* Specification Sheet */}
+                        <div className="rounded-xl border border-border/60 bg-muted/30 p-3.5 space-y-2">
                             <div className="flex items-center justify-between">
-                                <span className="font-semibold text-foreground">Specification sheet</span>
+                                <span className="font-semibold text-foreground">Specification Sheet</span>
                                 <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-500/10 text-blue-500">
-                                    Version 1.0
+                                    Proof Revision 1
                                 </span>
                             </div>
                             <div className="space-y-1 text-muted-foreground">
-                                <div>• Material: Double-wall food grade kraft board</div>
-                                <div>• Print: 2-color CMYK brand wrap</div>
-                                <div>• Coating: Water-based biodegradable lining</div>
-                                <div>• Batch size: 5,000 units</div>
+                                <div>• <span className="text-foreground font-medium">Material:</span> Double-wall food grade kraft board (280 GSM)</div>
+                                <div>• <span className="text-foreground font-medium">Print:</span> Custom brand artwork wrap (Food-grade soy ink)</div>
+                                <div>• <span className="text-foreground font-medium">Coating:</span> Water-based biodegradable lining</div>
+                                <div>• <span className="text-foreground font-medium">Batch size:</span> 5,000 units</div>
                             </div>
                         </div>
+
+                        {/* Revision Textarea Workflow (Item 13) */}
+                        {isRequestingRevision && (
+                            <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-3.5 space-y-2 animate-in fade-in-50">
+                                <label
+                                    htmlFor="proof-revision-comment"
+                                    className="block font-semibold text-foreground text-xs"
+                                >
+                                    Revision feedback for vendor designer <span className="text-rose-500">*</span>
+                                </label>
+                                <p className="text-[11px] text-muted-foreground">
+                                    Please specify what adjustments or corrections are required (e.g. logo positioning, color tone, or bleed margins).
+                                </p>
+                                <Textarea
+                                    id="proof-revision-comment"
+                                    placeholder="Enter your revision instructions here..."
+                                    value={revisionComment}
+                                    onChange={(e) => setRevisionComment(e.target.value)}
+                                    className="min-h-[80px] text-xs bg-background"
+                                />
+                            </div>
+                        )}
                     </div>
 
                     <DialogFooter className="flex flex-row justify-end items-center gap-2 pt-2">
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                                setIsProofModalOpen(false)
-                                toast.info("Feedback sent to vendor designer.")
-                            }}
-                        >
-                            Request revision
-                        </Button>
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                                setProofApproved(true)
-                                setIsProofModalOpen(false)
-                                toast.success("Artwork proof approved! Sent to production.")
-                            }}
-                        >
-                            <CheckCircle2 className="size-3.5 mr-1 text-emerald-500" />
-                            <span>Approve proof</span>
-                        </Button>
+                        {isRequestingRevision ? (
+                            <>
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => {
+                                        setIsRequestingRevision(false)
+                                        setRevisionComment("")
+                                    }}
+                                >
+                                    Back
+                                </Button>
+                                <Button
+                                    variant="default"
+                                    size="sm"
+                                    onClick={() => {
+                                        if (!revisionComment.trim()) {
+                                            toast.error("Please enter revision feedback before submitting.")
+                                            return
+                                        }
+                                        toast.info("Feedback sent to vendor designer.")
+                                        setIsRequestingRevision(false)
+                                        setRevisionComment("")
+                                        setIsProofModalOpen(false)
+                                    }}
+                                    className="bg-amber-600 hover:bg-amber-500 text-white"
+                                >
+                                    Submit revision feedback
+                                </Button>
+                            </>
+                        ) : (
+                            <>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => setIsRequestingRevision(true)}
+                                >
+                                    Request revision
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => {
+                                        if (proofOrder) {
+                                            updateOrderStatus(proofOrder.id, "In Production")
+                                        }
+                                        setProofApproved(true)
+                                        setIsProofModalOpen(false)
+                                        toast.success("Artwork proof approved! Sent to production.")
+                                    }}
+                                    className="border-emerald-500/30 text-emerald-500 hover:bg-emerald-500/10 hover:text-emerald-400"
+                                >
+                                    <CheckCircle2 className="size-3.5 mr-1 text-emerald-500" />
+                                    <span>Approve proof</span>
+                                </Button>
+                            </>
+                        )}
                     </DialogFooter>
                 </DialogContent>
             </Dialog>

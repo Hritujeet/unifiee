@@ -19,10 +19,17 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { useWorkflowStore } from "@/lib/business-workflow-store"
+import {
+    useWorkflowStore,
+    selectPendingOffersCount,
+    selectPendingOffersForRequirement,
+    selectAcceptedOfferForRequirement,
+} from "@/lib/business-workflow-store"
 
 export default function RequirementsView() {
     const requirements = useWorkflowStore((s) => s.requirements)
+    const quotations = useWorkflowStore((s) => s.quotations)
+    const orders = useWorkflowStore((s) => s.orders)
     const [searchQuery, setSearchQuery] = useState("")
     const [statusFilter, setStatusFilter] = useState<string>("all")
 
@@ -39,6 +46,7 @@ export default function RequirementsView() {
         return matchesStatus && matchesSearch
     })
 
+    const pendingOffersCount = selectPendingOffersCount(quotations)
     const quotedCount = requirements.filter((r) => r.status === "Quoted").length
     const confirmedCount = requirements.filter((r) => r.status === "Order Confirmed" || r.status === "In Production" || r.status === "Shipped").length
 
@@ -49,13 +57,13 @@ export default function RequirementsView() {
                 <div className="space-y-1.5">
                     <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-blue-500/10 text-blue-500 border border-blue-500/20">
                         <Layers className="size-3" />
-                        <span>Client Procurement (Eureka MVP Section 2)</span>
+                        <span>Client Procurement</span>
                     </div>
                     <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground font-heading">
                         Packaging Requirements
                     </h1>
                     <p className="text-sm text-muted-foreground max-w-2xl leading-relaxed">
-                        Submit requirements using plain language. Requirements are broadcast to suppliers who quote pricing and production schedules.
+                        Submit requirements using plain language. Requirements are broadcast to vendors who submit offers with pricing and production schedules.
                     </p>
                 </div>
 
@@ -64,13 +72,14 @@ export default function RequirementsView() {
                         <Link href="/business/offers" className="flex items-center gap-2">
                             <Tag className="size-3.5 text-amber-500" />
                             <span>View offers</span>
-                            {quotedCount > 0 && (
+                            {pendingOffersCount > 0 && (
                                 <span className="flex size-5 items-center justify-center rounded-full bg-amber-500/15 text-amber-500 text-[10px] font-semibold">
-                                    {quotedCount}
+                                    {pendingOffersCount}
                                 </span>
                             )}
                         </Link>
                     </Button>
+                    {/* Primary Button */}
                     <Button asChild size="sm" className="h-10 px-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-medium text-xs shadow-sm hover:shadow-md transition-all">
                         <Link href="/business/requirements/new" className="flex items-center gap-1.5">
                             <Plus className="size-4" />
@@ -93,7 +102,7 @@ export default function RequirementsView() {
                                     AI-Assisted Intake
                                 </span>
                                 <Badge variant="outline" className="text-[10px] border-blue-500/30 bg-blue-500/10 text-blue-400 font-medium">
-                                    Section 5 Structured Capture
+                                    Structured Fields
                                 </Badge>
                             </div>
                             <h2 className="text-base sm:text-lg font-semibold text-foreground">
@@ -106,7 +115,7 @@ export default function RequirementsView() {
                     </div>
 
                     <div className="shrink-0 flex items-center md:self-center">
-                        <Button asChild className="h-10 px-5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-medium text-xs sm:text-sm shadow-sm gap-2">
+                        <Button asChild variant="outline" className="h-10 px-5 rounded-xl border-blue-500/40 text-blue-600 dark:text-blue-400 hover:bg-blue-500/10 font-medium text-xs sm:text-sm shadow-xs gap-2">
                             <Link href="/business/requirements/new">
                                 <span>Submit new requirement</span>
                                 <ArrowRight className="size-4" />
@@ -131,12 +140,12 @@ export default function RequirementsView() {
 
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-                        <CardTitle className="text-xs font-medium text-muted-foreground">Requirements Quoted</CardTitle>
+                        <CardTitle className="text-xs font-medium text-muted-foreground">Offers to Review</CardTitle>
                         <Tag className="size-4 text-amber-500" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold text-amber-500">{quotedCount}</div>
-                        <p className="text-xs text-muted-foreground mt-1">Vendor quotes ready for review</p>
+                        <div className="text-2xl font-bold text-amber-500">{pendingOffersCount}</div>
+                        <p className="text-xs text-muted-foreground mt-1">Vendor offers awaiting your decision</p>
                     </CardContent>
                 </Card>
 
@@ -296,23 +305,49 @@ export default function RequirementsView() {
                                         </div>
 
                                         <div className="flex items-center gap-2 self-end sm:self-auto">
-                                            {req.quotesCount > 0 ? (
-                                                <Button
-                                                    asChild
-                                                    size="sm"
-                                                    className="h-8 px-3 rounded-lg bg-amber-500/15 text-amber-600 dark:text-amber-400 hover:bg-amber-500/25 border border-amber-500/30 text-xs font-semibold"
-                                                >
-                                                    <Link href="/business/offers" className="flex items-center gap-1.5">
-                                                        <span>Review {req.quotesCount} offer{req.quotesCount > 1 ? "s" : ""}</span>
-                                                        <ArrowRight className="size-3" />
-                                                    </Link>
-                                                </Button>
-                                            ) : (
-                                                <span className="text-[11px] text-muted-foreground flex items-center gap-1">
-                                                    <Radio className="size-3 text-blue-500 animate-pulse" />
-                                                    Broadcast live • Awaiting supplier bids
-                                                </span>
-                                            )}
+                                            {(() => {
+                                                const pendingForReq = selectPendingOffersForRequirement(quotations, req.id)
+                                                const acceptedForReq = selectAcceptedOfferForRequirement(quotations, req.id)
+                                                const relatedOrder = orders.find((o) => o.requirementId === req.id)
+
+                                                if (pendingForReq.length > 0) {
+                                                    return (
+                                                        <Button
+                                                            asChild
+                                                            size="sm"
+                                                            className="h-8 px-3 rounded-lg bg-amber-500/15 text-amber-600 dark:text-amber-400 hover:bg-amber-500/25 border border-amber-500/30 text-xs font-semibold"
+                                                        >
+                                                            <Link href="/business/offers" className="flex items-center gap-1.5">
+                                                                <span>Review {pendingForReq.length} offer{pendingForReq.length > 1 ? "s" : ""}</span>
+                                                                <ArrowRight className="size-3" />
+                                                            </Link>
+                                                        </Button>
+                                                    )
+                                                }
+
+                                                if (acceptedForReq || relatedOrder) {
+                                                    return (
+                                                        <Button
+                                                            asChild
+                                                            size="sm"
+                                                            variant="outline"
+                                                            className="h-8 px-3 rounded-lg text-xs font-semibold border-border/60 hover:bg-muted"
+                                                        >
+                                                            <Link href="/business/orders" className="flex items-center gap-1.5">
+                                                                <span>Track order</span>
+                                                                <ArrowRight className="size-3" />
+                                                            </Link>
+                                                        </Button>
+                                                    )
+                                                }
+
+                                                return (
+                                                    <span className="text-[11px] text-muted-foreground flex items-center gap-1">
+                                                        <Radio className="size-3 text-blue-500 animate-pulse" />
+                                                        Broadcast live • Awaiting vendor offers
+                                                    </span>
+                                                )
+                                            })()}
                                         </div>
                                     </div>
                                 </CardContent>

@@ -18,10 +18,74 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import {
     Order,
+    OrderWorkflowStatus,
+    PaymentWorkflowStatus,
     useWorkflowStore,
-    WORKFLOW_STAGES,
 } from "@/lib/business-workflow-store"
+import {
+    CLIENT_STAGES,
+    getClientStageIndex,
+} from "@/lib/constants/stages"
 import { toast } from "sonner"
+
+const ORDER_TRANSITION_STAGES: OrderWorkflowStatus[] = [
+    "Order Confirmed",
+    "In Production",
+    "Shipped",
+    "Delivered",
+]
+
+const PAYMENT_BADGES: Record<
+    PaymentWorkflowStatus,
+    { label: string; className: string }
+> = {
+    "Pending": {
+        label: "Payment: Pending",
+        className: "border-amber-500/30 bg-amber-500/10 text-amber-500",
+    },
+    "Payment Initiated": {
+        label: "Payment Initiated",
+        className: "border-sky-500/30 bg-sky-500/10 text-sky-400",
+    },
+    "Paid": {
+        label: "Paid",
+        className: "border-emerald-500/30 bg-emerald-500/10 text-emerald-400",
+    },
+    "Refunded": {
+        label: "Refunded",
+        className: "border-purple-500/30 bg-purple-500/10 text-purple-400",
+    },
+}
+
+function RelativeTimestamp({
+    label,
+    value,
+    daysAgo = 0,
+}: {
+    label?: string
+    value: string
+    daysAgo?: number
+}) {
+    // Generate an absolute date string for the hover tooltip (Item 20)
+    const baseDate = new Date(Date.now() - daysAgo * 86400000)
+    const fullDateString = baseDate.toLocaleString("en-IN", {
+        weekday: "short",
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+    })
+
+    return (
+        <span
+            title={`Full timestamp: ${fullDateString}`}
+            className="cursor-help hover:text-foreground transition-colors underline decoration-dotted decoration-muted-foreground/30 underline-offset-2"
+        >
+            {label ? `${label} ` : ""}{value}
+        </span>
+    )
+}
 
 export default function OrdersView() {
     const orders = useWorkflowStore((s) => s.orders)
@@ -32,17 +96,26 @@ export default function OrdersView() {
     const [statusFilter, setStatusFilter] = useState<string>("all")
 
     const handleAdvanceStatus = (order: Order) => {
-        const currentIndex = WORKFLOW_STAGES.indexOf(order.status)
-        if (currentIndex < WORKFLOW_STAGES.length - 1) {
-            const nextStatus = WORKFLOW_STAGES[currentIndex + 1]
+        const currentIndex = ORDER_TRANSITION_STAGES.indexOf(order.status)
+        if (currentIndex !== -1 && currentIndex < ORDER_TRANSITION_STAGES.length - 1) {
+            const nextStatus = ORDER_TRANSITION_STAGES[currentIndex + 1]
             updateOrderStatus(order.id, nextStatus)
             toast.success(`Order ${order.orderNumber} advanced to "${nextStatus}"!`)
         }
     }
 
     const handleTogglePaid = (order: Order) => {
+        const currentStatus: PaymentWorkflowStatus =
+            order.paymentStatus || (order.paid ? "Paid" : "Pending")
+        const statuses: PaymentWorkflowStatus[] = [
+            "Pending",
+            "Payment Initiated",
+            "Paid",
+            "Refunded",
+        ]
+        const nextStatus = statuses[(statuses.indexOf(currentStatus) + 1) % statuses.length]
         toggleOrderPaid(order.id)
-        toast.info(`Order ${order.orderNumber} payment marked as ${!order.paid ? "Paid: Yes" : "Paid: No"}`)
+        toast.info(`Order ${order.orderNumber} payment updated to "${nextStatus}"`)
     }
 
     const filteredOrders = orders.filter((order) => {
@@ -68,13 +141,13 @@ export default function OrdersView() {
                 <div className="space-y-1.5">
                     <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
                         <Package className="size-3" />
-                        <span>Order Fulfillment Tracking (Eureka MVP Section 7)</span>
+                        <span>Order Fulfillment Tracking</span>
                     </div>
                     <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground font-heading">
                         Orders
                     </h1>
                     <p className="text-sm text-muted-foreground max-w-2xl leading-relaxed">
-                        Track orders through the 6-stage fulfillment machine: Requirement Received → Offers → Order Confirmed → In Production → Shipped → Delivered.
+                        Track orders through the unified fulfillment stages: Requirement → Offers → Order Confirmed → In Production → Shipped → Delivered.
                     </p>
                 </div>
 
@@ -102,7 +175,7 @@ export default function OrdersView() {
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold">{orders.length}</div>
-                        <p className="text-[11px] text-muted-foreground mt-0.5">Accepted supplier quotes</p>
+                        <p className="text-[11px] text-muted-foreground mt-0.5">Accepted vendor offers</p>
                     </CardContent>
                 </Card>
 
@@ -188,7 +261,7 @@ export default function OrdersView() {
                             type="text"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            placeholder="Search orders, number, supplier..."
+                            placeholder="Search orders, number, vendor..."
                             className="h-9 w-full pl-9 text-xs"
                         />
                         {searchQuery && (
@@ -210,17 +283,21 @@ export default function OrdersView() {
                             <Package className="size-8 mx-auto text-muted-foreground/50" />
                             <h3 className="text-base font-semibold text-foreground">No active orders found</h3>
                             <p className="text-xs text-muted-foreground leading-relaxed">
-                                You do not have any orders matching this filter. Accept a quote from your incoming proposals to launch an order.
+                                You do not have any orders matching this filter. Accept an offer from your incoming proposals to launch an order.
                             </p>
                             <Button asChild size="sm" className="mt-2 text-xs">
-                                <Link href="/business/offers">Review received quotes</Link>
+                                <Link href="/business/offers">Review received offers</Link>
                             </Button>
                         </div>
                     </Card>
                 ) : (
                     <div className="grid gap-5">
                         {filteredOrders.map((order) => {
-                            const currentStageIndex = WORKFLOW_STAGES.indexOf(order.status)
+                            const currentStageIndex = getClientStageIndex(order.status)
+                            const currentTransitionIndex = ORDER_TRANSITION_STAGES.indexOf(order.status)
+                            const paymentStatus: PaymentWorkflowStatus =
+                                order.paymentStatus || (order.paid ? "Paid" : "Pending")
+                            const paymentConfig = PAYMENT_BADGES[paymentStatus]
 
                             return (
                                 <Card key={order.id} className="hover:border-border transition-all">
@@ -238,21 +315,17 @@ export default function OrdersView() {
                                                 </Badge>
                                             </div>
                                             <CardDescription className="text-xs">
-                                                Supplier: <strong>{order.vendorName}</strong> ({order.vendorLocation}) • Quantity: {order.quantity}
+                                                Vendor: <strong>{order.vendorName}</strong> ({order.vendorLocation}) • Quantity: {order.quantity}
                                             </CardDescription>
                                         </div>
 
                                         <div className="flex items-center gap-2 self-start shrink-0">
-                                            {/* Section 8: Paid: yes/no indicator */}
+                                            {/* Item 16: 4-State Payment Display */}
                                             <Badge
                                                 variant="outline"
-                                                className={`text-xs px-2.5 py-0.5 font-medium ${
-                                                    order.paid
-                                                        ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-500"
-                                                        : "border-amber-500/30 bg-amber-500/10 text-amber-500"
-                                                }`}
+                                                className={`text-xs px-2.5 py-0.5 font-medium ${paymentConfig.className}`}
                                             >
-                                                {order.paid ? "Paid: Yes" : "Paid: No (Bank Transfer)"}
+                                                {paymentConfig.label}
                                             </Badge>
 
                                             <Badge
@@ -269,8 +342,8 @@ export default function OrdersView() {
                                         </div>
                                     </CardHeader>
 
-                                    <CardContent className="space-y-6">
-                                        {/* SECTION 7: Exact 6-Stage Progress Tracker */}
+                                    <CardContent className="space-y-5">
+                                        {/* Item 10: Unified 6-Stage Client Progress Tracker */}
                                         <div className="space-y-2.5 bg-muted/20 p-4 rounded-xl border border-border/40">
                                             <div className="flex items-center justify-between text-xs text-muted-foreground">
                                                 <span className="font-medium text-foreground">Order Lifecycle Stage</span>
@@ -279,7 +352,7 @@ export default function OrdersView() {
 
                                             {/* Step Tracker */}
                                             <div className="grid grid-cols-6 gap-1.5 sm:gap-2 pt-1">
-                                                {WORKFLOW_STAGES.map((stage, idx) => {
+                                                {CLIENT_STAGES.map((stage, idx) => {
                                                     const isCompleted = idx <= currentStageIndex
                                                     const isCurrent = idx === currentStageIndex
 
@@ -288,7 +361,7 @@ export default function OrdersView() {
                                                             <div
                                                                 className={`h-2 rounded-full transition-all ${
                                                                     isCompleted
-                                                                        ? idx === 5
+                                                                        ? idx === CLIENT_STAGES.length - 1
                                                                             ? "bg-emerald-600"
                                                                             : "bg-blue-600"
                                                                         : "bg-muted"
@@ -327,16 +400,31 @@ export default function OrdersView() {
 
                                             <div className="border border-border/40 rounded-lg p-3 bg-card">
                                                 <span className="text-[10px] text-muted-foreground uppercase font-semibold block">Timestamp Log</span>
-                                                <span className="font-medium text-foreground mt-0.5 block">Placed {order.createdAt}</span>
-                                                <span className="text-[11px] text-muted-foreground">{order.updatedAt}</span>
+                                                <div className="font-medium text-foreground mt-0.5 block">
+                                                    <RelativeTimestamp label="Placed" value={order.createdAt} daysAgo={4} />
+                                                </div>
+                                                <div className="text-[11px] text-muted-foreground mt-0.5">
+                                                    <RelativeTimestamp label="Updated" value={order.updatedAt} daysAgo={0} />
+                                                </div>
                                             </div>
                                         </div>
 
-                                        {/* Demo State Controls (Section 13: Client/Vendor can move status) */}
+                                        {/* Item 16: Bank-transfer instructions block */}
+                                        <div className="rounded-xl border border-border/60 bg-muted/20 p-3.5 space-y-1 text-xs">
+                                            <div className="flex items-center gap-2 font-semibold text-foreground">
+                                                <CreditCard className="size-3.5 text-blue-500" />
+                                                <span>Payment via Direct Bank Transfer (NEFT / RTGS)</span>
+                                            </div>
+                                            <p className="text-muted-foreground text-[11px] leading-relaxed">
+                                                Payment instructions will be shared by Unifiée Admin. Please quote order reference <strong>{order.orderNumber}</strong> in your payment remarks.
+                                            </p>
+                                        </div>
+
+                                        {/* Demo State Controls */}
                                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2 border-t border-border/30 text-xs">
                                             <div className="flex items-center gap-2 text-muted-foreground">
-                                                <span className="font-semibold text-foreground">Interactive Demo:</span>
-                                                <span>Advance stage or update payment record</span>
+                                                <span className="font-semibold text-foreground">Demo Controls:</span>
+                                                <span>Cycle payment state or advance fulfillment stage</span>
                                             </div>
 
                                             <div className="flex items-center gap-2 self-end sm:self-auto">
@@ -347,16 +435,16 @@ export default function OrdersView() {
                                                     className="h-8 text-xs border-border/50"
                                                 >
                                                     <CreditCard className="size-3.5 mr-1" />
-                                                    <span>Toggle Paid ({order.paid ? "Yes" : "No"})</span>
+                                                    <span>Payment: {paymentStatus}</span>
                                                 </Button>
 
-                                                {currentStageIndex < WORKFLOW_STAGES.length - 1 && (
+                                                {currentTransitionIndex < ORDER_TRANSITION_STAGES.length - 1 && (
                                                     <Button
                                                         size="sm"
                                                         onClick={() => handleAdvanceStatus(order)}
                                                         className="h-8 px-3.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-medium gap-1"
                                                     >
-                                                        <span>Advance to &ldquo;{WORKFLOW_STAGES[currentStageIndex + 1]}&rdquo;</span>
+                                                        <span>Advance to &ldquo;{ORDER_TRANSITION_STAGES[currentTransitionIndex + 1]}&rdquo;</span>
                                                         <ArrowRight className="size-3" />
                                                     </Button>
                                                 )}

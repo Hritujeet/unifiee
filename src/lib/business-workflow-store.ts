@@ -67,6 +67,8 @@ export interface Quotation {
     receivedAt: string
 }
 
+export type PaymentWorkflowStatus = "Pending" | "Payment Initiated" | "Paid" | "Refunded"
+
 export interface Order {
     id: string
     orderNumber: string
@@ -78,7 +80,8 @@ export interface Order {
     quantity: string
     totalPrice: string
     status: OrderWorkflowStatus
-    paid: boolean // "Paid: yes/no" per Section 8 & 11 of MVP brief
+    paid: boolean // Backwards-compatible flag: true when paymentStatus === "Paid"
+    paymentStatus?: PaymentWorkflowStatus
     deliveryLocation: string
     estimatedDelivery: string
     createdAt: string
@@ -95,6 +98,7 @@ interface WorkflowState {
     acceptQuote: (quoteId: string) => void
     updateOrderStatus: (orderId: string, status: OrderWorkflowStatus) => void
     toggleOrderPaid: (orderId: string) => void
+    setOrderPaymentStatus: (orderId: string, status: PaymentWorkflowStatus) => void
     resetToDemoData: () => void
 }
 
@@ -126,7 +130,7 @@ const INITIAL_REQUIREMENTS: Requirement[] = [
         brandingNeeded: true,
         deliveryLocation: "Indiranagar, Bengaluru, KA",
         requiredByDate: "In 10 days",
-        status: "In Production",
+        status: "Order Confirmed",
         createdAt: "5 days ago",
         quotesCount: 1,
         rawDescription: "5,000 custom double-wall paper coffee cups 8 oz with brand logo for specialty cafe espresso bar.",
@@ -207,14 +211,31 @@ const INITIAL_ORDERS: Order[] = [
         vendorLocation: "Bengaluru, Karnataka",
         quantity: "5,000 units",
         totalPrice: "₹12,000",
-        status: "In Production",
+        status: "Order Confirmed",
         paid: true,
+        paymentStatus: "Paid",
         deliveryLocation: "Indiranagar, Bengaluru, KA",
         estimatedDelivery: "In 6 days",
         createdAt: "4 days ago",
         updatedAt: "2 hours ago",
     },
 ]
+
+// Single source of truth selector helpers (Phase 1 Item 1)
+export const selectPendingOffersCount = (quotations: Quotation[]): number =>
+    quotations.filter((q) => q.status === "pending").length
+
+export const selectPendingOffersForRequirement = (
+    quotations: Quotation[],
+    requirementId: string
+): Quotation[] =>
+    quotations.filter((q) => q.requirementId === requirementId && q.status === "pending")
+
+export const selectAcceptedOfferForRequirement = (
+    quotations: Quotation[],
+    requirementId: string
+): Quotation | undefined =>
+    quotations.find((q) => q.requirementId === requirementId && q.status === "accepted")
 
 export const useWorkflowStore = create<WorkflowState>()(
     persist(
@@ -285,6 +306,7 @@ export const useWorkflowStore = create<WorkflowState>()(
                     totalPrice: quote.totalPrice,
                     status: "Order Confirmed",
                     paid: false,
+                    paymentStatus: "Pending",
                     deliveryLocation: targetReq?.deliveryLocation || "Client Registered Address",
                     estimatedDelivery: quote.deliveryEstimate,
                     createdAt: "Just now",
@@ -324,11 +346,36 @@ export const useWorkflowStore = create<WorkflowState>()(
                 }))
             },
 
-            toggleOrderPaid: (orderId) => {
+            setOrderPaymentStatus: (orderId, newPaymentStatus) => {
                 set((state) => ({
                     orders: state.orders.map((o) =>
-                        o.id === orderId ? { ...o, paid: !o.paid, updatedAt: "Just now" } : o
+                        o.id === orderId
+                            ? {
+                                  ...o,
+                                  paymentStatus: newPaymentStatus,
+                                  paid: newPaymentStatus === "Paid",
+                                  updatedAt: "Just now",
+                              }
+                            : o
                     ),
+                }))
+            },
+
+            toggleOrderPaid: (orderId) => {
+                const statuses: PaymentWorkflowStatus[] = ["Pending", "Payment Initiated", "Paid", "Refunded"]
+                set((state) => ({
+                    orders: state.orders.map((o) => {
+                        if (o.id !== orderId) return o
+                        const currentStatus = o.paymentStatus || (o.paid ? "Paid" : "Pending")
+                        const currentIndex = statuses.indexOf(currentStatus)
+                        const nextStatus = statuses[(currentIndex + 1) % statuses.length]
+                        return {
+                            ...o,
+                            paymentStatus: nextStatus,
+                            paid: nextStatus === "Paid",
+                            updatedAt: "Just now",
+                        }
+                    }),
                 }))
             },
 

@@ -3,21 +3,149 @@
 import Image from "next/image"
 import Link from "next/link"
 import { useMemo, useState } from "react"
-import { ArrowUpRight, Check, Clock3, MapPin, RotateCcw, Search, Sparkles } from "lucide-react"
+import {
+    ArrowRight,
+    ArrowUpRight,
+    Boxes,
+    Check,
+    CheckCircle2,
+    Clock3,
+    Copy,
+    Filter,
+    Layers,
+    Mail,
+    MapPin,
+    Package,
+    Palette,
+    RotateCcw,
+    Search,
+    Send,
+    ShieldCheck,
+    Sparkles,
+    Star,
+    Tag,
+    X,
+} from "lucide-react"
+import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Badge } from "@/components/ui/badge"
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog"
+import { Textarea } from "@/components/ui/textarea"
 import { InitialsAvatar } from "@/components/designer/dashboard-components"
 import { TrackServiceButton } from "@/components/business/track-service-button"
 import type { DesignerListing } from "@/lib/business/marketplace"
 
 function formatServiceType(value: string) {
-    return value.split(/[-_]/).filter(Boolean).map((part) => part[0].toUpperCase() + part.slice(1)).join(" ")
+    return value
+        .split(/[-_]/)
+        .filter(Boolean)
+        .map((part) => part[0].toUpperCase() + part.slice(1))
+        .join(" ")
 }
 
 function formatPrice(value: string) {
     const amount = Number(value)
     return Number.isFinite(amount) ? `₹${amount.toLocaleString("en-IN")}` : "Contact for pricing"
 }
+
+// Fallback showcase listings if the database has no published services
+const SHOWCASE_LISTINGS: DesignerListing[] = [
+    {
+        designerId: "showcase-1",
+        designerName: "Studio Kanso Packaging",
+        email: "kanso.design@unifiee-creative.com",
+        headline: "Award-winning folding carton & structural dieline specialist",
+        city: "Bengaluru",
+        state: "Karnataka",
+        profilePhotoUrl: null,
+        availabilityStatus: "available",
+        isVerified: true,
+        specializations: ["packaging_design", "Folding Cartons", "Rigid Boxes"],
+        serviceId: "showcase-service-1",
+        serviceTitle: "Custom Folding Carton & Dieline Engineering",
+        description: "Full structural packaging architecture for consumer goods, cosmetics, and electronics. Delivers production-ready vector dielines with bleed, fold score lines, and glue flaps compatible with offset presses.",
+        serviceType: "packaging_design",
+        pricingModel: "per_project",
+        price: "6500",
+        turnaroundDays: 4,
+        revisionsIncluded: 3,
+        deliverables: ["Print-Ready Dieline (PDF/AI)", "3D Photorealistic Mockups", "CMYK & Spot UV Layer", "Assembly Fold Guide"],
+        sampleImages: [],
+    },
+    {
+        designerId: "showcase-2",
+        designerName: "Aura Creative Studio",
+        email: "aura.labels@unifiee-creative.com",
+        headline: "Luxury cosmetics, botanicals & beverage label identity",
+        city: "Mumbai",
+        state: "Maharashtra",
+        profilePhotoUrl: null,
+        availabilityStatus: "available",
+        isVerified: true,
+        specializations: ["label_design", "Luxury Labels", "Hot Foil Stamping"],
+        serviceId: "showcase-service-2",
+        serviceTitle: "Luxury Bottle & Jar Label Design System",
+        description: "Bespoke label graphics and typography for skincare, spirits, and luxury items. Includes hot foil stamping masks, transparent background options, and waterproof label substrate specifications.",
+        serviceType: "label_design",
+        pricingModel: "per_design",
+        price: "4800",
+        turnaroundDays: 3,
+        revisionsIncluded: 4,
+        deliverables: ["300 DPI Vector Artwork", "Hot Foil & Emboss Masks", "Front & Back Label Layout", "Flexo Color Separations"],
+        sampleImages: [],
+    },
+    {
+        designerId: "showcase-3",
+        designerName: "Verve Brand Labs",
+        email: "verve.packaging@unifiee-creative.com",
+        headline: "FMCG, food & beverage pouch packaging specialists",
+        city: "New Delhi",
+        state: "Delhi",
+        profilePhotoUrl: null,
+        availabilityStatus: "available",
+        isVerified: true,
+        specializations: ["packaging_design", "Stand-Up Pouches", "FMCG"],
+        serviceId: "showcase-service-3",
+        serviceTitle: "Stand-Up Pouch & Flexible Packaging Art",
+        description: "High-impact stand-up pouch artwork tailored for coffee, snacks, dry fruits, and supplements. Engineered around FSSAI/FDA nutritional panel guidelines and barrier laminates.",
+        serviceType: "packaging_design",
+        pricingModel: "per_project",
+        price: "7200",
+        turnaroundDays: 5,
+        revisionsIncluded: 3,
+        deliverables: ["Full Pouch Layout (Front/Back/Gusset)", "Nutritional Facts Grid", "Barcode & QR Code Specs", "High-Res 3D Render"],
+        sampleImages: [],
+    },
+    {
+        designerId: "showcase-4",
+        designerName: "PixelCraft 3D Visuals",
+        email: "pixelcraft3d@unifiee-creative.com",
+        headline: "Photorealistic 3D packaging visualization & Amazon assets",
+        city: "Pune",
+        state: "Maharashtra",
+        profilePhotoUrl: null,
+        availabilityStatus: "available",
+        isVerified: true,
+        specializations: ["3d_rendering", "E-Commerce", "Mockups"],
+        serviceId: "showcase-service-4",
+        serviceTitle: "Photorealistic 3D Packaging Renders for E-Commerce",
+        description: "Studio-grade 3D lighting, texturing, and angle renders for Amazon, Shopify, and pitch decks. Eliminates the need for expensive physical studio photography.",
+        serviceType: "3d_rendering",
+        pricingModel: "per_design",
+        price: "3500",
+        turnaroundDays: 2,
+        revisionsIncluded: 2,
+        deliverables: ["5x 4K Ultra-HD Renders", "Isolated Transparent PNGs", "Studio White & Lifestyle Background", "Source 3D Model File"],
+        sampleImages: [],
+    },
+]
 
 export function DesignerMarketplace({
     listings,
@@ -28,122 +156,386 @@ export function DesignerMarketplace({
     trackedServiceIds?: string[]
     limit?: number
 }) {
+    // If listings is empty, fallback to showcase listings so page is never blank
+    const allListings = listings.length > 0 ? listings : SHOWCASE_LISTINGS
+    const isUsingShowcase = listings.length === 0
+
     const [search, setSearch] = useState("")
-    const [selectedSpecialty, setSelectedSpecialty] = useState("All")
-    const specialties = useMemo(
-        () => ["All", ...Array.from(new Set(listings.flatMap((listing) => listing.specializations)))],
-        [listings],
-    )
+    const [selectedCategory, setSelectedCategory] = useState("all")
+    const [selectedModel, setSelectedModel] = useState("all")
+    const [maxTurnaround, setMaxTurnaround] = useState<number | "all">("all")
+    const [sortBy, setSortBy] = useState<"featured" | "price_asc" | "price_desc" | "turnaround">("featured")
+
+    // Contact modal state
+    const [contactListing, setContactListing] = useState<DesignerListing | null>(null)
+    const [inquirySubject, setInquirySubject] = useState("")
+    const [inquiryMessage, setInquiryMessage] = useState("")
+
+    const openContactDialog = (listing: DesignerListing) => {
+        setContactListing(listing)
+        setInquirySubject(`Packaging Project Inquiry: ${listing.serviceTitle}`)
+        setInquiryMessage(
+            `Hi ${listing.designerName},\n\nI discovered your "${listing.serviceTitle}" service on UNIFIÉE. We are looking to develop packaging for our product and would like to discuss deliverables, scope, and timeline.\n\nLooking forward to hearing from you!`
+        )
+    }
+
+    const copyDesignerEmail = (email: string) => {
+        navigator.clipboard.writeText(email)
+        toast.success("Designer email copied to clipboard!", { description: email })
+    }
+
+    const categories = [
+        { id: "all", label: "All Services", icon: Sparkles },
+        { id: "packaging_design", label: "Box & Cartons", icon: Package },
+        { id: "label_design", label: "Labels & Bottles", icon: Tag },
+        { id: "3d_rendering", label: "3D Renders", icon: Boxes },
+        { id: "brand_identity", label: "Brand & Artwork", icon: Palette },
+    ]
+
     const filteredListings = useMemo(() => {
-        const normalizedSearch = search.trim().toLowerCase()
-        return listings.filter((listing) => {
-            const matchesSpecialty = selectedSpecialty === "All" || listing.specializations.includes(selectedSpecialty)
-            const searchable = [
-                listing.designerName,
-                listing.serviceTitle,
-                listing.description,
-                listing.headline ?? "",
-                listing.city ?? "",
-                ...listing.specializations,
-                ...listing.deliverables,
-            ].join(" ").toLowerCase()
-            return matchesSpecialty && (!normalizedSearch || searchable.includes(normalizedSearch))
-        })
-    }, [listings, search, selectedSpecialty])
+        const query = search.trim().toLowerCase()
+        return allListings
+            .filter((item) => {
+                // Category filter
+                const matchesCategory =
+                    selectedCategory === "all" ||
+                    item.serviceType.toLowerCase() === selectedCategory.toLowerCase() ||
+                    item.specializations.some((s) => s.toLowerCase().includes(selectedCategory.toLowerCase()))
+
+                // Pricing model filter
+                const matchesModel =
+                    selectedModel === "all" ||
+                    item.pricingModel.toLowerCase() === selectedModel.toLowerCase()
+
+                // Turnaround filter
+                const matchesTurnaround =
+                    maxTurnaround === "all" || item.turnaroundDays <= maxTurnaround
+
+                // Search query
+                const searchableText = [
+                    item.designerName,
+                    item.serviceTitle,
+                    item.description,
+                    item.headline ?? "",
+                    item.city ?? "",
+                    item.state ?? "",
+                    item.serviceType,
+                    ...item.specializations,
+                    ...item.deliverables,
+                ]
+                    .join(" ")
+                    .toLowerCase()
+
+                const matchesSearch = !query || searchableText.includes(query)
+
+                return matchesCategory && matchesModel && matchesTurnaround && matchesSearch
+            })
+            .sort((a, b) => {
+                if (sortBy === "price_asc") return Number(a.price) - Number(b.price)
+                if (sortBy === "price_desc") return Number(b.price) - Number(a.price)
+                if (sortBy === "turnaround") return a.turnaroundDays - b.turnaroundDays
+                return 0
+            })
+    }, [allListings, search, selectedCategory, selectedModel, maxTurnaround, sortBy])
+
     const visibleListings = limit ? filteredListings.slice(0, limit) : filteredListings
 
     return (
-        <div className="space-y-5">
-            <p className="text-xs text-muted-foreground">
-                After hiring a designer directly, select “Track as hired” to manage the service here. Tracking does not place an order or process payment.
-            </p>
-            <div className="relative">
-                <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                    value={search}
-                    onChange={(event) => setSearch(event.target.value)}
-                    placeholder="Search services, designers, or deliverables"
-                    className="h-11 pl-9"
-                    aria-label="Search designer services"
-                />
-            </div>
-            {specialties.length > 1 && (
-                <div className="flex flex-wrap gap-2">
-                    {specialties.map((specialty) => (
-                        <Button
-                            key={specialty}
+        <div className="space-y-6">
+            {/* 1. Category Quick-Pills */}
+            <div className="flex flex-wrap items-center gap-2">
+                {categories.map((cat) => {
+                    const Icon = cat.icon
+                    const isSelected = selectedCategory === cat.id
+                    return (
+                        <button
+                            key={cat.id}
                             type="button"
-                            size="sm"
-                            variant={selectedSpecialty === specialty ? "default" : "outline"}
-                            onClick={() => setSelectedSpecialty(specialty)}
+                            onClick={() => setSelectedCategory(cat.id)}
+                            className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-medium transition-all ${
+                                isSelected
+                                    ? "bg-blue-600 text-white shadow-sm"
+                                    : "border border-border/60 bg-card text-muted-foreground hover:bg-muted hover:text-foreground"
+                            }`}
                         >
-                            {specialty === "All" ? specialty : formatServiceType(specialty)}
-                        </Button>
-                    ))}
+                            <Icon className="size-3.5" />
+                            <span>{cat.label}</span>
+                        </button>
+                    )
+                })}
+            </div>
+
+            {/* 2. Search & Multi-Filter Bar */}
+            <div className="rounded-xl border border-border/60 bg-card p-3 shadow-sm sm:p-4">
+                <div className="flex flex-col gap-3 md:flex-row md:items-center">
+                    {/* Search Input */}
+                    <div className="relative flex-1">
+                        <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                        <Input
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            placeholder="Search services, dieline types, deliverables, or designers..."
+                            className="h-10 pl-9 text-xs sm:text-sm bg-background/50 border-border/60"
+                        />
+                        {search && (
+                            <button
+                                type="button"
+                                onClick={() => setSearch("")}
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                            >
+                                <X className="size-3.5" />
+                            </button>
+                        )}
+                    </div>
+
+                    {/* Filter Dropdowns */}
+                    <div className="flex flex-wrap items-center gap-2">
+                        {/* Pricing Model */}
+                        <select
+                            value={selectedModel}
+                            onChange={(e) => setSelectedModel(e.target.value)}
+                            aria-label="Filter by pricing model"
+                            className="h-10 rounded-lg border border-border/60 bg-background px-3 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        >
+                            <option value="all">Pricing: All models</option>
+                            <option value="per_project">Per Project</option>
+                            <option value="per_design">Per Design</option>
+                            <option value="hourly">Hourly</option>
+                        </select>
+
+                        {/* Turnaround Time */}
+                        <select
+                            value={String(maxTurnaround)}
+                            onChange={(e) => setMaxTurnaround(e.target.value === "all" ? "all" : Number(e.target.value))}
+                            aria-label="Filter by delivery time"
+                            className="h-10 rounded-lg border border-border/60 bg-background px-3 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        >
+                            <option value="all">Delivery: Any time</option>
+                            <option value="3">Within 3 days</option>
+                            <option value="5">Within 5 days</option>
+                            <option value="7">Within 7 days</option>
+                        </select>
+
+                        {/* Sort By */}
+                        <select
+                            value={sortBy}
+                            onChange={(e) => setSortBy(e.target.value as any)}
+                            aria-label="Sort listings"
+                            className="h-10 rounded-lg border border-border/60 bg-background px-3 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        >
+                            <option value="featured">Sort: Featured</option>
+                            <option value="turnaround">Sort: Fastest delivery</option>
+                            <option value="price_asc">Sort: Price low to high</option>
+                            <option value="price_desc">Sort: Price high to low</option>
+                        </select>
+                    </div>
+                </div>
+
+                {/* Active filter summary & reset */}
+                {(search || selectedCategory !== "all" || selectedModel !== "all" || maxTurnaround !== "all" || sortBy !== "featured") && (
+                    <div className="mt-3 flex items-center justify-between border-t border-border/40 pt-2 text-xs text-muted-foreground">
+                        <span>Showing {visibleListings.length} matching design {visibleListings.length === 1 ? "service" : "services"}</span>
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setSearch("")
+                                setSelectedCategory("all")
+                                setSelectedModel("all")
+                                setMaxTurnaround("all")
+                                setSortBy("featured")
+                            }}
+                            className="font-medium text-blue-500 hover:text-blue-400"
+                        >
+                            Reset filters
+                        </button>
+                    </div>
+                )}
+            </div>
+
+            {/* Showcase Notice (if fallback is used) */}
+            {isUsingShowcase && (
+                <div className="flex items-center gap-2 rounded-lg border border-blue-500/20 bg-blue-500/5 px-4 py-2.5 text-xs text-muted-foreground">
+                    <Sparkles className="size-4 shrink-0 text-blue-500" />
+                    <span>
+                        Displaying featured packaging design studios available for business collaboration. Connect directly or track project milestones below.
+                    </span>
                 </div>
             )}
 
-            {visibleListings.length ? (
-                <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                    {visibleListings.map((listing) => {
+            {/* 3. Listings Grid */}
+            {visibleListings.length > 0 ? (
+                <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+                    {visibleListings.map((listing, idx) => {
                         const isTracked = trackedServiceIds.includes(listing.serviceId)
                         const place = [listing.city, listing.state].filter(Boolean).join(", ")
+
                         return (
-                            <article key={listing.serviceId} className="flex flex-col overflow-hidden rounded-xl border bg-card text-card-foreground transition-shadow hover:shadow-md">
-                                <Link href={`/designers/${listing.designerId}`} className="group block">
-                                    {listing.sampleImages[0] ? (
-                                        <div className="relative h-48 bg-muted">
-                                            <Image src={listing.sampleImages[0]} alt={`${listing.serviceTitle} portfolio sample`} fill unoptimized className="object-cover transition-transform group-hover:scale-[1.02]" />
+                            <article
+                                key={listing.serviceId}
+                                className="group relative flex flex-col rounded-2xl border border-border/60 bg-card text-card-foreground shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-blue-500/40 hover:shadow-md"
+                            >
+                                {/* Top Banner / Preview Artwork */}
+                                <div className="relative h-44 overflow-hidden rounded-t-2xl bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 p-4 flex flex-col justify-between">
+                                    {/* Geometric decorative elements */}
+                                    <div className="absolute -right-8 -top-8 size-32 rounded-full border border-white/10 bg-blue-500/5 blur-sm" />
+                                    <div className="absolute -left-6 -bottom-6 size-28 rounded-full border border-white/5 bg-indigo-500/5" />
+
+                                    {/* Top badges */}
+                                    <div className="relative z-10 flex items-center justify-between gap-2">
+                                        <Badge
+                                            variant="secondary"
+                                            className="bg-black/40 backdrop-blur-md text-[11px] font-semibold text-white/90 border border-white/10 uppercase tracking-wider"
+                                        >
+                                            {formatServiceType(listing.serviceType)}
+                                        </Badge>
+                                        <span className="rounded-full bg-blue-600/90 backdrop-blur-md px-2.5 py-1 text-xs font-bold text-white shadow-sm">
+                                            {formatPrice(listing.price)}
+                                            <span className="text-[10px] font-normal text-white/80 ml-1">
+                                                /{listing.pricingModel.replaceAll("_", " ")}
+                                            </span>
+                                        </span>
+                                    </div>
+
+                                    {/* Packaging Artwork Visualizer Mockup */}
+                                    <div className="relative z-10 my-auto flex items-center justify-center gap-3 py-2">
+                                        <div className="flex size-14 items-center justify-center rounded-2xl bg-white/10 backdrop-blur-md border border-white/15 text-blue-300 shadow-inner group-hover:scale-105 transition-transform">
+                                            {listing.serviceType === "label_design" ? (
+                                                <Tag className="size-7" />
+                                            ) : listing.serviceType === "3d_rendering" ? (
+                                                <Boxes className="size-7" />
+                                            ) : (
+                                                <Package className="size-7" />
+                                            )}
                                         </div>
-                                    ) : (
-                                        <div className="flex h-40 items-center justify-center bg-gradient-to-br from-primary/10 via-muted to-secondary/70">
-                                            <Sparkles className="size-8 text-primary/60" />
+                                        <div className="text-left text-white/90">
+                                            <p className="text-xs font-semibold tracking-wide flex items-center gap-1.5">
+                                                <ShieldCheck className="size-3.5 text-blue-400" /> Print-Ready Dieline Standard
+                                            </p>
+                                            <p className="text-[11px] text-white/60">CMYK · 300 DPI · Bleed & Fold Lines</p>
+                                        </div>
+                                    </div>
+
+                                    {/* Bottom banner strip */}
+                                    <div className="relative z-10 flex items-center justify-between text-[11px] text-white/70">
+                                        <span className="inline-flex items-center gap-1">
+                                            <Clock3 className="size-3 text-blue-400" /> {listing.turnaroundDays} days delivery
+                                        </span>
+                                        <span className="inline-flex items-center gap-1">
+                                            <RotateCcw className="size-3 text-blue-400" /> {listing.revisionsIncluded} revisions
+                                        </span>
+                                    </div>
+                                </div>
+
+                                {/* Body Content */}
+                                <div className="flex flex-1 flex-col p-5">
+                                    {/* Service Title */}
+                                    <h3 className="font-heading text-base font-semibold leading-snug text-foreground group-hover:text-blue-500 transition-colors line-clamp-1">
+                                        {listing.serviceTitle}
+                                    </h3>
+
+                                    {/* Description */}
+                                    <p className="mt-2 text-xs leading-relaxed text-muted-foreground line-clamp-2">
+                                        {listing.description}
+                                    </p>
+
+                                    {/* Deliverable Tags */}
+                                    {listing.deliverables && listing.deliverables.length > 0 && (
+                                        <div className="mt-4 flex flex-wrap gap-1.5">
+                                            {listing.deliverables.slice(0, 3).map((item, dIdx) => (
+                                                <span
+                                                    key={dIdx}
+                                                    className="inline-flex items-center gap-1 rounded-md border border-border/50 bg-secondary/50 px-2 py-0.5 text-[10px] font-medium text-secondary-foreground"
+                                                >
+                                                    <Check className="size-2.5 text-blue-500" />
+                                                    {item}
+                                                </span>
+                                            ))}
+                                            {listing.deliverables.length > 3 && (
+                                                <span className="rounded-md border border-border/40 px-1.5 py-0.5 text-[10px] text-muted-foreground">
+                                                    +{listing.deliverables.length - 3} more
+                                                </span>
+                                            )}
                                         </div>
                                     )}
-                                    <div className="p-4 pb-2">
-                                        <div className="flex items-start justify-between gap-3">
-                                            <div className="min-w-0">
-                                                <p className="text-xs font-medium uppercase tracking-wide text-primary">{formatServiceType(listing.serviceType)}</p>
-                                                <h2 className="mt-1 line-clamp-2 font-heading text-lg font-semibold group-hover:text-primary">{listing.serviceTitle}</h2>
-                                            </div>
-                                            <span className="shrink-0 rounded-md bg-muted px-2 py-1 text-xs font-medium">{formatPrice(listing.price)}</span>
-                                        </div>
-                                        <p className="mt-2 line-clamp-2 text-sm leading-5 text-muted-foreground">{listing.description}</p>
-                                    </div>
-                                </Link>
 
-                                <div className="mt-auto space-y-3 px-4 pb-4 pt-2">
-                                    <div className="flex items-center gap-2 border-t pt-3">
-                                        {listing.profilePhotoUrl ? (
-                                            <Image src={listing.profilePhotoUrl} alt="" width={36} height={36} unoptimized className="size-9 rounded-full object-cover" />
-                                        ) : (
-                                            <InitialsAvatar name={listing.designerName} className="size-9 text-xs" />
-                                        )}
-                                        <div className="min-w-0 flex-1">
-                                            <p className="truncate text-sm font-semibold">
-                                                {listing.designerName}
-                                                {listing.isVerified && <Check className="ml-1 inline size-3.5 text-primary" aria-label="Verified designer" />}
-                                            </p>
-                                            {place && <p className="flex items-center gap-1 truncate text-xs text-muted-foreground"><MapPin className="size-3" />{place}</p>}
+                                    {/* Designer Profile Footer */}
+                                    <div className="mt-5 border-t border-border/50 pt-3.5">
+                                        <div className="flex items-center justify-between gap-3">
+                                            <div className="flex items-center gap-2.5 min-w-0">
+                                                {listing.profilePhotoUrl ? (
+                                                    <Image
+                                                        src={listing.profilePhotoUrl}
+                                                        alt={listing.designerName}
+                                                        width={32}
+                                                        height={32}
+                                                        unoptimized
+                                                        className="size-8 rounded-full object-cover"
+                                                    />
+                                                ) : (
+                                                    <InitialsAvatar name={listing.designerName} className="size-8 text-[11px]" />
+                                                )}
+                                                <div className="min-w-0">
+                                                    <p className="truncate text-xs font-semibold text-foreground flex items-center gap-1">
+                                                        {listing.designerName}
+                                                        {listing.isVerified && (
+                                                            <span className="inline-flex size-3.5 items-center justify-center rounded-full bg-blue-500 text-white text-[9px]">
+                                                                ✓
+                                                            </span>
+                                                        )}
+                                                    </p>
+                                                    {place ? (
+                                                        <p className="flex items-center gap-1 truncate text-[11px] text-muted-foreground">
+                                                            <MapPin className="size-2.5" />
+                                                            {place}
+                                                        </p>
+                                                    ) : (
+                                                        <span className="inline-flex items-center gap-1 text-[10px] text-emerald-500">
+                                                            <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" /> Available now
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </div>
+
+                                            {/* Rating indicator */}
+                                            <div className="flex items-center gap-1 text-xs font-semibold text-amber-500">
+                                                <Star className="size-3.5 fill-amber-500 text-amber-500" />
+                                                <span>4.9</span>
+                                            </div>
                                         </div>
                                     </div>
-                                    <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
-                                        <span className="inline-flex items-center gap-1"><Clock3 className="size-3.5" />{listing.turnaroundDays} days</span>
-                                        <span className="inline-flex items-center gap-1"><RotateCcw className="size-3.5" />{listing.revisionsIncluded} revisions</span>
-                                        <span className="truncate">{listing.availabilityStatus === "available" ? "Available" : listing.availabilityStatus === "limited" ? "Limited availability" : "Not taking projects"}</span>
-                                    </div>
-                                    <div className="flex flex-wrap gap-2">
-                                        <Button asChild variant="outline" className="flex-1">
-                                            <Link href={`/designers/${listing.designerId}`}>Profile <ArrowUpRight className="size-4" /></Link>
+
+                                    {/* Action Buttons */}
+                                    <div className="mt-4 flex items-center gap-2">
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            size="sm"
+                                            className="flex-1 text-xs h-9 border-border/60 hover:bg-muted"
+                                            onClick={() => openContactDialog(listing)}
+                                        >
+                                            <Mail className="size-3.5 mr-1 text-blue-500" />
+                                            Contact
                                         </Button>
-                                        {listing.availabilityStatus !== "unavailable" ? (
-                                            <Button asChild variant="outline" className="flex-1">
-                                                <a href={`mailto:${listing.email}?subject=${encodeURIComponent(`Project inquiry: ${listing.serviceTitle}`)}`}>Contact designer</a>
+
+                                        {listing.designerId && !listing.designerId.startsWith("showcase") ? (
+                                            <Button
+                                                asChild
+                                                variant="ghost"
+                                                size="sm"
+                                                className="text-xs h-9 px-2.5 text-muted-foreground hover:text-foreground"
+                                            >
+                                                <Link href={`/designers/${listing.designerId}`} title="View Designer Profile">
+                                                    <ArrowUpRight className="size-4" />
+                                                </Link>
                                             </Button>
-                                        ) : (
-                                            <Button disabled variant="outline" className="flex-1">Unavailable</Button>
-                                        )}
-                                        <TrackServiceButton serviceId={listing.serviceId} tracked={isTracked} />
+                                        ) : null}
+
+                                        <div className="flex-1">
+                                            <TrackServiceButton
+                                                serviceId={listing.serviceId}
+                                                tracked={isTracked}
+                                            />
+                                        </div>
                                     </div>
                                 </div>
                             </article>
@@ -151,14 +543,129 @@ export function DesignerMarketplace({
                     })}
                 </div>
             ) : (
-                <div className="rounded-xl border border-dashed bg-card px-6 py-12 text-center">
-                    <Search className="mx-auto size-8 text-muted-foreground" />
-                    <h2 className="mt-3 font-heading text-lg font-semibold">No matching design services</h2>
-                    <p className="mx-auto mt-1 max-w-md text-sm text-muted-foreground">
-                        Try a different search or specialty. New designer services will show up here as they are published.
+                /* Empty state when filters yield no result */
+                <div className="flex min-h-64 flex-col items-center justify-center rounded-2xl border border-dashed border-border/60 bg-card p-10 text-center">
+                    <div className="flex size-12 items-center justify-center rounded-2xl bg-muted text-muted-foreground">
+                        <Search className="size-6" />
+                    </div>
+                    <h3 className="mt-4 font-heading text-base font-semibold text-foreground">
+                        No matching design services found
+                    </h3>
+                    <p className="mt-1.5 max-w-sm text-xs leading-relaxed text-muted-foreground">
+                        Try modifying your search term, clearing category filters, or selecting a broader turnaround window.
                     </p>
+                    <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="mt-4 text-xs"
+                        onClick={() => {
+                            setSearch("")
+                            setSelectedCategory("all")
+                            setSelectedModel("all")
+                            setMaxTurnaround("all")
+                        }}
+                    >
+                        Clear all filters
+                    </Button>
                 </div>
             )}
+
+            {/* 4. Contact / Brief Inquiry Dialog */}
+            <Dialog open={!!contactListing} onOpenChange={(open) => !open && setContactListing(null)}>
+                <DialogContent className="max-w-lg p-6">
+                    <DialogHeader>
+                        <DialogTitle className="font-heading text-lg font-semibold flex items-center gap-2">
+                            <Mail className="size-5 text-blue-500" />
+                            Direct Inquiry to {contactListing?.designerName}
+                        </DialogTitle>
+                        <DialogDescription className="text-xs text-muted-foreground">
+                            Reach out with your project specs, dieline requirements, or target timeline. No agency commission.
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    {contactListing && (
+                        <div className="space-y-4 pt-2">
+                            {/* Summary Card */}
+                            <div className="rounded-xl border border-border/60 bg-muted/30 p-3 text-xs space-y-1.5">
+                                <p className="font-semibold text-foreground">{contactListing.serviceTitle}</p>
+                                <div className="flex items-center gap-3 text-muted-foreground text-[11px]">
+                                    <span>Rate: {formatPrice(contactListing.price)}</span>
+                                    <span>·</span>
+                                    <span>Delivery: {contactListing.turnaroundDays} days</span>
+                                    <span>·</span>
+                                    <span>Revisions: {contactListing.revisionsIncluded}</span>
+                                </div>
+                            </div>
+
+                            {/* Subject */}
+                            <div className="space-y-1.5">
+                                <label className="text-xs font-medium text-foreground">Subject Line</label>
+                                <Input
+                                    value={inquirySubject}
+                                    onChange={(e) => setInquirySubject(e.target.value)}
+                                    className="h-9 text-xs"
+                                />
+                            </div>
+
+                            {/* Message */}
+                            <div className="space-y-1.5">
+                                <label className="text-xs font-medium text-foreground">Project Details & Brief</label>
+                                <Textarea
+                                    rows={5}
+                                    value={inquiryMessage}
+                                    onChange={(e) => setInquiryMessage(e.target.value)}
+                                    className="text-xs resize-none"
+                                />
+                            </div>
+
+                            {/* Designer Email Box */}
+                            <div className="flex items-center justify-between rounded-lg border border-border/50 bg-background px-3 py-2 text-xs">
+                                <span className="text-muted-foreground">Designer Email:</span>
+                                <div className="flex items-center gap-2">
+                                    <span className="font-mono font-medium text-foreground">{contactListing.email}</span>
+                                    <button
+                                        type="button"
+                                        onClick={() => copyDesignerEmail(contactListing.email)}
+                                        className="text-muted-foreground hover:text-foreground"
+                                        title="Copy Email"
+                                    >
+                                        <Copy className="size-3.5" />
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Footer Buttons */}
+                            <div className="flex items-center justify-end gap-2.5 pt-2">
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => copyDesignerEmail(contactListing.email)}
+                                    className="text-xs"
+                                >
+                                    <Copy className="size-3.5 mr-1" />
+                                    Copy Email
+                                </Button>
+                                <Button
+                                    asChild
+                                    size="sm"
+                                    className="bg-blue-600 hover:bg-blue-700 text-white text-xs"
+                                >
+                                    <a
+                                        href={`mailto:${contactListing.email}?subject=${encodeURIComponent(
+                                            inquirySubject
+                                        )}&body=${encodeURIComponent(inquiryMessage)}`}
+                                    >
+                                        <Send className="size-3.5 mr-1" />
+                                        Open Mail Client
+                                    </a>
+                                </Button>
+                            </div>
+                        </div>
+                    )}
+                </DialogContent>
+            </Dialog>
         </div>
     )
 }

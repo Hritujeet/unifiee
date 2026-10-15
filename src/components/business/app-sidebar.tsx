@@ -53,8 +53,8 @@ export default function BusinessAppSidebar() {
 
     const exploreRoutes = [
         { title: "Explore vendors", url: "/business/explore", icon: Building2 },
-        { title: "Explore designers", url: "/business/explore", icon: Palette },
-        { title: "Hired services", url: "/business/explore", icon: Briefcase },
+        { title: "Explore designers", url: "/business/designers", icon: Palette },
+        { title: "Hired services", url: "/business/hired-services", icon: Briefcase },
     ]
 
     return (
