@@ -28,6 +28,14 @@ import { registerDesignerAction } from "@/actions/designer-registration"
 import { useRouter } from "next/navigation"
 import { useEffect } from "react"
 import { authClient } from "@/lib/auth-client"
+import {
+    showValidationToast,
+    showTermsRequiredToast,
+    showRegistrationLoadingToast,
+    showRegistrationSuccessToast,
+    showRegistrationErrorToast,
+} from "@/lib/form-toast-utils"
+import type { FieldErrors } from "react-hook-form"
 
 const pricingModels = [
     { label: "Per Project", value: "per_project" },
@@ -96,6 +104,7 @@ export default function DesignerOnboardingForm() {
 
     const mutation = useMutation({
         mutationFn: async (data: FormValues) => {
+            showRegistrationLoadingToast("Packaging Designer");
             const result = await registerDesignerAction(data);
             if (!result.success) {
                 throw new Error(result.error);
@@ -103,20 +112,25 @@ export default function DesignerOnboardingForm() {
             return result;
         },
         onSuccess: () => {
-            toast.success("Registered as designer successfully! Redirecting to dashboard...");
+            showRegistrationSuccessToast("Packaging Designer", "studio dashboard");
             router.push("/designer");
         },
         onError: (error: unknown) => {
-            toast.error(error instanceof Error ? error.message : "Failed to register designer");
+            const message = error instanceof Error ? error.message : "Failed to register designer profile";
+            showRegistrationErrorToast("Packaging Designer", message);
         }
     });
 
     const submitHandler = (data: FormValues) => {
-        mutation.mutate(data)
+        if (!termsAccepted) {
+            showTermsRequiredToast();
+            return;
+        }
+        mutation.mutate(data);
     }
 
-    const errorHandler = () => {
-        toast.error("Please fill in all required fields correctly")
+    const errorHandler = (formErrors: FieldErrors<FormInput>) => {
+        showValidationToast(formErrors, "Packaging Designer Registration");
     }
 
     return (
@@ -329,7 +343,17 @@ export default function DesignerOnboardingForm() {
                         </label>
                     </div>
 
-                    <Button type="submit" disabled={!termsAccepted || mutation.isPending} className="w-full">
+                    <Button 
+                        type="submit" 
+                        disabled={mutation.isPending} 
+                        onClick={(e) => {
+                            if (!termsAccepted) {
+                                e.preventDefault();
+                                showTermsRequiredToast();
+                            }
+                        }}
+                        className="w-full"
+                    >
                         {mutation.isPending ? <Loader2 className="animate-spin" /> : "Register as Designer"}
                     </Button>
                 </FieldGroup>

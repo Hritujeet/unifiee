@@ -111,18 +111,27 @@ export function SignupForm({
     },
     onSuccess: (result) => {
       if (result.error) {
-        toast.error(result.error.message || "Failed to create account. Please try again.")
+        toast.error("Account creation failed", {
+          description: result.error.message || "Failed to create account. This email might already be in use.",
+          duration: 6000,
+        })
         setPasswordValue("password", "", { shouldValidate: false })
         setPasswordValue("confirmPassword", "", { shouldValidate: false })
         return
       }
-      toast.success("Account created successfully!")
+      toast.success("Account created successfully!", {
+        description: "Welcome to UNIFIÉE! Taking you to onboarding...",
+        duration: 3000,
+      })
       setShowPasswordDialog(false)
       setIsRedirecting(true)
       window.location.href = "/onboarding"
     },
-    onError: () => {
-      toast.error("Something went wrong. Please check your connection and try again.")
+    onError: (error) => {
+      toast.error("Registration failed", {
+        description: error instanceof Error ? error.message : "Unable to reach server. Please check your internet connection.",
+        duration: 6000,
+      })
     },
   })
 
@@ -133,8 +142,11 @@ export function SignupForm({
         callbackURL: "/callback",
       })
     },
-    onError: () => {
-      toast.error("Failed to connect to Google. Please try again.")
+    onError: (error) => {
+      toast.error("Google sign-up error", {
+        description: error instanceof Error ? error.message : "Failed to connect to Google OAuth. Please try again.",
+        duration: 6000,
+      })
     },
   })
 

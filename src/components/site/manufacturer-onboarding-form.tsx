@@ -30,6 +30,14 @@ import { registerManufacturerAction } from "@/actions/manufacturer-registration"
 import { useRouter } from "next/navigation"
 import { useEffect } from "react"
 import { authClient } from "@/lib/auth-client"
+import {
+    showValidationToast,
+    showTermsRequiredToast,
+    showRegistrationLoadingToast,
+    showRegistrationSuccessToast,
+    showRegistrationErrorToast,
+} from "@/lib/form-toast-utils"
+import type { FieldErrors } from "react-hook-form"
 
 
 
@@ -80,6 +88,7 @@ export default function ManufacturerOnboardingForm() {
 
     const mutation = useMutation({
         mutationFn: async (data: FormValues) => {
+            showRegistrationLoadingToast("Manufacturer");
             const result = await registerManufacturerAction(data);
             if (!result.success) {
                 throw new Error(result.error);
@@ -87,21 +96,26 @@ export default function ManufacturerOnboardingForm() {
             return result;
         },
         onSuccess: () => {
-            toast.success("Registered as manufacturer successfully! Redirecting to your dashboard...");
+            showRegistrationSuccessToast("Manufacturer", "manufacturer portal");
             // hard navigate so the server layout re-runs and sees the new manufacturer row
             window.location.href = "/manufacturer";
         },
         onError: (error: any) => {
-            toast.error(error.message || "Failed to register manufacturer");
+            const message = error instanceof Error ? error.message : "Failed to register manufacturer profile";
+            showRegistrationErrorToast("Manufacturer", message);
         }
     });
 
     const submitHandler = (data: FormValues) => {
-        mutation.mutate(data)
+        if (!termsAccepted) {
+            showTermsRequiredToast();
+            return;
+        }
+        mutation.mutate(data);
     }
 
-    const errorHandler = () => {
-        toast.error("Please fill in all required fields correctly")
+    const errorHandler = (formErrors: FieldErrors<FormValues>) => {
+        showValidationToast(formErrors, "Manufacturer Registration");
     }
 
     return (
@@ -326,7 +340,17 @@ export default function ManufacturerOnboardingForm() {
                         </label>
                     </div>
 
-                    <Button type="submit" disabled={!termsAccepted || mutation.isPending} className="w-full">
+                    <Button 
+                        type="submit" 
+                        disabled={mutation.isPending} 
+                        onClick={(e) => {
+                            if (!termsAccepted) {
+                                e.preventDefault();
+                                showTermsRequiredToast();
+                            }
+                        }}
+                        className="w-full"
+                    >
                         {mutation.isPending ? <Loader2 className="animate-spin" /> : "Register as Manufacturer"}
                     </Button>
                 </FieldGroup>

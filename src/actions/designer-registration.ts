@@ -7,16 +7,22 @@ import { manufacturerTable } from "@/lib/db/schema/manufacturer";
 import { packagingDesignerTable } from "@/lib/db/schema/packaging-designer";
 import { business } from "@/lib/db/schema/business";
 import { designerOnboardingSchema } from "@/lib/zod-schema";
-import { eq } from "drizzle-orm";
+import { eq, or } from "drizzle-orm";
 import { z } from "zod";
 
 export async function registerDesignerAction(data: z.infer<typeof designerOnboardingSchema>) {
+    const inputPhone = data?.phone || "";
+    const inputEmail = data?.email || "";
+
     try {
         // 1. Require authenticated session
         const reqHeaders = await headers();
         const session = await auth.api.getSession({ headers: reqHeaders });
         if (!session?.user) {
-            return { success: false, error: "You must be signed in to register as a designer" };
+            return {
+                success: false,
+                error: "You must be signed in to register as a designer. Please log in or refresh your session."
+            };
         }
 
         const userId = session.user.id;
@@ -28,17 +34,66 @@ export async function registerDesignerAction(data: z.infer<typeof designerOnboar
             db.select({ id: business.id }).from(business).where(eq(business.userId, userId)).limit(1),
         ]);
 
-        if (existingManufacturer.length > 0) return { success: false, error: "You are already registered as a manufacturer" };
-        if (existingDesigner.length > 0) return { success: false, error: "You are already registered as a designer" };
-        if (existingBusiness.length > 0) return { success: false, error: "You are already registered as a business" };
+        if (existingManufacturer.length > 0) {
+            return {
+                success: false,
+                error: "This account is already registered as a Manufacturer. Each account can only hold one vendor role."
+            };
+        }
+        if (existingDesigner.length > 0) {
+            return {
+                success: false,
+                error: "You already have an active Packaging Designer profile registered with this account."
+            };
+        }
+        if (existingBusiness.length > 0) {
+            return {
+                success: false,
+                error: "This account is already registered as an F&B Business. Buyer accounts cannot register as designers."
+            };
+        }
 
         // 3. Validate form data
         const parsed = designerOnboardingSchema.safeParse(data);
         if (!parsed.success) {
-            return { success: false, error: "Invalid form data" };
+            const firstIssues = parsed.error.issues
+                .slice(0, 3)
+                .map((issue) => `${issue.path.join(".") || "field"}: ${issue.message}`)
+                .join("; ");
+            return {
+                success: false,
+                error: `Form validation failed — ${firstIssues}`
+            };
         }
 
         const validData = parsed.data;
+
+        // Check if phone or email is already registered by another designer
+        const existingContact = await db
+            .select({ id: packagingDesignerTable.id, phone: packagingDesignerTable.phone, email: packagingDesignerTable.email })
+            .from(packagingDesignerTable)
+            .where(
+                or(
+                    eq(packagingDesignerTable.phone, validData.phone),
+                    eq(packagingDesignerTable.email, validData.email.toLowerCase())
+                )
+            )
+            .limit(1);
+
+        if (existingContact.length > 0) {
+            if (existingContact[0].phone === validData.phone) {
+                return {
+                    success: false,
+                    error: `The mobile number '${validData.phone}' is already registered with another designer profile. Please use a different phone number.`
+                };
+            }
+            if (existingContact[0].email === validData.email.toLowerCase()) {
+                return {
+                    success: false,
+                    error: `The email address '${validData.email}' is already registered with another designer profile.`
+                };
+            }
+        }
         
         // Ensure additional links are grouped
         const additionalLinks: any = {};
@@ -77,9 +132,37 @@ export async function registerDesignerAction(data: z.infer<typeof designerOnboar
         return { success: true };
     } catch (error: any) {
         console.error("Designer registration error:", error);
-        if (error.code === "23505") {
-            return { success: false, error: "Email or phone already registered" };
+        const dbError = error?.cause || error;
+        if (dbError?.code === "23505" || error?.code === "23505") {
+            const detail = String(dbError?.detail || dbError?.constraint || "").toLowerCase();
+            if (detail.includes("phone")) {
+                return {
+                    success: false,
+                    error: `The mobile number '${inputPhone}' is already registered in the system. Please use a different phone number.`
+                };
+            }
+            if (detail.includes("email")) {
+                return {
+                    success: false,
+                    error: `The email address '${inputEmail}' is already registered with an existing designer profile.`
+                };
+            }
+            if (detail.includes("user_id")) {
+                return {
+                    success: false,
+                    error: "Your user account already has a registered designer profile."
+                };
+            }
+            return {
+                success: false,
+                error: "Duplicate entry: A designer profile with these credentials already exists."
+            };
         }
-        return { success: false, error: "Something went wrong. Please try again." };
+
+        const rawMessage = dbError?.message || error?.message || "Unknown database error";
+        return {
+            success: false,
+            error: `Registration could not be completed: ${rawMessage}`
+        };
     }
 }

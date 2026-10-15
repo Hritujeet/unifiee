@@ -111,11 +111,17 @@ export function LoginForm({
         setPasswordValue("email", variables.email)
         setShowPasswordDialog(true)
       } else {
-        toast.error("Something went wrong, please try again")
+        toast.error("Account lookup failed", {
+          description: "Could not determine the sign-in provider for this email. Please try Google sign-in or refresh the page.",
+          duration: 6000,
+        })
       }
     },
-    onError: () => {
-      toast.error("Something went wrong, please try again")
+    onError: (error) => {
+      toast.error("Connection error", {
+        description: error instanceof Error ? error.message : "Unable to reach authentication server. Please check your network and try again.",
+        duration: 6000,
+      })
     },
   })
 
@@ -128,17 +134,26 @@ export function LoginForm({
     },
     onSuccess: (result) => {
       if (result.error) {
-        toast.error(result.error.message || "Invalid email or password.")
+        toast.error("Sign in failed", {
+          description: result.error.message || "Invalid email or password combination. Please re-check your password.",
+          duration: 6000,
+        })
         setPasswordValue("password", "", { shouldValidate: false })
         return
       }
-      toast.success("Signed in successfully!")
+      toast.success("Signed in successfully!", {
+        description: "Welcome back! Directing you to your account...",
+        duration: 3000,
+      })
       setShowPasswordDialog(false)
       setIsRedirecting(true)
       window.location.href = "/callback"
     },
-    onError: () => {
-      toast.error("Something went wrong. Please check your connection and try again.")
+    onError: (error) => {
+      toast.error("Sign in failed", {
+        description: error instanceof Error ? error.message : "Could not complete sign in. Please check your internet connection.",
+        duration: 6000,
+      })
     },
   })
 
@@ -149,8 +164,11 @@ export function LoginForm({
         callbackURL: "/callback",
       })
     },
-    onError: () => {
-      toast.error("Failed to connect to Google. Please try again.")
+    onError: (error) => {
+      toast.error("Google sign-in error", {
+        description: error instanceof Error ? error.message : "Failed to initiate Google authentication. Please try again.",
+        duration: 6000,
+      })
     },
   })
 

@@ -32,6 +32,14 @@ import { registerBusinessAction } from "@/actions/business-registration"
 import { useRouter } from "next/navigation"
 import { useEffect } from "react"
 import { authClient } from "@/lib/auth-client"
+import {
+    showValidationToast,
+    showTermsRequiredToast,
+    showRegistrationLoadingToast,
+    showRegistrationSuccessToast,
+    showRegistrationErrorToast,
+} from "@/lib/form-toast-utils"
+import type { FieldErrors } from "react-hook-form"
 
 const business_types = [
     { label: "Café", value: "cafe" },
@@ -93,6 +101,7 @@ export default function BusinessOnboardingForm() {
 
     const mutation = useMutation({
         mutationFn: async (data: z.infer<typeof businessOnboardingSchema>) => {
+            showRegistrationLoadingToast("F&B Business");
             const result = await registerBusinessAction(data);
             if (!result.success) {
                 throw new Error(result.error);
@@ -100,21 +109,26 @@ export default function BusinessOnboardingForm() {
             return result;
         },
         onSuccess: () => {
-            toast.success("Registered as business successfully! Redirecting to your dashboard...");
+            showRegistrationSuccessToast("F&B Business", "business dashboard");
             // hard navigate so the server layout re-runs and sees the new business row
             window.location.href = "/business";
         },
         onError: (error: any) => {
-            toast.error(error.message || "Failed to register business");
+            const message = error instanceof Error ? error.message : "Failed to register business profile";
+            showRegistrationErrorToast("F&B Business", message);
         }
     });
 
     const submitHandler = (data: z.infer<typeof businessOnboardingSchema>) => {
-        mutation.mutate(data)
+        if (!termsAccepted) {
+            showTermsRequiredToast();
+            return;
+        }
+        mutation.mutate(data);
     }
 
-    const errorHandler = () => {
-        toast.error("Please fill in all required fields correctly")
+    const errorHandler = (formErrors: FieldErrors<z.infer<typeof businessOnboardingSchema>>) => {
+        showValidationToast(formErrors, "Business Registration");
     }
 
     return (
@@ -381,7 +395,17 @@ export default function BusinessOnboardingForm() {
                         </label>
                     </div>
 
-                    <Button type="submit" disabled={!termsAccepted || mutation.isPending} className="w-full">
+                    <Button 
+                        type="submit" 
+                        disabled={mutation.isPending} 
+                        onClick={(e) => {
+                            if (!termsAccepted) {
+                                e.preventDefault();
+                                showTermsRequiredToast();
+                            }
+                        }}
+                        className="w-full"
+                    >
                         {mutation.isPending ? <Loader2 className="animate-spin" /> : "Register as Business"}
                     </Button>
                 </FieldGroup>

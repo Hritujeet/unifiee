@@ -15,6 +15,9 @@ import { Loader2 } from "lucide-react"
 import { toast } from "sonner"
 import { setPasswordAction } from "@/actions/set-pw"
 
+import { showValidationToast } from "@/lib/form-toast-utils"
+import type { FieldErrors } from "react-hook-form"
+
 export default function SetPasswordForm() {
   const searchParams = useSearchParams()
   const email = searchParams.get("email")
@@ -34,6 +37,7 @@ export default function SetPasswordForm() {
 
   const mutation = useMutation({
     mutationFn: async (data: z.infer<typeof setPasswordSchema>) => {
+      toast.loading("Setting your password...", { id: "set-password" })
       const result = await setPasswordAction(data)
       if (!result?.success) {
         throw new Error(result?.error || "Failed to set password")
@@ -41,19 +45,31 @@ export default function SetPasswordForm() {
       return result
     },
     onSuccess: () => {
-      toast.success("Password set successfully!")
+      toast.success("Password set successfully!", {
+        id: "set-password",
+        description: "Your credentials are updated. Redirecting to your dashboard...",
+        duration: 4000,
+      })
       setIsRedirecting(true)
       // Let the server callback page decide where to send the user
       // (new user → /onboarding, or an existing role's dashboard)
       window.location.href = "/callback"
     },
     onError: (error) => {
-      toast.error(error.message)
+      toast.error("Could not set password", {
+        id: "set-password",
+        description: error instanceof Error ? error.message : "An error occurred while updating your password.",
+        duration: 6000,
+      })
     }
   })
 
   const onSubmit = (data: z.infer<typeof setPasswordSchema>) => {
     mutation.mutate(data)
+  }
+
+  const onError = (formErrors: FieldErrors<z.infer<typeof setPasswordSchema>>) => {
+    showValidationToast(formErrors, "Set Password")
   }
 
   const busy = mutation.isPending || isRedirecting
@@ -73,7 +89,7 @@ export default function SetPasswordForm() {
             </ul>
           </div>
 
-          <form onSubmit={handleSubmit(onSubmit)} className="flex w-full flex-col gap-4" noValidate>
+          <form onSubmit={handleSubmit(onSubmit, onError)} className="flex w-full flex-col gap-4" noValidate>
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="password" className="text-xs text-muted-foreground">
                 New Password

@@ -24,7 +24,7 @@ export async function setPasswordAction(data: z.infer<typeof setPasswordSchema>)
     });
     
     if (!session || !session.user) {
-      return { success: false, error: "Unauthorized" };
+      return { success: false, error: "Your session has expired or is unauthorized. Please sign in again." };
     }
     
     // Use Better Auth API to set the password
@@ -38,6 +38,7 @@ export async function setPasswordAction(data: z.infer<typeof setPasswordSchema>)
     return { success: true, userCreatedAt: session.user.createdAt.getTime() };
   } catch (error) {
     console.error("Error setting password:", error);
-    return { success: false, error: "Something went wrong" };
+    const message = error instanceof Error ? error.message : "Password service unavailable";
+    return { success: false, error: `Could not set password: ${message}` };
   }
 }

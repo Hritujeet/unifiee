@@ -7,16 +7,22 @@ import { business } from "@/lib/db/schema/business";
 import { manufacturerTable } from "@/lib/db/schema/manufacturer";
 import { packagingDesignerTable } from "@/lib/db/schema/packaging-designer";
 import { businessOnboardingSchema } from "@/lib/zod-schema";
-import { eq } from "drizzle-orm";
+import { eq, or } from "drizzle-orm";
 import { z } from "zod";
 
 export async function registerBusinessAction(data: z.infer<typeof businessOnboardingSchema>) {
+    const inputPhone = data?.phone || "";
+    const inputEmail = data?.email || "";
+
     try {
         // 1. Require authenticated session
         const reqHeaders = await headers();
         const session = await auth.api.getSession({ headers: reqHeaders });
         if (!session?.user) {
-            return { success: false, error: "You must be signed in to register as a business" };
+            return {
+                success: false,
+                error: "You must be signed in to register as a business. Please log in or refresh your session."
+            };
         }
 
         const userId = session.user.id;
@@ -29,19 +35,65 @@ export async function registerBusinessAction(data: z.infer<typeof businessOnboar
         ]);
 
         if (existingBusiness.length > 0) {
-            return { success: false, error: "You are already registered as a business" };
+            return {
+                success: false,
+                error: "You already have a business profile registered with this account."
+            };
         }
-        if (existingManufacturer.length > 0 || existingDesigner.length > 0) {
-            return { success: false, error: "You are already registered as a vendor and cannot register as a business" };
+        if (existingManufacturer.length > 0) {
+            return {
+                success: false,
+                error: "This account is registered as a Manufacturer. Vendor accounts cannot register as buyer businesses."
+            };
+        }
+        if (existingDesigner.length > 0) {
+            return {
+                success: false,
+                error: "This account is registered as a Packaging Designer. Vendor accounts cannot register as buyer businesses."
+            };
         }
 
         // 3. Validate form data
         const parsed = businessOnboardingSchema.safeParse(data);
         if (!parsed.success) {
-            return { success: false, error: "Invalid form data" };
+            const firstIssues = parsed.error.issues
+                .slice(0, 3)
+                .map((issue) => `${issue.path.join(".") || "field"}: ${issue.message}`)
+                .join("; ");
+            return {
+                success: false,
+                error: `Form validation failed — ${firstIssues}`
+            };
         }
 
         const validData = parsed.data;
+
+        // Check if phone or email is already registered by another business
+        const existingContact = await db
+            .select({ id: business.id, phone: business.phone, email: business.email })
+            .from(business)
+            .where(
+                or(
+                    eq(business.phone, validData.phone),
+                    eq(business.email, validData.email.toLowerCase())
+                )
+            )
+            .limit(1);
+
+        if (existingContact.length > 0) {
+            if (existingContact[0].phone === validData.phone) {
+                return {
+                    success: false,
+                    error: `The mobile number '${validData.phone}' is already registered with another business profile. Please use a different phone number.`
+                };
+            }
+            if (existingContact[0].email === validData.email.toLowerCase()) {
+                return {
+                    success: false,
+                    error: `The email address '${validData.email}' is already registered with another business profile.`
+                };
+            }
+        }
 
         // 4. Insert
         await db.insert(business).values({
@@ -66,9 +118,37 @@ export async function registerBusinessAction(data: z.infer<typeof businessOnboar
         return { success: true };
     } catch (error: any) {
         console.error("Business registration error:", error);
-        if (error.code === "23505") {
-            return { success: false, error: "Email or phone already registered" };
+        const dbError = error?.cause || error;
+        if (dbError?.code === "23505" || error?.code === "23505") {
+            const detail = String(dbError?.detail || dbError?.constraint || "").toLowerCase();
+            if (detail.includes("phone")) {
+                return {
+                    success: false,
+                    error: `The phone number '${inputPhone}' is already registered with an existing business profile.`
+                };
+            }
+            if (detail.includes("email")) {
+                return {
+                    success: false,
+                    error: `The email address '${inputEmail}' is already registered with an existing business profile.`
+                };
+            }
+            if (detail.includes("user_id")) {
+                return {
+                    success: false,
+                    error: "Your user account already has a registered business profile."
+                };
+            }
+            return {
+                success: false,
+                error: "Duplicate entry: A business profile with these credentials already exists."
+            };
         }
-        return { success: false, error: "Something went wrong. Please try again." };
+
+        const rawMessage = dbError?.message || error?.message || "Unknown database error";
+        return {
+            success: false,
+            error: `Registration could not be completed: ${rawMessage}`
+        };
     }
 }
