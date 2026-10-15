@@ -53,8 +53,8 @@ export default function BusinessAppSidebar() {
 
     const exploreRoutes = [
         { title: "Explore vendors", url: "/business/explore", icon: Building2 },
-        { title: "Explore designers", url: "/business/designers", icon: Palette },
-        { title: "Hired services", url: "/business/hired-services", icon: Briefcase },
+        { title: "Explore designers", url: "/business/explore", icon: Palette },
+        { title: "Hired services", url: "/business/explore", icon: Briefcase },
     ]
 
     return (
@@ -116,7 +116,7 @@ export default function BusinessAppSidebar() {
                                             tooltip={route.title}
                                             className="font-normal text-sm text-muted-foreground hover:text-foreground transition-all data-[active=true]:bg-blue-600 data-[active=true]:text-white data-[active=true]:font-medium"
                                         >
-                                            <Link href={route.url}>
+                                            <Link href={route.url} className="flex items-center gap-2">
                                                 <route.icon className="size-4" />
                                                 <span>{route.title}</span>
                                             </Link>

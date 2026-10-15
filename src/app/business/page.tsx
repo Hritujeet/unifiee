@@ -29,15 +29,8 @@ export default async function BusinessDashboardPage() {
 
     return (
         <div className="w-full">
-            <BusinessDashboardView
-                businessName={displayName}
-                initialCounts={{
-                    openRequirements: 2,
-                    offersToReview: 3,
-                    ordersInProgress: 1,
-                    spendThisMonth: "₹0",
-                }}
-            />
+            <BusinessDashboardView businessName={displayName} />
         </div>
     )
 }
+
