@@ -15,15 +15,17 @@ export default async function DesignerLayout({ children }: { children: React.Rea
     const session = await auth.api.getSession({ headers: await headers() })
     if (!session?.user) redirect("/sign-in")
 
-    const hasPassword = await userHasPassword(session.user.id)
+    // Run password check and designer lookup in parallel
+    const [hasPassword, designerRows] = await Promise.all([
+        userHasPassword(session.user.id),
+        db
+            .select({ id: packagingDesignerTable.id })
+            .from(packagingDesignerTable)
+            .where(eq(packagingDesignerTable.userId, session.user.id))
+            .limit(1),
+    ])
+
     if (!hasPassword) redirect("/set-password")
-
-    const designerRows = await db
-        .select({ id: packagingDesignerTable.id })
-        .from(packagingDesignerTable)
-        .where(eq(packagingDesignerTable.userId, session.user.id))
-        .limit(1)
-
     if (designerRows.length === 0) redirect("/onboarding")
 
     return (

@@ -22,16 +22,16 @@ export default async function SetPasswordPage() {
     redirect("/sign-in");
   }
 
-  // 2. Already has a password — redirect to appropriate destination
-  const hasPw = await userHasPassword(session.user.id);
+  // 2. Check password and role in parallel for faster redirects
+  const [hasPw, role] = await Promise.all([
+    userHasPassword(session.user.id),
+    getUserRole(),
+  ]);
+
   if (hasPw) {
-    const role = await getUserRole();
     if (role === "manufacturer") redirect("/manufacturer");
     if (role === "designer") redirect("/designer");
     if (role === "business") redirect("/business");
-
-    const userCreatedAt = new Date(session.user.createdAt).getTime();
-    if (Date.now() - userCreatedAt < 60000) redirect("/onboarding");
 
     redirect("/onboarding");
   }

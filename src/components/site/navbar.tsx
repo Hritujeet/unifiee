@@ -3,7 +3,6 @@
 import { Button, buttonVariants } from "@/components/ui/button";
 import { authClient } from "@/lib/auth-client";
 import { cn } from "@/lib/utils";
-import { getUserRole } from "@/actions/get-user-role";
 import { useUserRoleStore } from "@/lib/stores/user-role-store";
 import { Loader2, LogOut, Menu, X, LayoutDashboard } from "lucide-react";
 import Link from "next/link";
@@ -11,7 +10,7 @@ import Image from "next/image";
 import LogoLight from "@/img/LogoLight.png";
 import LogoDark from "@/img/LogoDark.png";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
 import { ThemeToggle } from "./theme-toggle";
 
@@ -21,25 +20,54 @@ const navLinks = [
   { href: "/contact", label: "Contact" },
 ];
 
-export function Navbar() {
+type InitialSession = {
+  user: {
+    id: string;
+    name: string;
+    email: string;
+    image: string | null;
+  };
+} | null;
+
+type InitialRole = "manufacturer" | "designer" | "business" | "none" | null;
+
+interface NavbarClientProps {
+  initialSession: InitialSession;
+  initialRole: InitialRole;
+}
+
+export function NavbarClient({ initialSession, initialRole }: NavbarClientProps) {
   const pathname = usePathname();
   const router = useRouter();
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
-  const { data: session, isPending } = authClient.useSession();
 
+  // Use the client session hook for real-time updates (sign in/out),
+  // but seed with server data so there's no loading spinner on first paint
+  const { data: liveSession, isPending: sessionPending } = authClient.useSession();
+
+  // After hydration, prefer live session. Before that, use server-provided data.
+  // `isPending` from useSession is true only on the very first client fetch.
+  const session = sessionPending ? initialSession : liveSession;
+  const isLoading = sessionPending && !initialSession;
+
+  // Hydrate the role store with the server-provided role immediately
   const storeRole = useUserRoleStore((s) => s.role);
   const setRole = useUserRoleStore((s) => s.setRole);
 
   useEffect(() => {
-    if (session?.user && storeRole === null) {
-      getUserRole().then(setRole);
+    if (initialRole !== null && storeRole === null) {
+      setRole(initialRole);
     }
-    if (!session?.user) {
+  }, [initialRole, storeRole, setRole]);
+
+  // If user signs out client-side, clear the role
+  useEffect(() => {
+    if (!sessionPending && !liveSession?.user) {
       setRole(null);
     }
-  }, [session, storeRole, setRole]);
+  }, [sessionPending, liveSession, setRole]);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 16);
@@ -60,20 +88,24 @@ export function Navbar() {
     router.refresh();
   };
 
+  // Use server-hydrated role (or store role after client updates)
+  const currentRole = storeRole ?? initialRole;
+
   // Dashboard href & label derived from role
   const dashboardHref =
-    storeRole === "manufacturer" ? "/manufacturer" :
-    storeRole === "designer" ? "/designer" :
-    storeRole === "business" ? "/business" :
+    currentRole === "manufacturer" ? "/manufacturer" :
+    currentRole === "designer" ? "/designer" :
+    currentRole === "business" ? "/business" :
     session?.user ? "/onboarding" : null;
 
   const dashboardLabel =
-    storeRole === "manufacturer" ? "Manufacturer Dashboard" :
-    storeRole === "designer" ? "Designer Dashboard" :
-    storeRole === "business" ? "Business Dashboard" :
+    currentRole === "manufacturer" ? "Manufacturer Dashboard" :
+    currentRole === "designer" ? "Designer Dashboard" :
+    currentRole === "business" ? "Business Dashboard" :
     "Get Started";
 
-  const roleLoading = session?.user && storeRole === null;
+  // Only show loading if we have no server data AND client is still fetching
+  const roleLoading = session?.user && currentRole === null;
 
   // ── Desktop signed-in cluster ──────────────────────────────────────────────
   const SignedInActions = () => (
@@ -173,9 +205,9 @@ export function Navbar() {
           {/* Desktop right */}
           <div className="hidden md:flex items-center gap-3">
             <ThemeToggle />
-            {isPending ? (
+            {isLoading ? (
               <Loader2 className="size-4 animate-spin text-muted-foreground" />
-            ) : session ? (
+            ) : session?.user ? (
               <SignedInActions />
             ) : (
               <SignedOutActions />
@@ -216,7 +248,7 @@ export function Navbar() {
             ))}
 
             <div className="pt-4 flex flex-col gap-3">
-              {isPending ? null : session ? (
+              {isLoading ? null : session?.user ? (
                 <>
                   {/* Dashboard link */}
                   {dashboardHref && (

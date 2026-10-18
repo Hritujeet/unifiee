@@ -1,5 +1,5 @@
 import { Footer } from "@/components/site/footer";
-import { Navbar } from "@/components/site/navbar";
+import { Navbar } from "@/components/site/navbar-wrapper";
 
 export default function LandingLayout({ children }: LayoutProps<"/">) {
     return (

@@ -15,6 +15,7 @@ import { toast } from "sonner"
 import { z } from "zod"
 import { authClient } from "@/lib/auth-client"
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import {
   Dialog,
   DialogContent,
@@ -68,6 +69,7 @@ export function SignupForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
+  const router = useRouter()
   const [isRedirecting, setIsRedirecting] = useState(false)
   
   const [showPasswordDialog, setShowPasswordDialog] = useState(false)
@@ -125,7 +127,8 @@ export function SignupForm({
       })
       setShowPasswordDialog(false)
       setIsRedirecting(true)
-      window.location.href = "/onboarding"
+      router.push("/onboarding")
+      router.refresh()
     },
     onError: (error) => {
       toast.error("Registration failed", {

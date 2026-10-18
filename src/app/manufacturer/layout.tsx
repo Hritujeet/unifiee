@@ -13,16 +13,17 @@ export default async function ManufacturerLayout({ children }: { children: React
     const session = await auth.api.getSession({ headers: await headers() });
     if (!session?.user) redirect("/sign-in");
 
-    // 2. Must have a password set
-    const hasPw = await userHasPassword(session.user.id);
-    if (!hasPw) redirect("/set-password");
+    // 2 + 3. Run password check and manufacturer lookup in parallel
+    const [hasPw, manufacturerRows] = await Promise.all([
+        userHasPassword(session.user.id),
+        db
+            .select({ id: manufacturerTable.id })
+            .from(manufacturerTable)
+            .where(eq(manufacturerTable.userId, session.user.id))
+            .limit(1),
+    ]);
 
-    // 3. Must be a registered manufacturer
-    const manufacturerRows = await db
-        .select({ id: manufacturerTable.id })
-        .from(manufacturerTable)
-        .where(eq(manufacturerTable.userId, session.user.id))
-        .limit(1);
+    if (!hasPw) redirect("/set-password");
 
     if (manufacturerRows.length === 0) {
         // Signed in but not a vendor — send them to onboarding

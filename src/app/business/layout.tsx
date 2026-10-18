@@ -14,16 +14,17 @@ export default async function BusinessLayout({ children }: { children: React.Rea
     const session = await auth.api.getSession({ headers: await headers() });
     if (!session?.user) redirect("/sign-in");
 
-    // 2. Must have a password set
-    const hasPw = await userHasPassword(session.user.id);
-    if (!hasPw) redirect("/set-password");
+    // 2 + 3. Run password check and business lookup in parallel
+    const [hasPw, businessRows] = await Promise.all([
+        userHasPassword(session.user.id),
+        db
+            .select({ id: business.id })
+            .from(business)
+            .where(eq(business.userId, session.user.id))
+            .limit(1),
+    ]);
 
-    // 3. Must be a registered business
-    const businessRows = await db
-        .select({ id: business.id })
-        .from(business)
-        .where(eq(business.userId, session.user.id))
-        .limit(1);
+    if (!hasPw) redirect("/set-password");
 
     if (businessRows.length === 0) {
         // Signed in but not a business — send them to onboarding

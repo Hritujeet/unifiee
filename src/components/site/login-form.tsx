@@ -16,6 +16,7 @@ import { toast } from "sonner"
 import { z } from "zod"
 import { authClient } from "@/lib/auth-client"
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import {
   Dialog,
   DialogContent,
@@ -60,6 +61,7 @@ export function LoginForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
+  const router = useRouter()
   const [isRedirecting, setIsRedirecting] = useState(false)
   const [showPasswordDialog, setShowPasswordDialog] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
@@ -147,7 +149,8 @@ export function LoginForm({
       })
       setShowPasswordDialog(false)
       setIsRedirecting(true)
-      window.location.href = "/callback"
+      router.push("/callback")
+      router.refresh()
     },
     onError: (error) => {
       toast.error("Sign in failed", {
