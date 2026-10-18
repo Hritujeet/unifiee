@@ -1,5 +1,6 @@
 import type { Metadata } from "next"
 import RequirementsView from "@/components/business/requirements-view"
+import { getBusinessRequirementsAction } from "@/actions/business-requirements"
 
 export const metadata: Metadata = {
     title: "Requirements — UNIFIÉE Business",
@@ -7,7 +8,11 @@ export const metadata: Metadata = {
     robots: { index: false },
 }
 
-export default function BusinessRequirementsPage() {
-    return <RequirementsView />
+export default async function BusinessRequirementsPage() {
+    const result = await getBusinessRequirementsAction()
+    const dbRequirements = result.success && result.data ? result.data : []
+
+    return <RequirementsView initialDbRequirements={dbRequirements} />
 }
+
 

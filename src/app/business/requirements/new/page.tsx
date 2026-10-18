@@ -19,8 +19,8 @@ import { Textarea } from "@/components/ui/textarea"
 import {
     PackagingType,
     PackagingUse,
-    useWorkflowStore,
 } from "@/lib/business-workflow-store"
+import { createRequirementAction } from "@/actions/business-requirements"
 import { toast } from "sonner"
 
 interface ParsedRequirementForm {
@@ -56,10 +56,10 @@ const PRESET_PROMPTS = [
 
 export default function NewRequirementPage() {
     const router = useRouter()
-    const addRequirement = useWorkflowStore((s) => s.addRequirement)
 
     const [rawPrompt, setRawPrompt] = useState("")
     const [isParsing, setIsParsing] = useState(false)
+    const [isSaving, setIsSaving] = useState(false)
     const [structuredSpec, setStructuredSpec] = useState<ParsedRequirementForm | null>(null)
 
     // AI Parser - extracts Section 5 structured fields from plain language
@@ -153,24 +153,37 @@ export default function NewRequirementPage() {
         }, 700)
     }
 
-    const handleBroadcast = () => {
-        if (!structuredSpec) return
+    const handleBroadcast = async () => {
+        if (!structuredSpec || isSaving) return
 
-        addRequirement({
-            title: structuredSpec.title,
-            packagingUse: structuredSpec.packagingUse,
-            packagingType: structuredSpec.packagingType,
-            quantity: structuredSpec.quantity,
-            size: structuredSpec.size,
-            material: structuredSpec.material,
-            brandingNeeded: structuredSpec.brandingNeeded,
-            deliveryLocation: structuredSpec.deliveryLocation,
-            requiredByDate: structuredSpec.requiredByDate,
-            rawDescription: rawPrompt,
-        })
+        setIsSaving(true)
+        try {
+            const result = await createRequirementAction({
+                title: structuredSpec.title,
+                packagingUse: structuredSpec.packagingUse,
+                packagingType: structuredSpec.packagingType,
+                quantity: structuredSpec.quantity,
+                size: structuredSpec.size,
+                material: structuredSpec.material,
+                brandingNeeded: structuredSpec.brandingNeeded,
+                deliveryLocation: structuredSpec.deliveryLocation,
+                requiredByDate: structuredSpec.requiredByDate,
+                rawDescription: rawPrompt,
+            })
 
-        toast.success("Requirement broadcast to all verified packaging suppliers!")
-        router.push("/business/requirements")
+            if (!result.success) {
+                toast.error(result.error || "Failed to save requirement.")
+                setIsSaving(false)
+                return
+            }
+
+            toast.success("Requirement broadcast and saved to database!")
+            router.push("/business/requirements")
+            router.refresh()
+        } catch {
+            toast.error("An unexpected error occurred while saving your requirement.")
+            setIsSaving(false)
+        }
     }
 
     return (
@@ -454,10 +467,20 @@ export default function NewRequirementPage() {
                             <Button
                                 size="sm"
                                 onClick={handleBroadcast}
+                                disabled={isSaving}
                                 className="h-10 px-5 bg-blue-600 hover:bg-blue-500 text-white font-medium text-xs sm:text-sm gap-2"
                             >
-                                <span>Broadcast to Suppliers</span>
-                                <ArrowRight className="size-4" />
+                                {isSaving ? (
+                                    <>
+                                        <Loader2 className="size-4 animate-spin" />
+                                        <span>Saving & Broadcasting...</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <span>Broadcast to Suppliers</span>
+                                        <ArrowRight className="size-4" />
+                                    </>
+                                )}
                             </Button>
                         </div>
                     </CardContent>

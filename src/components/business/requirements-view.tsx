@@ -2,10 +2,12 @@
 
 import { useState } from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import {
     ArrowRight,
     Clock,
     Layers,
+    Loader2,
     MapPin,
     Package,
     Plus,
@@ -13,6 +15,7 @@ import {
     Search,
     Sparkles,
     Tag,
+    Trash2,
     X,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -24,14 +27,78 @@ import {
     selectPendingOffersCount,
     selectPendingOffersForRequirement,
     selectAcceptedOfferForRequirement,
+    Requirement,
+    OrderWorkflowStatus,
 } from "@/lib/business-workflow-store"
+import type { BusinessRequirement } from "@/lib/db/schema/business-requirement"
+import { deleteRequirementAction } from "@/actions/business-requirements"
+import { toast } from "sonner"
 
-export default function RequirementsView() {
-    const requirements = useWorkflowStore((s) => s.requirements)
+export interface RequirementsViewProps {
+    initialDbRequirements?: BusinessRequirement[]
+}
+
+const statusMap: Record<string, OrderWorkflowStatus> = {
+    requirement_received: "Requirement Received",
+    quoted: "Quoted",
+    order_confirmed: "Order Confirmed",
+    in_production: "In Production",
+    shipped: "Shipped",
+    delivered: "Delivered",
+}
+
+export default function RequirementsView({ initialDbRequirements = [] }: RequirementsViewProps) {
+    const router = useRouter()
+    const storeRequirements = useWorkflowStore((s) => s.requirements)
     const quotations = useWorkflowStore((s) => s.quotations)
     const orders = useWorkflowStore((s) => s.orders)
+
+    const [deletingId, setDeletingId] = useState<string | null>(null)
     const [searchQuery, setSearchQuery] = useState("")
     const [statusFilter, setStatusFilter] = useState<string>("all")
+
+    // Map database requirements to the Requirement interface
+    const dbRequirements: Requirement[] = initialDbRequirements.map((dbReq) => ({
+        id: dbReq.id,
+        title: dbReq.title,
+        packagingUse: dbReq.packagingUse,
+        packagingType: dbReq.packagingType,
+        quantity: dbReq.quantity,
+        size: dbReq.size,
+        material: dbReq.material,
+        brandingNeeded: dbReq.brandingNeeded,
+        deliveryLocation: dbReq.deliveryLocation,
+        requiredByDate: dbReq.requiredByDate,
+        status: statusMap[dbReq.status] || "Requirement Received",
+        createdAt: new Date(dbReq.createdAt).toLocaleDateString("en-IN", {
+            month: "short",
+            day: "numeric",
+            year: "numeric",
+        }),
+        quotesCount: 0,
+        rawDescription: dbReq.rawDescription || undefined,
+    }))
+
+    // Use DB requirements if present, otherwise fallback to store
+    const requirements = dbRequirements.length > 0 ? dbRequirements : storeRequirements
+
+    const handleDelete = async (id: string, title: string) => {
+        setDeletingId(id)
+        try {
+            const res = await deleteRequirementAction(id)
+            if (!res.success) {
+                toast.error(res.error || "Failed to delete requirement.")
+                setDeletingId(null)
+                return
+            }
+            toast.success(`Requirement "${title}" deleted from database.`)
+            router.refresh()
+        } catch {
+            toast.error("Could not delete requirement.")
+        } finally {
+            setDeletingId(null)
+        }
+    }
 
     const filteredRequirements = requirements.filter((req) => {
         const matchesStatus = statusFilter === "all" || req.status === statusFilter
@@ -348,6 +415,25 @@ export default function RequirementsView() {
                                                     </span>
                                                 )
                                             })()}
+
+                                            {/* Delete requirement button for DB-persisted records */}
+                                            {req.id.includes("-") && req.id.length >= 32 && (
+                                                <Button
+                                                    type="button"
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    disabled={deletingId === req.id}
+                                                    onClick={() => handleDelete(req.id, req.title)}
+                                                    className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                                                    title="Delete requirement"
+                                                >
+                                                    {deletingId === req.id ? (
+                                                        <Loader2 className="size-3.5 animate-spin" />
+                                                    ) : (
+                                                        <Trash2 className="size-3.5" />
+                                                    )}
+                                                </Button>
+                                            )}
                                         </div>
                                     </div>
                                 </CardContent>
