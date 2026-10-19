@@ -17,7 +17,7 @@ export const vendorReviewsTable = pgTable("vendor_reviews", {
     id: uuid("id").primaryKey().notNull(),
     vendorId: uuid("vendor_id")
         .notNull()
-        .references(() => manufacturerTable.id, { onDelete: "cascade" }),
+        .references(() => manufacturerTable.id, { onDelete: "restrict" }),
     orderId: uuid("order_id")
         .notNull()
         .unique()

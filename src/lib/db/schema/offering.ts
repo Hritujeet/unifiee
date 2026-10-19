@@ -66,6 +66,47 @@ export const offeringPaymentTermsEnum = pgEnum("offering_payment_terms", [
     "net_30",
 ])
 
+export const catalogProductStatusEnum = pgEnum("catalog_product_status", [
+    "draft",
+    "published",
+    "archived",
+])
+
+/**
+ * Standardized Master Catalog Products Table.
+ * Decouples standardized product specifications and taxonomy from vendor-specific commercial terms,
+ * allowing multiple vendors to list offerings against the same standardized product SKU.
+ */
+export const catalogProductsTable = pgTable("catalog_products", {
+    id: uuid("id").primaryKey().notNull(),
+    sku: varchar("sku", { length: 64 }).notNull(),
+    title: varchar("title", { length: 240 }).notNull(),
+    description: text("description").notNull(),
+    vendorType: offeringVendorTypeEnum("vendor_type").notNull().default("manufacturer"),
+    categoryKey: varchar("category_key", { length: 100 }).notNull(),
+    unitOfMeasure: offeringUnitEnum("unit_of_measure").notNull(),
+    specifications: jsonb("specifications").$type<Record<string, unknown>>().notNull().default({}),
+    images: jsonb("images").$type<Array<{
+        url: string
+        isPrimary?: boolean
+        caption?: string
+    }>>().default([]),
+    benchmarkUnitPrice: varchar("benchmark_unit_price", { length: 32 }),
+    defaultLeadTimeDays: integer("default_lead_time_days"),
+    isCustomizable: boolean("is_customizable").notNull().default(false),
+    status: catalogProductStatusEnum("status").notNull().default("published"),
+    createdBy: text("created_by").references(() => user.id, { onDelete: "set null" }),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow().$onUpdate(() => new Date()),
+}, (table) => [
+    uniqueIndex("catalog_products_sku_unique").on(table.sku),
+    index("catalog_products_category_idx").on(table.categoryKey),
+    index("catalog_products_status_idx").on(table.status),
+])
+
+export type CatalogProduct = typeof catalogProductsTable.$inferSelect
+export type NewCatalogProduct = typeof catalogProductsTable.$inferInsert
+
 export const offeringTypesTable = pgTable("offering_types", {
     key: varchar("key", { length: 100 }).primaryKey(),
     displayName: varchar("display_name", { length: 160 }).notNull(),
@@ -87,6 +128,7 @@ export const offeringTypesTable = pgTable("offering_types", {
 
 export const offeringsTable = pgTable("offerings", {
     id: uuid("id").primaryKey().notNull(),
+    catalogProductId: uuid("catalog_product_id").references(() => catalogProductsTable.id, { onDelete: "set null" }),
     vendorId: uuid("vendor_id").notNull().references(() => manufacturerTable.id, { onDelete: "restrict" }),
     vendorType: offeringVendorTypeEnum("vendor_type").notNull().default("manufacturer"),
     offeringType: varchar("offering_type", { length: 100 }).notNull(),
@@ -94,7 +136,7 @@ export const offeringsTable = pgTable("offerings", {
     title: varchar("title", { length: 240 }).notNull(),
     description: text("description").notNull(),
     unitOfMeasure: offeringUnitEnum("unit_of_measure").notNull(),
-    unitPrice: numeric("unit_price", { precision: 12, scale: 2 }).notNull(),
+    unitPrice: numeric("unit_price", { precision: 12, scale: 4 }).notNull(),
     currency: varchar("currency", { length: 3 }).notNull().default("INR"),
     minOrderQuantity: integer("min_order_quantity").notNull().default(1),
     maxOrderQuantity: integer("max_order_quantity"),
@@ -134,6 +176,7 @@ export const offeringsTable = pgTable("offerings", {
         columns: [table.vendorType, table.offeringType],
         foreignColumns: [offeringTypesTable.vendorType, offeringTypesTable.key],
     }).onDelete("restrict"),
+    index("offerings_catalog_product_idx").on(table.catalogProductId),
     index("offerings_vendor_id_idx").on(table.vendorId),
     index("offerings_vendor_type_idx").on(table.vendorType),
     index("offerings_offering_type_idx").on(table.offeringType),
@@ -155,7 +198,7 @@ export const offeringPriceTiersTable = pgTable("offering_price_tiers", {
     offeringId: uuid("offering_id").notNull().references(() => offeringsTable.id, { onDelete: "cascade" }),
     minQuantity: integer("min_quantity").notNull(),
     maxQuantity: integer("max_quantity"),
-    unitPrice: numeric("unit_price", { precision: 12, scale: 2 }).notNull(),
+    unitPrice: numeric("unit_price", { precision: 12, scale: 4 }).notNull(),
     createdAt: timestamp("created_at").notNull().defaultNow(),
 }, (table) => [
     index("offering_price_tiers_offering_idx").on(table.offeringId, table.minQuantity),
@@ -174,3 +217,15 @@ export const offeringImagesTable = pgTable("offering_images", {
 }, (table) => [
     index("offering_images_offering_order_idx").on(table.offeringId, table.displayOrder),
 ])
+
+export type OfferingType = typeof offeringTypesTable.$inferSelect
+export type NewOfferingType = typeof offeringTypesTable.$inferInsert
+
+export type Offering = typeof offeringsTable.$inferSelect
+export type NewOffering = typeof offeringsTable.$inferInsert
+
+export type OfferingPriceTier = typeof offeringPriceTiersTable.$inferSelect
+export type NewOfferingPriceTier = typeof offeringPriceTiersTable.$inferInsert
+
+export type OfferingImage = typeof offeringImagesTable.$inferSelect
+export type NewOfferingImage = typeof offeringImagesTable.$inferInsert

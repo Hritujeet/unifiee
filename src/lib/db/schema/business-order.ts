@@ -81,7 +81,7 @@ export const businessOrderItemsTable = pgTable("business_order_items", {
     titleSnapshot: varchar("title_snapshot", { length: 240 }).notNull(),
     quantity: integer("quantity").notNull(),
     unitOfMeasureSnapshot: offeringUnitEnum("unit_of_measure_snapshot").notNull(),
-    unitPriceSnapshot: numeric("unit_price_snapshot", { precision: 12, scale: 2 }).notNull(),
+    unitPriceSnapshot: numeric("unit_price_snapshot", { precision: 12, scale: 4 }).notNull(),
     taxPercentSnapshot: numeric("tax_percent_snapshot", { precision: 5, scale: 2 }).notNull(),
     priceIncludesTaxSnapshot: boolean("price_includes_tax_snapshot").notNull(),
     fulfilmentModeSnapshot: offeringFulfilmentModeEnum("fulfilment_mode_snapshot").notNull(),

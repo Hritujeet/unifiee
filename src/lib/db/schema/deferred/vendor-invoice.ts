@@ -1,3 +1,19 @@
+/**
+ * DEFERRED: PHASE 2 TRANSACTION & COMPLIANCE MODULE
+ * 
+ * Per CEO review directive:
+ * "Invoicing, payouts, and settlement functionality should remain deferred until our
+ * transaction and compliance model is clear. Let's keep the current implementation focused
+ * while ensuring the core data model can support the later phases."
+ * 
+ * Pending Clarifications for Phase 2:
+ * 1. Marketplace Model vs. Merchant of Record (MoR) status under Indian GST laws.
+ * 2. Mandatory e-Invoicing integration (IRN generation & B2B QR code) for entities with turnover > ₹5 Cr.
+ * 3. Section 194-O Income Tax (TDS on e-commerce operators @ 0.1% / 1%).
+ * 4. Section 52 GST TCS (Tax Collected at Source @ 1%).
+ * 5. Escrow / Nodal settlement account architecture compliant with RBI Payment Aggregator guidelines.
+ */
+
 import {
     check,
     index,
@@ -12,9 +28,9 @@ import {
     varchar,
 } from "drizzle-orm/pg-core"
 import { sql } from "drizzle-orm"
-import { manufacturerTable } from "./manufacturer"
-import { business } from "./business"
-import { businessOrdersTable } from "./business-order"
+import { manufacturerTable } from "../manufacturer"
+import { business } from "../business"
+import { businessOrdersTable } from "../business-order"
 
 export const vendorInvoiceStatusEnum = pgEnum("vendor_invoice_status", [
     "draft",
@@ -33,7 +49,7 @@ export const vendorInvoicesTable = pgTable("vendor_invoices", {
         .references(() => businessOrdersTable.id, { onDelete: "restrict" }),
     vendorId: uuid("vendor_id")
         .notNull()
-        .references(() => manufacturerTable.id, { onDelete: "cascade" }),
+        .references(() => manufacturerTable.id, { onDelete: "restrict" }),
     businessId: uuid("business_id")
         .notNull()
         .references(() => business.id, { onDelete: "restrict" }),
