@@ -35,10 +35,37 @@ export default async function ManufacturerLayout({ children }: { children: React
             <SidebarProvider>
                 <AppSidebar />
                 <SidebarInset>
-                    <header className="flex h-14 shrink-0 items-center gap-2 border-b px-4 lg:h-16">
-                        <SidebarTrigger className="-ml-1" />
+                    <header className="sticky top-0 z-20 flex h-14 shrink-0 items-center justify-between gap-3 border-b border-border/80 bg-background/85 px-4 backdrop-blur-md lg:h-16 lg:px-6">
+                        <div className="flex items-center gap-3">
+                            <SidebarTrigger className="-ml-1 size-8 rounded-lg hover:bg-muted" />
+                            <div className="hidden h-4 w-px bg-border/60 sm:block" />
+                            <div className="flex items-center gap-2 text-xs">
+                                <span className="font-semibold tracking-tight text-foreground">UNIFIÉE</span>
+                                <span className="text-muted-foreground/60">/</span>
+                                <span className="text-muted-foreground">Manufacturer Portal</span>
+                            </div>
+                        </div>
+
+                        <div className="flex items-center gap-3">
+                            {/* Live Marketplace Indicator */}
+                            <div className="hidden sm:flex items-center gap-1.5 rounded-full border border-emerald-500/25 bg-emerald-500/10 px-2.5 py-1 text-[11px] font-medium text-emerald-600 dark:text-emerald-400">
+                                <span className="relative flex size-2">
+                                    <span className="absolute inline-flex size-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                                    <span className="relative inline-flex size-2 rounded-full bg-emerald-500" />
+                                </span>
+                                <span>Catalog Live</span>
+                            </div>
+
+                            <a
+                                href="/manufacturer/publish-offering"
+                                className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground shadow-xs hover:bg-primary/90 transition-colors"
+                            >
+                                <span className="text-sm leading-none">+</span>
+                                <span>Post Offering</span>
+                            </a>
+                        </div>
                     </header>
-                    <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-6">
+                    <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-6 lg:p-8">
                         {children}
                     </main>
                 </SidebarInset>

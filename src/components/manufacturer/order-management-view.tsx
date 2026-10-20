@@ -18,6 +18,8 @@ import {
     Calendar,
     ArrowRight,
     Sparkles,
+    ShieldCheck,
+    Check,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -91,6 +93,25 @@ interface OrderManagementViewProps {
     initialOrders: DbOrderWithItems[]
 }
 
+const LIFECYCLE_STEPS = [
+    { key: "submitted", label: "Request Received" },
+    { key: "confirmed", label: "Accepted" },
+    { key: "processing", label: "Production" },
+    { key: "shipped", label: "Dispatched" },
+    { key: "delivered", label: "Delivered" },
+]
+
+function getStageIndex(status: string): number {
+    switch (status) {
+        case "submitted": return 0
+        case "confirmed": return 1
+        case "processing": return 2
+        case "shipped": return 3
+        case "delivered": return 4
+        default: return 0
+    }
+}
+
 export function OrderManagementView({ initialOrders }: OrderManagementViewProps) {
     const router = useRouter()
     const [orders, setOrders] = useState<DbOrderWithItems[]>(initialOrders)
@@ -134,17 +155,17 @@ export function OrderManagementView({ initialOrders }: OrderManagementViewProps)
 
     if (orders.length === 0) {
         return (
-            <div className="flex flex-col items-center justify-center rounded-xl border border-dashed py-16 text-center">
-                <div className="size-12 rounded-full bg-muted flex items-center justify-center mb-3">
-                    <ShoppingCart className="size-6 text-muted-foreground/60" />
+            <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed py-20 text-center bg-card shadow-xs">
+                <div className="size-14 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mb-4">
+                    <ShoppingCart className="size-7" />
                 </div>
-                <h3 className="text-base font-semibold text-foreground">No orders received yet</h3>
-                <p className="mt-1 text-xs text-muted-foreground max-w-sm mb-4">
-                    When businesses place orders for your packaging offerings, they will appear here for you to review and fulfill.
+                <h3 className="text-lg font-bold text-foreground">No orders received yet</h3>
+                <p className="mt-1.5 text-xs text-muted-foreground max-w-sm mb-6 leading-relaxed">
+                    When F&B brands and restaurants place packaging orders for your catalog offerings, they will appear here for you to accept, produce, and dispatch.
                 </p>
-                <Button asChild size="sm" variant="outline" className="gap-1.5 text-xs">
+                <Button asChild size="default" className="gap-2 text-xs shadow-xs">
                     <Link href="/manufacturer/publish-offering">
-                        <Plus className="size-3.5" />
+                        <Plus className="size-4" />
                         List Packaging Offerings
                     </Link>
                 </Button>
@@ -162,13 +183,13 @@ export function OrderManagementView({ initialOrders }: OrderManagementViewProps)
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         placeholder="Search by Order #, Buyer, or Offering..."
-                        className="pl-9 text-xs"
+                        className="pl-9 text-xs h-9 bg-card"
                     />
                 </div>
 
                 <div className="flex items-center gap-2">
                     <Select value={statusFilter} onValueChange={setStatusFilter}>
-                        <SelectTrigger className="w-40 text-xs h-9">
+                        <SelectTrigger className="w-44 text-xs h-9 bg-card">
                             <SelectValue placeholder="Status" />
                         </SelectTrigger>
                         <SelectContent>
@@ -185,36 +206,38 @@ export function OrderManagementView({ initialOrders }: OrderManagementViewProps)
 
             {/* Orders list */}
             {filtered.length === 0 ? (
-                <div className="flex flex-col items-center justify-center rounded-xl border border-dashed py-12 text-center text-muted-foreground">
-                    <p className="text-sm font-medium">No orders match your filter</p>
+                <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed py-14 text-center text-muted-foreground bg-card">
+                    <p className="text-sm font-semibold text-foreground">No orders match your filter</p>
                     <p className="text-xs text-muted-foreground mt-1">Try clearing your search query or status filter.</p>
                 </div>
             ) : (
-                <div className="space-y-4">
+                <div className="space-y-5">
                     {filtered.map(({ order, buyerName, buyerEmail, buyerPhone, items = [] }) => {
                         const isUpdating = updatingId === order.id
+                        const currentStageIndex = getStageIndex(order.status)
+
                         return (
-                            <Card key={order.id} className="border shadow-xs hover:border-primary/40 transition-colors overflow-hidden">
-                                <CardContent className="p-4 sm:p-5 space-y-4">
+                            <Card key={order.id} className="border shadow-xs hover:border-primary/40 transition-all hover:shadow-sm overflow-hidden bg-card">
+                                <CardContent className="p-5 space-y-4">
                                     {/* Order Header */}
-                                    <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 border-b pb-3">
+                                    <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 border-b pb-3.5">
                                         <div className="space-y-1">
-                                            <div className="flex items-center gap-2 flex-wrap">
-                                                <span className="font-mono text-sm font-bold text-foreground">
+                                            <div className="flex items-center gap-2.5 flex-wrap">
+                                                <span className="font-mono text-base font-extrabold text-foreground">
                                                     {order.orderNumber}
                                                 </span>
                                                 <Badge
                                                     variant="outline"
                                                     className={
                                                         order.status === "delivered"
-                                                            ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/30 text-xs uppercase"
+                                                            ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/30 text-[10px] font-bold uppercase"
                                                             : order.status === "shipped"
-                                                            ? "bg-blue-500/10 text-blue-600 border-blue-500/30 text-xs uppercase"
+                                                            ? "bg-blue-500/10 text-blue-600 border-blue-500/30 text-[10px] font-bold uppercase"
                                                             : order.status === "processing"
-                                                            ? "bg-indigo-500/10 text-indigo-600 border-indigo-500/30 text-xs uppercase"
+                                                            ? "bg-indigo-500/10 text-indigo-600 border-indigo-500/30 text-[10px] font-bold uppercase"
                                                             : order.status === "confirmed"
-                                                            ? "bg-teal-500/10 text-teal-600 border-teal-500/30 text-xs uppercase"
-                                                            : "bg-amber-500/10 text-amber-600 border-amber-500/30 text-xs uppercase"
+                                                            ? "bg-teal-500/10 text-teal-600 border-teal-500/30 text-[10px] font-bold uppercase"
+                                                            : "bg-amber-500/10 text-amber-600 border-amber-500/30 text-[10px] font-bold uppercase"
                                                     }
                                                 >
                                                     {order.status === "submitted" ? "New Request" : order.status}
@@ -229,49 +252,92 @@ export function OrderManagementView({ initialOrders }: OrderManagementViewProps)
                                         </div>
 
                                         <div className="text-left sm:text-right">
-                                            <span className="text-base font-bold text-foreground block">
+                                            <span className="text-lg font-black text-foreground block">
                                                 ₹{parseFloat(order.total).toLocaleString("en-IN")}
                                             </span>
                                             <span className="text-[11px] text-muted-foreground capitalize">
-                                                Terms: {order.paymentTerms.replace("_", " ")}
+                                                Payment: {order.paymentTerms.replace("_", " ")}
                                             </span>
                                         </div>
                                     </div>
 
+                                    {/* Visual Fulfillment Stepper */}
+                                    <div className="py-2">
+                                        <div className="flex items-center justify-between text-[11px] font-medium text-muted-foreground relative">
+                                            {/* Progress connecting line */}
+                                            <div className="absolute left-0 top-3.5 h-0.5 w-full bg-muted -z-0" />
+                                            <div
+                                                className="absolute left-0 top-3.5 h-0.5 bg-primary transition-all duration-300 -z-0"
+                                                style={{ width: `${(currentStageIndex / (LIFECYCLE_STEPS.length - 1)) * 100}%` }}
+                                            />
+
+                                            {LIFECYCLE_STEPS.map((step, idx) => {
+                                                const isCompleted = idx < currentStageIndex
+                                                const isCurrent = idx === currentStageIndex
+                                                return (
+                                                    <div key={step.key} className="flex flex-col items-center gap-1.5 relative z-10">
+                                                        <div
+                                                            className={`size-7 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
+                                                                isCompleted
+                                                                    ? "bg-primary text-primary-foreground"
+                                                                    : isCurrent
+                                                                    ? "bg-primary text-primary-foreground ring-4 ring-primary/20"
+                                                                    : "bg-muted text-muted-foreground"
+                                                            }`}
+                                                        >
+                                                            {isCompleted ? <Check className="size-3.5" /> : idx + 1}
+                                                        </div>
+                                                        <span
+                                                            className={`text-[10px] hidden sm:block ${
+                                                                isCurrent
+                                                                    ? "font-bold text-foreground"
+                                                                    : isCompleted
+                                                                    ? "text-foreground"
+                                                                    : "text-muted-foreground"
+                                                            }`}
+                                                        >
+                                                            {step.label}
+                                                        </span>
+                                                    </div>
+                                                )
+                                            })}
+                                        </div>
+                                    </div>
+
                                     {/* Requested Offering(s) for this Order */}
-                                    <div className="rounded-lg bg-muted/40 p-3.5 border border-border/60 space-y-2.5">
-                                        <div className="flex items-center justify-between text-xs font-semibold text-muted-foreground">
-                                            <span className="flex items-center gap-1.5">
+                                    <div className="rounded-xl bg-muted/40 p-4 border border-border/60 space-y-3">
+                                        <div className="flex items-center justify-between text-xs font-bold text-muted-foreground">
+                                            <span className="flex items-center gap-1.5 uppercase tracking-wider text-[11px]">
                                                 <Package className="size-3.5 text-primary" />
                                                 Customer Request & Offering Details
                                             </span>
                                             {items.length > 0 && (
-                                                <span className="text-[11px] font-normal">
-                                                    {items.length} {items.length === 1 ? "offering item" : "offering items"}
+                                                <span className="text-[11px] font-normal text-muted-foreground">
+                                                    {items.length} {items.length === 1 ? "line item" : "line items"}
                                                 </span>
                                             )}
                                         </div>
 
                                         {items.length === 0 ? (
                                             <div className="text-xs text-muted-foreground py-1">
-                                                Standard Packaging Batch &bull; ₹{parseFloat(order.total).toLocaleString("en-IN")}
+                                                Packaging Production Run &bull; ₹{parseFloat(order.total).toLocaleString("en-IN")}
                                             </div>
                                         ) : (
                                             <div className="divide-y divide-border/40">
                                                 {items.map((item) => (
-                                                    <div key={item.id} className="pt-2 first:pt-0 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+                                                    <div key={item.id} className="pt-2.5 first:pt-0 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
                                                         <div className="space-y-0.5">
-                                                            <p className="font-semibold text-foreground text-sm">
+                                                            <p className="font-bold text-foreground text-sm">
                                                                 {item.titleSnapshot}
                                                             </p>
                                                             <p className="text-muted-foreground text-[11px]">
-                                                                Requested: <strong className="text-foreground font-medium">{item.quantity.toLocaleString("en-IN")} {item.unitOfMeasureSnapshot}</strong>
-                                                                {" "}&bull; Unit Price: <strong className="text-foreground font-medium">₹{parseFloat(item.unitPriceSnapshot).toLocaleString("en-IN")}</strong>
-                                                                {" "}&bull; Lead Time: {item.leadTimeDaysMinSnapshot}-{item.leadTimeDaysMaxSnapshot} days
-                                                                {" "}&bull; Mode: {item.fulfilmentModeSnapshot.replace("_", " ")}
+                                                                Quantity: <strong className="text-foreground font-semibold">{item.quantity.toLocaleString("en-IN")} {item.unitOfMeasureSnapshot}</strong>
+                                                                {" "}&bull; Rate: <strong className="text-foreground font-semibold">₹{parseFloat(item.unitPriceSnapshot).toLocaleString("en-IN")}</strong>
+                                                                {" "}&bull; Turnaround: {item.leadTimeDaysMinSnapshot}-{item.leadTimeDaysMaxSnapshot} days
+                                                                {" "}&bull; {item.fulfilmentModeSnapshot.replace("_", " ")}
                                                             </p>
                                                         </div>
-                                                        <div className="text-left sm:text-right font-semibold text-foreground">
+                                                        <div className="text-left sm:text-right font-extrabold text-foreground text-sm">
                                                             ₹{(item.quantity * parseFloat(item.unitPriceSnapshot)).toLocaleString("en-IN")}
                                                         </div>
                                                     </div>
@@ -281,7 +347,7 @@ export function OrderManagementView({ initialOrders }: OrderManagementViewProps)
 
                                         {order.notes && (
                                             <div className="mt-2 pt-2 border-t border-border/40 text-xs text-muted-foreground">
-                                                <span className="font-medium text-foreground">Buyer Note: </span>
+                                                <span className="font-semibold text-foreground">Buyer Note: </span>
                                                 {order.notes}
                                             </div>
                                         )}
@@ -290,7 +356,7 @@ export function OrderManagementView({ initialOrders }: OrderManagementViewProps)
                                     {/* Shipping Address & Status Progression Actions */}
                                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs pt-1">
                                         <div className="text-muted-foreground flex items-center gap-1.5">
-                                            <MapPin className="size-3.5 shrink-0" />
+                                            <MapPin className="size-3.5 shrink-0 text-muted-foreground" />
                                             <span>
                                                 {order.shippingAddressLine1}, {order.shippingCity}, {order.shippingState} - {order.shippingPincode}
                                             </span>
@@ -303,10 +369,10 @@ export function OrderManagementView({ initialOrders }: OrderManagementViewProps)
                                                     size="sm"
                                                     disabled={isUpdating}
                                                     onClick={() => handleUpdateStatus(order.id, "confirmed")}
-                                                    className="h-8 text-xs gap-1.5"
+                                                    className="h-8 text-xs gap-1.5 font-semibold shadow-xs"
                                                 >
                                                     <CheckCircle2 className="size-3.5" />
-                                                    Accept Order
+                                                    Accept Customer Order
                                                 </Button>
                                             )}
 
@@ -314,12 +380,11 @@ export function OrderManagementView({ initialOrders }: OrderManagementViewProps)
                                                 <Button
                                                     size="sm"
                                                     disabled={isUpdating}
-                                                    variant="default"
                                                     onClick={() => handleUpdateStatus(order.id, "processing")}
-                                                    className="h-8 text-xs gap-1.5"
+                                                    className="h-8 text-xs gap-1.5 font-semibold shadow-xs"
                                                 >
                                                     <Package className="size-3.5" />
-                                                    Start Production
+                                                    Start Production Batch
                                                 </Button>
                                             )}
 
@@ -329,10 +394,10 @@ export function OrderManagementView({ initialOrders }: OrderManagementViewProps)
                                                     disabled={isUpdating}
                                                     variant="secondary"
                                                     onClick={() => handleUpdateStatus(order.id, "shipped")}
-                                                    className="h-8 text-xs gap-1.5 border"
+                                                    className="h-8 text-xs gap-1.5 font-semibold border shadow-xs"
                                                 >
                                                     <Truck className="size-3.5" />
-                                                    Mark Dispatched
+                                                    Mark Dispatched & In Transit
                                                 </Button>
                                             )}
 
@@ -341,17 +406,17 @@ export function OrderManagementView({ initialOrders }: OrderManagementViewProps)
                                                     size="sm"
                                                     disabled={isUpdating}
                                                     onClick={() => handleUpdateStatus(order.id, "delivered")}
-                                                    className="h-8 text-xs gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white"
+                                                    className="h-8 text-xs gap-1.5 font-semibold bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs"
                                                 >
                                                     <CheckCircle2 className="size-3.5" />
-                                                    Confirm Delivered
+                                                    Confirm Buyer Delivery
                                                 </Button>
                                             )}
 
                                             {order.status === "delivered" && (
-                                                <Badge variant="outline" className="text-emerald-600 bg-emerald-500/10 border-emerald-500/30 gap-1 py-1">
-                                                    <CheckCircle2 className="size-3" />
-                                                    Fulfilled & Completed
+                                                <Badge variant="outline" className="text-emerald-600 bg-emerald-500/10 border-emerald-500/30 gap-1.5 py-1 px-2.5 font-bold">
+                                                    <ShieldCheck className="size-3.5" />
+                                                    Fulfilled & Escrow Settled
                                                 </Badge>
                                             )}
                                         </div>

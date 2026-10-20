@@ -50,22 +50,27 @@ export default function ManufacturerAppSidebar() {
     }
 
     return (
-        <Sidebar collapsible="icon" className="border-r border-border/80 bg-sidebar">
+        <Sidebar collapsible="icon" className="border-r border-border/80 bg-sidebar/95 backdrop-blur-xs">
             {/* Header / Brand */}
             <SidebarHeader className="h-16 justify-center px-4 border-b border-sidebar-border/60">
                 <SidebarMenu>
                     <SidebarMenuItem>
-                        <SidebarMenuButton size="lg" asChild className="hover:bg-transparent">
+                        <SidebarMenuButton size="lg" asChild className="hover:bg-transparent px-1">
                             <Link href="/manufacturer" className="flex items-center gap-3">
-                                <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold text-sm shadow-xs">
+                                <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary via-primary/90 to-indigo-600 text-primary-foreground font-black text-sm shadow-sm ring-1 ring-white/20">
                                     U
                                 </div>
-                                <div className="flex flex-col leading-none gap-1">
-                                    <span className="text-sm font-bold tracking-tight text-sidebar-foreground">
-                                        Unifiée
-                                    </span>
-                                    <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
-                                        Vendor Portal
+                                <div className="flex flex-col leading-tight">
+                                    <div className="flex items-center gap-1.5">
+                                        <span className="text-sm font-bold tracking-tight text-sidebar-foreground">
+                                            UNIFIÉE
+                                        </span>
+                                        <span className="rounded bg-primary/10 px-1 py-0.5 text-[9px] font-semibold text-primary uppercase">
+                                            Vendor
+                                        </span>
+                                    </div>
+                                    <span className="text-[11px] font-medium text-muted-foreground">
+                                        Operations Center
                                     </span>
                                 </div>
                             </Link>
