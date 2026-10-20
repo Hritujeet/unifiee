@@ -12,7 +12,7 @@ import {
 } from "drizzle-orm/pg-core"
 import { manufacturerTable } from "./manufacturer"
 import { business } from "./business"
-import { catalogProductsTable, offeringsTable } from "./offering"
+import { offeringsTable } from "./offering"
 
 export const vendorInquiryStatusEnum = pgEnum("vendor_inquiry_status", [
     "new",
@@ -30,7 +30,6 @@ export const vendorInquiriesTable = pgTable("vendor_inquiries", {
     businessId: uuid("business_id")
         .notNull()
         .references(() => business.id, { onDelete: "restrict" }),
-    catalogProductId: uuid("catalog_product_id").references(() => catalogProductsTable.id, { onDelete: "set null" }),
     offeringId: uuid("offering_id").references(() => offeringsTable.id, { onDelete: "set null" }),
     subject: varchar("subject", { length: 255 }).notNull(),
     message: text("message").notNull(),
@@ -44,7 +43,6 @@ export const vendorInquiriesTable = pgTable("vendor_inquiries", {
 }, (table) => [
     index("vendor_inquiries_vendor_status_idx").on(table.vendorId, table.status),
     index("vendor_inquiries_business_idx").on(table.businessId),
-    index("vendor_inquiries_catalog_product_idx").on(table.catalogProductId),
     index("vendor_inquiries_created_idx").on(table.createdAt),
 ])
 

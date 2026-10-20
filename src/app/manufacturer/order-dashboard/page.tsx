@@ -1,14 +1,10 @@
 import type { Metadata } from 'next'
-import { db } from '@/lib/db'
-import { businessOrdersTable } from '@/lib/db/schema/business-order'
-import { business } from '@/lib/db/schema/business'
-import { getAuthenticatedVendor } from '@/actions/vendor-actions'
+import { getAuthenticatedVendor, getVendorOrdersWithItems } from '@/actions/vendor-actions'
 import { OrderManagementView } from '@/components/manufacturer/order-management-view'
-import { desc, eq } from 'drizzle-orm'
 
 export const metadata: Metadata = {
-    title: "Orders — UNIFIÉE Vendor",
-    description: "Manage accepted packaging orders and update delivery status.",
+    title: "Customer Orders — UNIFIÉE Vendor",
+    description: "Review and fulfill customer requests corresponding to your packaging offerings.",
     robots: { index: false },
 }
 
@@ -23,17 +19,7 @@ export default async function OrderDashboardPage() {
         )
     }
 
-    const rows = await db
-        .select({
-            order: businessOrdersTable,
-            buyerName: business.businessName,
-            buyerEmail: business.email,
-            buyerPhone: business.phone,
-        })
-        .from(businessOrdersTable)
-        .leftJoin(business, eq(businessOrdersTable.businessId, business.id))
-        .where(eq(businessOrdersTable.vendorId, vendor.manufacturerId))
-        .orderBy(desc(businessOrdersTable.createdAt))
+    const rows = await getVendorOrdersWithItems(vendor.manufacturerId)
 
     return (
         <div className="mx-auto w-full max-w-6xl space-y-6 text-foreground pb-12">

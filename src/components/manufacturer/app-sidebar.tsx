@@ -31,10 +31,9 @@ import { toast } from "sonner"
 
 const navItems = [
     { title: "Dashboard", url: "/manufacturer", icon: LayoutDashboard },
-    { title: "Orders", url: "/manufacturer/order-dashboard", icon: ShoppingCart },
+    { title: "Customer Orders", url: "/manufacturer/order-dashboard", icon: ShoppingCart },
     { title: "My Offerings", url: "/manufacturer/offerings", icon: ClipboardList },
     { title: "Post Offering", url: "/manufacturer/publish-offering", icon: PlusCircle },
-    { title: "Quotations", url: "/manufacturer/quotations", icon: FileSpreadsheet },
 ]
 
 export default function ManufacturerAppSidebar() {

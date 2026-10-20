@@ -66,47 +66,6 @@ export const offeringPaymentTermsEnum = pgEnum("offering_payment_terms", [
     "net_30",
 ])
 
-export const catalogProductStatusEnum = pgEnum("catalog_product_status", [
-    "draft",
-    "published",
-    "archived",
-])
-
-/**
- * Standardized Master Catalog Products Table.
- * Decouples standardized product specifications and taxonomy from vendor-specific commercial terms,
- * allowing multiple vendors to list offerings against the same standardized product SKU.
- */
-export const catalogProductsTable = pgTable("catalog_products", {
-    id: uuid("id").primaryKey().notNull(),
-    sku: varchar("sku", { length: 64 }).notNull(),
-    title: varchar("title", { length: 240 }).notNull(),
-    description: text("description").notNull(),
-    vendorType: offeringVendorTypeEnum("vendor_type").notNull().default("manufacturer"),
-    categoryKey: varchar("category_key", { length: 100 }).notNull(),
-    unitOfMeasure: offeringUnitEnum("unit_of_measure").notNull(),
-    specifications: jsonb("specifications").$type<Record<string, unknown>>().notNull().default({}),
-    images: jsonb("images").$type<Array<{
-        url: string
-        isPrimary?: boolean
-        caption?: string
-    }>>().default([]),
-    benchmarkUnitPrice: varchar("benchmark_unit_price", { length: 32 }),
-    defaultLeadTimeDays: integer("default_lead_time_days"),
-    isCustomizable: boolean("is_customizable").notNull().default(false),
-    status: catalogProductStatusEnum("status").notNull().default("published"),
-    createdBy: text("created_by").references(() => user.id, { onDelete: "set null" }),
-    createdAt: timestamp("created_at").notNull().defaultNow(),
-    updatedAt: timestamp("updated_at").notNull().defaultNow().$onUpdate(() => new Date()),
-}, (table) => [
-    uniqueIndex("catalog_products_sku_unique").on(table.sku),
-    index("catalog_products_category_idx").on(table.categoryKey),
-    index("catalog_products_status_idx").on(table.status),
-])
-
-export type CatalogProduct = typeof catalogProductsTable.$inferSelect
-export type NewCatalogProduct = typeof catalogProductsTable.$inferInsert
-
 export const offeringTypesTable = pgTable("offering_types", {
     key: varchar("key", { length: 100 }).primaryKey(),
     displayName: varchar("display_name", { length: 160 }).notNull(),
@@ -128,7 +87,7 @@ export const offeringTypesTable = pgTable("offering_types", {
 
 export const offeringsTable = pgTable("offerings", {
     id: uuid("id").primaryKey().notNull(),
-    catalogProductId: uuid("catalog_product_id").references(() => catalogProductsTable.id, { onDelete: "set null" }),
+    catalogProductId: uuid("catalog_product_id"),
     vendorId: uuid("vendor_id").notNull().references(() => manufacturerTable.id, { onDelete: "restrict" }),
     vendorType: offeringVendorTypeEnum("vendor_type").notNull().default("manufacturer"),
     offeringType: varchar("offering_type", { length: 100 }).notNull(),

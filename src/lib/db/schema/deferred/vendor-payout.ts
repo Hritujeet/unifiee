@@ -44,7 +44,6 @@ export const vendorPayoutAccountsTable = pgTable("vendor_payout_accounts", {
     upiId: varchar("upi_id", { length: 100 }),
     isPrimary: boolean("is_primary").notNull().default(true),
     isVerified: boolean("is_verified").notNull().default(false),
-    verifiedAt: timestamp("verified_at"),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow().$onUpdate(() => new Date()),
 }, (table) => [

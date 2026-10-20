@@ -6,17 +6,13 @@ import { db } from "@/lib/db"
 import { manufacturerTable } from "@/lib/db/schema/manufacturer"
 import {
     offeringsTable,
-    offeringPriceTiersTable,
-    type Offering,
 } from "@/lib/db/schema/offering"
 import {
     businessOrdersTable,
     businessOrderItemsTable,
 } from "@/lib/db/schema/business-order"
 import { business } from "@/lib/db/schema/business"
-import { vendorQuotationsTable } from "@/lib/db/schema/vendor-quotation"
-import { businessRequirementsTable } from "@/lib/db/schema/business-requirement"
-import { eq, and, desc, sql, isNull } from "drizzle-orm"
+import { eq, and, desc, isNull, inArray } from "drizzle-orm"
 import { revalidatePath } from "next/cache"
 import crypto from "crypto"
 
@@ -55,13 +51,41 @@ export async function getAuthenticatedVendor(): Promise<VendorAuthContext | null
     }
 }
 
+// ── Helper to fetch orders along with requested offering items ──────────────
+export async function getVendorOrdersWithItems(vendorId: string) {
+    const rawOrders = await db
+        .select({
+            order: businessOrdersTable,
+            buyerName: business.businessName,
+            buyerEmail: business.email,
+            buyerPhone: business.phone,
+        })
+        .from(businessOrdersTable)
+        .leftJoin(business, eq(businessOrdersTable.businessId, business.id))
+        .where(eq(businessOrdersTable.vendorId, vendorId))
+        .orderBy(desc(businessOrdersTable.createdAt))
+
+    if (rawOrders.length === 0) return []
+
+    const orderIds = rawOrders.map((o) => o.order.id)
+    const items = await db
+        .select()
+        .from(businessOrderItemsTable)
+        .where(inArray(businessOrderItemsTable.orderId, orderIds))
+
+    return rawOrders.map((o) => ({
+        ...o,
+        items: items.filter((item) => item.orderId === o.order.id),
+    }))
+}
+
 // ── 1. Fetch Vendor Dashboard Data from Real DB ─────────────────────────────
 export async function getVendorDashboardData() {
     const vendor = await getAuthenticatedVendor()
     if (!vendor) return null
 
     // Run parallel queries against real database
-    const [offerings, orders, quotations] = await Promise.all([
+    const [offerings, orders] = await Promise.all([
         // Real offerings
         db
             .select()
@@ -74,32 +98,8 @@ export async function getVendorDashboardData() {
             )
             .orderBy(desc(offeringsTable.createdAt)),
 
-        // Real orders with business details
-        db
-            .select({
-                order: businessOrdersTable,
-                buyerName: business.businessName,
-                buyerEmail: business.email,
-                buyerPhone: business.phone,
-            })
-            .from(businessOrdersTable)
-            .leftJoin(business, eq(businessOrdersTable.businessId, business.id))
-            .where(eq(businessOrdersTable.vendorId, vendor.manufacturerId))
-            .orderBy(desc(businessOrdersTable.createdAt)),
-
-        // Real quotations with requirement details
-        db
-            .select({
-                quote: vendorQuotationsTable,
-                requirementTitle: businessRequirementsTable.title,
-            })
-            .from(vendorQuotationsTable)
-            .leftJoin(
-                businessRequirementsTable,
-                eq(vendorQuotationsTable.requirementId, businessRequirementsTable.id)
-            )
-            .where(eq(vendorQuotationsTable.vendorId, vendor.manufacturerId))
-            .orderBy(desc(vendorQuotationsTable.createdAt)),
+        // Real orders with requested offering items
+        getVendorOrdersWithItems(vendor.manufacturerId),
     ])
 
     // Calculate actual earnings
@@ -129,11 +129,9 @@ export async function getVendorDashboardData() {
             activeOrdersCount,
             publishedOfferingsCount: offerings.length,
             activeOfferingsCount: offerings.filter((o) => o.status === "active").length,
-            quotationsCount: quotations.length,
         },
         offerings,
         orders,
-        quotations,
     }
 }
 

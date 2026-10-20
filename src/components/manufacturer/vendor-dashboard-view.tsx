@@ -35,7 +35,6 @@ export interface VendorDashboardViewProps {
         activeOrdersCount: number
         publishedOfferingsCount: number
         activeOfferingsCount: number
-        quotationsCount: number
     }
     recentOrders: Array<{
         order: {
