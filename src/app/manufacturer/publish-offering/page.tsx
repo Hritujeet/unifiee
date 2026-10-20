@@ -4,22 +4,25 @@ import { FileText } from 'lucide-react'
 
 export const metadata: Metadata = {
     title: "Publish Offering — UNIFIÉE Vendor",
-    description: "Publish a packaging offering on the UNIFIÉE vendor platform.",
+    description: "Publish a packaging offering on the UNIFIÉE vendor platform with commercial price tiers and technical specifications.",
     robots: { index: false },
 }
 
 export default function PublishOfferingPage() {
     return (
-        <div className="mx-auto max-w-2xl">
+        <div className="mx-auto w-full max-w-7xl space-y-6 text-foreground pb-12">
             {/* Page header */}
-            <div className="mb-8 flex items-start gap-3">
-                <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                    <FileText className="size-5" />
-                </div>
+            <div className="flex flex-col gap-2 border-b pb-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                    <h1 className="font-heading text-xl font-semibold text-foreground">Publish an Offering</h1>
-                    <p className="mt-0.5 text-sm text-muted-foreground">
-                        Fill in the details below to publish your offering for businesses.
+                    <div className="flex items-center gap-2 text-primary font-semibold text-xs uppercase tracking-wider">
+                        <FileText className="size-4" />
+                        <span>Packaging Publishing Studio</span>
+                    </div>
+                    <h1 className="mt-1 font-heading text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+                        Publish a Packaging Offering
+                    </h1>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                        Configure volume pricing slabs, production lead times, substrate specifications, and eco-certifications for F&B buyers.
                     </p>
                 </div>
             </div>

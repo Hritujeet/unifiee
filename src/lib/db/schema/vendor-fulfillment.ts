@@ -1,5 +1,4 @@
 import {
-    boolean,
     check,
     index,
     integer,
@@ -16,25 +15,15 @@ import { sql } from "drizzle-orm"
 import { manufacturerTable } from "./manufacturer"
 import { businessOrdersTable } from "./business-order"
 
-export const fulfillmentWorkflowTypeEnum = pgEnum("fulfillment_workflow_type", [
-    "ready_stock",
-    "made_to_order",
-    "service",
-])
-
 export const orderFulfillmentStageEnum = pgEnum("order_fulfillment_stage", [
     "order_confirmed",
-    "artwork_submitted",
     "artwork_approved",
-    "tooling_and_plates_ready",
     "raw_material_sourced",
     "in_production",
     "quality_check_passed",
     "packed",
     "dispatched",
-    "out_for_delivery",
     "delivered",
-    "cancelled",
 ])
 
 export const shipmentStatusEnum = pgEnum("shipment_status", [
@@ -47,11 +36,6 @@ export const shipmentStatusEnum = pgEnum("shipment_status", [
     "returned",
 ])
 
-/**
- * Order Fulfillment Milestones Table.
- * Supports flexible workflows for both standard-stock orders (skip artwork/production)
- * and customized packaging orders (full pre-press, tooling, and manufacturing sequence).
- */
 export const orderFulfillmentMilestonesTable = pgTable("order_fulfillment_milestones", {
     id: uuid("id").primaryKey().notNull(),
     orderId: uuid("order_id")
@@ -59,10 +43,8 @@ export const orderFulfillmentMilestonesTable = pgTable("order_fulfillment_milest
         .references(() => businessOrdersTable.id, { onDelete: "cascade" }),
     vendorId: uuid("vendor_id")
         .notNull()
-        .references(() => manufacturerTable.id, { onDelete: "restrict" }),
-    workflowType: fulfillmentWorkflowTypeEnum("workflow_type").notNull().default("made_to_order"),
+        .references(() => manufacturerTable.id, { onDelete: "cascade" }),
     stage: orderFulfillmentStageEnum("stage").notNull(),
-    stageSequence: integer("stage_sequence").notNull().default(1),
     title: varchar("title", { length: 160 }).notNull(),
     description: text("description"),
     proofImages: jsonb("proof_images").$type<Array<{
@@ -70,14 +52,12 @@ export const orderFulfillmentMilestonesTable = pgTable("order_fulfillment_milest
         caption?: string
         uploadedAt: string
     }>>().default([]),
-    isCompleted: boolean("is_completed").notNull().default(false),
-    completedAt: timestamp("completed_at"),
+    completedAt: timestamp("completed_at").notNull().defaultNow(),
     createdAt: timestamp("created_at").notNull().defaultNow(),
 }, (table) => [
     index("order_milestones_order_idx").on(table.orderId),
     index("order_milestones_vendor_idx").on(table.vendorId),
     index("order_milestones_stage_idx").on(table.orderId, table.stage),
-    index("order_milestones_workflow_idx").on(table.workflowType, table.stage),
 ])
 
 export const orderShipmentsTable = pgTable("order_shipments", {
@@ -87,7 +67,7 @@ export const orderShipmentsTable = pgTable("order_shipments", {
         .references(() => businessOrdersTable.id, { onDelete: "cascade" }),
     vendorId: uuid("vendor_id")
         .notNull()
-        .references(() => manufacturerTable.id, { onDelete: "restrict" }),
+        .references(() => manufacturerTable.id, { onDelete: "cascade" }),
     courierPartner: varchar("courier_partner", { length: 120 }).notNull(),
     trackingNumber: varchar("tracking_number", { length: 120 }).notNull(),
     trackingUrl: text("tracking_url"),
@@ -104,12 +84,10 @@ export const orderShipmentsTable = pgTable("order_shipments", {
 }, (table) => [
     index("order_shipments_order_idx").on(table.orderId),
     index("order_shipments_vendor_idx").on(table.vendorId),
-    index("order_shipments_tracking_idx").on(table.trackingNumber),
     check("order_shipments_boxes_positive_check", sql`${table.numberOfBoxes} > 0`),
 ])
 
 export type OrderFulfillmentMilestone = typeof orderFulfillmentMilestonesTable.$inferSelect
 export type NewOrderFulfillmentMilestone = typeof orderFulfillmentMilestonesTable.$inferInsert
-
 export type OrderShipment = typeof orderShipmentsTable.$inferSelect
 export type NewOrderShipment = typeof orderShipmentsTable.$inferInsert
