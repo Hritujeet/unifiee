@@ -5,6 +5,7 @@ import { db } from "@/lib/db"
 import { packagingDesignerTable } from "@/lib/db/schema/packaging-designer"
 import { designerPackagingSpecializationValues } from "@/lib/zod-schema"
 import { getFormDataLines, getFormDataValue, getOptionalFormDataText } from "@/lib/server/form-data"
+import { checkRateLimit, getClientIpFromHeaders } from "@/lib/server/rate-limit"
 import { eq } from "drizzle-orm"
 import { revalidatePath } from "next/cache"
 import { headers } from "next/headers"
@@ -64,9 +65,25 @@ export async function updateDesignerProfile(formData: FormData) {
         return { success: false, error: "Invalid profile submission." }
     }
 
-    const session = await auth.api.getSession({ headers: await headers() })
+    const reqHeaders = await headers()
+    const session = await auth.api.getSession({ headers: reqHeaders })
     if (!session?.user) {
         return { success: false, error: "Please sign in again to update your profile." }
+    }
+
+    // Rate limiting: max 20 profile updates per 10 minutes
+    const clientIp = getClientIpFromHeaders(reqHeaders)
+    const rateCheck = await checkRateLimit(
+        {
+            keyPrefix: "update-profile",
+            limit: 20,
+            windowSeconds: 600,
+        },
+        `${session.user.id}:${clientIp}`
+    )
+
+    if (!rateCheck.success) {
+        return { success: false, error: "Too many profile updates. Please wait a moment." }
     }
 
     const parsed = profileSchema.safeParse({

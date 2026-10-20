@@ -7,6 +7,7 @@ import { manufacturerTable } from "@/lib/db/schema/manufacturer";
 import { packagingDesignerTable } from "@/lib/db/schema/packaging-designer";
 import { business } from "@/lib/db/schema/business";
 import { manufacturerOnboardingSchema } from "@/lib/zod-schema";
+import { checkRateLimit, getClientIpFromHeaders } from "@/lib/server/rate-limit";
 import { eq, or } from "drizzle-orm";
 import { z } from "zod";
 
@@ -15,8 +16,10 @@ export async function registerManufacturerAction(data: z.infer<typeof manufactur
     const inputEmail = data?.email || "";
 
     try {
-        // 1. Require authenticated session
         const reqHeaders = await headers();
+        const clientIp = getClientIpFromHeaders(reqHeaders);
+
+        // 1. Require authenticated session
         const session = await auth.api.getSession({ headers: reqHeaders });
         if (!session?.user) {
             return {
@@ -27,7 +30,24 @@ export async function registerManufacturerAction(data: z.infer<typeof manufactur
 
         const userId = session.user.id;
 
-        // 2. Prevent double-registration — check if already registered
+        // 2. Server-side Rate Limiting (max 5 registration attempts per 10 minutes)
+        const rateCheck = await checkRateLimit(
+            {
+                keyPrefix: "manufacturer-reg",
+                limit: 5,
+                windowSeconds: 600,
+            },
+            `${userId}:${clientIp}`
+        );
+
+        if (!rateCheck.success) {
+            return {
+                success: false,
+                error: `Too many registration attempts. Please wait ${rateCheck.resetInSeconds} seconds before trying again.`
+            };
+        }
+
+        // 3. Prevent double-registration — check if already registered
         const [existingManufacturer, existingDesigner, existingBusiness] = await Promise.all([
             db.select({ id: manufacturerTable.id }).from(manufacturerTable).where(eq(manufacturerTable.userId, userId)).limit(1),
             db.select({ id: packagingDesignerTable.id }).from(packagingDesignerTable).where(eq(packagingDesignerTable.userId, userId)).limit(1),
@@ -53,7 +73,7 @@ export async function registerManufacturerAction(data: z.infer<typeof manufactur
             };
         }
 
-        // 3. Validate form data
+        // 4. Validate form data
         const parsed = manufacturerOnboardingSchema.safeParse(data);
         if (!parsed.success) {
             const firstIssues = parsed.error.issues
@@ -95,7 +115,7 @@ export async function registerManufacturerAction(data: z.infer<typeof manufactur
             }
         }
 
-        // 4. Insert
+        // 5. Insert
         await db.insert(manufacturerTable).values({
             id: crypto.randomUUID(),
             userId,

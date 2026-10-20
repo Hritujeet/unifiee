@@ -3,58 +3,59 @@ import { z } from "zod";
 import { db } from "@/lib/db";
 import { user, account } from "@/lib/db/schema/auth-schema";
 import { eq, sql, and } from "drizzle-orm";
+import { checkRateLimit, getClientIpFromHeaders } from "@/lib/server/rate-limit";
 
 const checkEmailSchema = z.object({
-  email: z.string().email(),
+  email: z
+    .string()
+    .trim()
+    .toLowerCase()
+    .email("Please provide a valid email address")
+    .max(255, "Email address is too long"),
 });
-
-// In-memory rate limiter with periodic stale-entry cleanup
-const rateLimitMap = new Map<string, { count: number; lastReset: number }>();
-const RATE_LIMIT_WINDOW = 60 * 1000; // 1 minute
-const MAX_REQUESTS = 5;
-
-// Purge stale entries every 5 minutes to prevent unbounded memory growth
-setInterval(() => {
-  const now = Date.now();
-  for (const [key, record] of rateLimitMap) {
-    if (now - record.lastReset > RATE_LIMIT_WINDOW) {
-      rateLimitMap.delete(key);
-    }
-  }
-}, 5 * 60 * 1000);
-
-function isRateLimited(ip: string): boolean {
-  const now = Date.now();
-  const record = rateLimitMap.get(ip);
-
-  if (!record || now - record.lastReset > RATE_LIMIT_WINDOW) {
-    rateLimitMap.set(ip, { count: 1, lastReset: now });
-    return false;
-  }
-
-  if (record.count >= MAX_REQUESTS) {
-    return true;
-  }
-
-  record.count += 1;
-  return false;
-}
 
 export async function POST(req: NextRequest) {
   try {
-    const ip = req.headers.get("x-forwarded-for") || "unknown";
-    if (isRateLimited(ip)) {
-      return NextResponse.json({ status: "error" }, { status: 429 });
+    const clientIp = getClientIpFromHeaders(req.headers);
+    const rateCheck = await checkRateLimit(
+      {
+        keyPrefix: "check-email",
+        limit: 5,
+        windowSeconds: 60,
+      },
+      clientIp
+    );
+
+    if (!rateCheck.success) {
+      return NextResponse.json(
+        {
+          status: "error",
+          error: "Too many sign-in attempts. Please wait a minute before trying again.",
+          retryAfter: rateCheck.resetInSeconds,
+        },
+        {
+          status: 429,
+          headers: {
+            "Retry-After": String(rateCheck.resetInSeconds),
+          },
+        }
+      );
     }
 
-    const body = await req.json();
+    const body = await req.json().catch(() => null);
     const parsed = checkEmailSchema.safeParse(body);
 
     if (!parsed.success) {
-      return NextResponse.json({ status: "error" }, { status: 400 });
+      return NextResponse.json(
+        {
+          status: "error",
+          error: parsed.error.issues[0]?.message || "Please provide a valid email address.",
+        },
+        { status: 400 }
+      );
     }
 
-    const email = parsed.data.email.toLowerCase();
+    const email = parsed.data.email;
 
     // Single JOIN query instead of two sequential round-trips
     const rows = await db
@@ -81,18 +82,16 @@ export async function POST(req: NextRequest) {
     const row = rows[0];
 
     // No credential account row joined → user exists but has no password set
-    if (!row.providerId) {
-      return NextResponse.json({ status: "set_pw" });
-    }
-
-    if (!row.password || row.password.trim() === "") {
+    if (!row.providerId || !row.password || row.password.trim() === "") {
       return NextResponse.json({ status: "set_pw" });
     }
 
     return NextResponse.json({ status: "enter_pw" });
-
   } catch (error) {
-    console.error("Error in check-email:", error);
-    return NextResponse.json({ status: "error" }, { status: 500 });
+    console.error("Error in check-email route:", error);
+    return NextResponse.json(
+      { status: "error", error: "Internal server error" },
+      { status: 500 }
+    );
   }
 }

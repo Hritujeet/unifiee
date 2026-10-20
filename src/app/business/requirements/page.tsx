@@ -7,7 +7,7 @@ export const metadata: Metadata = {
     description: "Manage your packaging requirements and vendor sourcing on UNIFIÉE.",
     robots: { index: false },
 }
-
+export const dynamic = "force-dynamic"
 export default async function BusinessRequirementsPage() {
     const result = await getBusinessRequirementsAction()
     const dbRequirements = result.success && result.data ? result.data : []

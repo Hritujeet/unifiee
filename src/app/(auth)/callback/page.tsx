@@ -6,14 +6,14 @@ import { redirect } from "next/navigation";
 
 /**
  * Server-side OAuth / sign-in callback handler.
- * Routing logic:
- *   no session          → /sign-in
- *   no password         → /set-password
- *   new user (<60s)     → /onboarding
- *   existing manufacturer → /manufacturer
- *   existing designer  → /designer
- *   existing business   → /business
- *   everyone else       → /
+ * Routing priority:
+ *   1. No session          → /sign-in
+ *   2. No password set     → /set-password
+ *   3. Registered role:
+ *        manufacturer      → /manufacturer
+ *        designer          → /designer
+ *        business          → /business
+ *   4. No role registered  → /onboarding
  */
 export default async function AuthCallbackPage() {
   const session = await auth.api.getSession({
@@ -33,17 +33,11 @@ export default async function AuthCallbackPage() {
     redirect("/set-password");
   }
 
-  // New account just created — no role yet — send to onboarding
-  const userCreatedAt = new Date(session.user.createdAt).getTime();
-  if (Date.now() - userCreatedAt < 60000) {
-    redirect("/onboarding");
-  }
-
-  // Returning registered users go straight to their dashboard
+  // Returning registered users go straight to their specific role dashboard
   if (role === "manufacturer") redirect("/manufacturer");
   if (role === "designer") redirect("/designer");
   if (role === "business") redirect("/business");
 
-  // Registered but not yet onboarded
+  // User has account and password, but has not completed onboarding
   redirect("/onboarding");
 }

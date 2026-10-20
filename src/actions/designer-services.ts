@@ -5,6 +5,7 @@ import { db } from "@/lib/db"
 import { designerServiceTable } from "@/lib/db/schema/designer-service"
 import { packagingDesignerTable } from "@/lib/db/schema/packaging-designer"
 import { getFormDataLines, getFormDataValue } from "@/lib/server/form-data"
+import { checkRateLimit, getClientIpFromHeaders } from "@/lib/server/rate-limit"
 import { and, eq } from "drizzle-orm"
 import { revalidatePath } from "next/cache"
 import { headers } from "next/headers"
@@ -36,7 +37,8 @@ export async function createDesignerService(formData: FormData): Promise<CreateD
         return { success: false, error: "Invalid service submission." }
     }
 
-    const session = await auth.api.getSession({ headers: await headers() })
+    const reqHeaders = await headers()
+    const session = await auth.api.getSession({ headers: reqHeaders })
     if (!session?.user) {
         return { success: false, error: "Please sign in again to add a service." }
     }
@@ -49,6 +51,21 @@ export async function createDesignerService(formData: FormData): Promise<CreateD
 
     if (!designer) {
         return { success: false, error: "Designer profile not found." }
+    }
+
+    // Rate limiting: max 15 services created per 10 minutes
+    const clientIp = getClientIpFromHeaders(reqHeaders)
+    const rateCheck = await checkRateLimit(
+        {
+            keyPrefix: "create-service",
+            limit: 15,
+            windowSeconds: 600,
+        },
+        `${designer.id}:${clientIp}`
+    )
+
+    if (!rateCheck.success) {
+        return { success: false, error: "Too many service submissions. Please wait a moment." }
     }
 
     const parsed = serviceSchema.safeParse({
@@ -85,7 +102,7 @@ export async function createDesignerService(formData: FormData): Promise<CreateD
 }
 
 export async function deleteDesignerService(serviceId: string): Promise<CreateDesignerServiceResult> {
-    const parsedId = z.string().uuid().safeParse(serviceId)
+    const parsedId = z.string().uuid("Invalid service ID.").safeParse(serviceId)
     if (!parsedId.success) {
         return { success: false, error: "Invalid service." }
     }

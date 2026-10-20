@@ -82,10 +82,10 @@ export default function SetPasswordForm() {
             Set Password
           </h1>
           <div className="text-sm text-muted-foreground mb-6 text-center">
-            <ul className="my-2 text-left list-disc ml-6">
-              <li>Password must be at least 6 characters long</li>
-              <li>You will use this password to access your account using Google as well as your email id.</li>
-              <li>It's recommended to pick a strong password</li>
+            <ul className="my-2 text-left list-disc ml-6 space-y-1">
+              <li>Password must be at least 8 characters long</li>
+              <li>You will use this password to access your account with email as well as Google</li>
+              <li>It is recommended to use a mix of letters, numbers, and symbols</li>
             </ul>
           </div>
 

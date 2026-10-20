@@ -53,13 +53,13 @@ function GoogleIcon() {
 }
 
 const basicInfoSchema = z.object({
-  name: z.string().min(2, "Name must be at least 2 characters long"),
-  email: z.string().email("Please provide a valid email address"),
+  name: z.string().trim().min(2, "Name must be at least 2 characters long").max(100, "Name is too long"),
+  email: z.string().trim().email("Please provide a valid email address").max(255, "Email is too long"),
 })
 
 const passwordSchema = z.object({
-  password: z.string().min(6, "Password must be at least 6 characters long"),
-  confirmPassword: z.string()
+  password: z.string().min(8, "Password must be at least 8 characters long").max(128, "Password cannot exceed 128 characters"),
+  confirmPassword: z.string().min(8, "Password must be at least 8 characters long").max(128, "Password cannot exceed 128 characters"),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords do not match",
   path: ["confirmPassword"]
@@ -106,13 +106,22 @@ export function SignupForm({
   const mutation = useMutation({
     mutationFn: async (formData: z.infer<typeof passwordSchema>) => {
       return await authClient.signUp.email({
-        name: pendingName,
-        email: pendingEmail,
+        name: pendingName.trim(),
+        email: pendingEmail.trim(),
         password: formData.password,
       })
     },
     onSuccess: (result) => {
       if (result.error) {
+        const isRateLimited = result.error.status === 429 ||
+          /too many requests|rate limit/i.test(result.error.message || "");
+        if (isRateLimited) {
+          toast.error("Too many registration attempts", {
+            description: "Please wait a minute before trying again.",
+            duration: 6000,
+          })
+          return
+        }
         toast.error("Account creation failed", {
           description: result.error.message || "Failed to create account. This email might already be in use.",
           duration: 6000,
@@ -131,8 +140,10 @@ export function SignupForm({
       router.refresh()
     },
     onError: (error) => {
-      toast.error("Registration failed", {
-        description: error instanceof Error ? error.message : "Unable to reach server. Please check your internet connection.",
+      const msg = error instanceof Error ? error.message : "Unable to reach server."
+      const isRateLimited = /too many requests|rate limit/i.test(msg)
+      toast.error(isRateLimited ? "Too many registration attempts" : "Registration failed", {
+        description: isRateLimited ? "Please wait a minute before trying again." : msg,
         duration: 6000,
       })
     },

@@ -54,7 +54,7 @@ function GoogleIcon() {
 }
 
 const emailSchema = z.object({
-  email: z.string().email("Please provide a valid email address"),
+  email: z.string().trim().email("Please provide a valid email address"),
 })
 
 export function LoginForm({
@@ -96,12 +96,16 @@ export function LoginForm({
       const res = await fetch("/api/auth/check-email", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: data.email }),
+        body: JSON.stringify({ email: data.email.trim() }),
       })
+      const json = await res.json().catch(() => ({}))
       if (!res.ok) {
-        throw new Error("Failed to check email")
+        if (res.status === 429) {
+          throw new Error(json.error || "Too many sign-in attempts. Please wait a minute before trying again.")
+        }
+        throw new Error(json.error || "Failed to check email")
       }
-      return res.json() as Promise<{ status: "not_registered" | "set_pw" | "enter_pw" | "error" }>
+      return json as { status: "not_registered" | "set_pw" | "enter_pw" | "error" }
     },
     onSuccess: (data, variables) => {
       if (data.status === "not_registered") {
@@ -109,8 +113,9 @@ export function LoginForm({
       } else if (data.status === "set_pw") {
         toast.info("This email is registered with Google. Please click 'Continue with Google' to sign in and set your password.", { duration: 6000 })
       } else if (data.status === "enter_pw") {
-        setEmailToLogin(variables.email)
-        setPasswordValue("email", variables.email)
+        const cleanEmail = variables.email.trim()
+        setEmailToLogin(cleanEmail)
+        setPasswordValue("email", cleanEmail)
         setShowPasswordDialog(true)
       } else {
         toast.error("Account lookup failed", {
@@ -120,8 +125,10 @@ export function LoginForm({
       }
     },
     onError: (error) => {
-      toast.error("Connection error", {
-        description: error instanceof Error ? error.message : "Unable to reach authentication server. Please check your network and try again.",
+      const msg = error instanceof Error ? error.message : "Unable to reach authentication server."
+      const isRateLimit = /too many|wait a minute/i.test(msg)
+      toast.error(isRateLimit ? "Sign-in rate limit reached" : "Connection error", {
+        description: msg,
         duration: 6000,
       })
     },
@@ -130,12 +137,21 @@ export function LoginForm({
   const loginMutation = useMutation({
     mutationFn: async (formData: z.infer<typeof loginFormSchema>) => {
       return await authClient.signIn.email({
-        email: formData.email,
+        email: formData.email.trim(),
         password: formData.password,
       })
     },
     onSuccess: (result) => {
       if (result.error) {
+        const isRateLimited = result.error.status === 429 ||
+          /too many requests|rate limit/i.test(result.error.message || "");
+        if (isRateLimited) {
+          toast.error("Too many login attempts", {
+            description: "You have exceeded the maximum login attempts. Please wait a minute before trying again.",
+            duration: 6000,
+          })
+          return
+        }
         toast.error("Sign in failed", {
           description: result.error.message || "Invalid email or password combination. Please re-check your password.",
           duration: 6000,
@@ -153,8 +169,10 @@ export function LoginForm({
       router.refresh()
     },
     onError: (error) => {
-      toast.error("Sign in failed", {
-        description: error instanceof Error ? error.message : "Could not complete sign in. Please check your internet connection.",
+      const msg = error instanceof Error ? error.message : "Could not complete sign in."
+      const isRateLimited = /too many requests|rate limit/i.test(msg)
+      toast.error(isRateLimited ? "Too many login attempts" : "Sign in failed", {
+        description: isRateLimited ? "You have exceeded the maximum login attempts. Please wait a minute before trying again." : msg,
         duration: 6000,
       })
     },

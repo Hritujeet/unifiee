@@ -14,6 +14,8 @@ export const auth = betterAuth({
     emailAndPassword: {
         enabled: true,
         requireEmailVerification: false,
+        minPasswordLength: 8,
+        maxPasswordLength: 128,
     },
     socialProviders: {
         google: {
@@ -21,11 +23,49 @@ export const auth = betterAuth({
             clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
         }
     },
+    rateLimit: {
+        enabled: true,
+        window: 60,
+        max: 60,
+        customRules: {
+            "/sign-in/email": {
+                window: 60,
+                max: 5,
+            },
+            "/sign-in/social": {
+                window: 60,
+                max: 10,
+            },
+            "/sign-up/email": {
+                window: 60,
+                max: 5,
+            },
+            "/set-password": {
+                window: 60,
+                max: 5,
+            },
+            "/change-password": {
+                window: 60,
+                max: 5,
+            },
+        },
+        storage: "memory",
+    },
+    advanced: {
+        ipAddress: {
+            ipAddressHeaders: [
+                "x-vercel-forwarded-for",
+                "cf-connecting-ip",
+                "x-real-ip",
+                "x-forwarded-for",
+            ],
+        },
+    },
     account: {
         accountLinking: {
             enabled: true,
             trustedProviders: ["google"],
-            allowDifferentEmails: true,
+            allowDifferentEmails: false,
         }
     },
     databaseHooks: {

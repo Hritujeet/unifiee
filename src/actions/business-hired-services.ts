@@ -10,12 +10,14 @@ import { businessHiredServiceTable } from "@/lib/db/schema/business-hired-servic
 import { business } from "@/lib/db/schema/business"
 import { designerServiceTable } from "@/lib/db/schema/designer-service"
 import { packagingDesignerTable } from "@/lib/db/schema/packaging-designer"
+import { checkRateLimit, getClientIpFromHeaders } from "@/lib/server/rate-limit"
 
 type HireActionResult = { success: boolean; error?: string }
 
 async function getCurrentBusiness() {
-    const session = await auth.api.getSession({ headers: await headers() })
-    if (!session?.user) return null
+    const reqHeaders = await headers()
+    const session = await auth.api.getSession({ headers: reqHeaders })
+    if (!session?.user) return { session: null, businessProfile: null, reqHeaders }
 
     const [businessProfile] = await db
         .select({ id: business.id })
@@ -23,15 +25,31 @@ async function getCurrentBusiness() {
         .where(eq(business.userId, session.user.id))
         .limit(1)
 
-    return businessProfile ?? null
+    return { session, businessProfile: businessProfile ?? null, reqHeaders }
 }
 
 export async function trackHiredDesignerService(serviceId: string): Promise<HireActionResult> {
-    const parsedId = z.string().uuid().safeParse(serviceId)
+    const parsedId = z.string().uuid("Invalid service ID format.").safeParse(serviceId)
     if (!parsedId.success) return { success: false, error: "Invalid designer service." }
 
-    const businessProfile = await getCurrentBusiness()
-    if (!businessProfile) return { success: false, error: "Sign in with a business account to track hired services." }
+    const { session, businessProfile, reqHeaders } = await getCurrentBusiness()
+    if (!session?.user || !businessProfile) {
+        return { success: false, error: "Sign in with a business account to track hired services." }
+    }
+
+    const clientIp = getClientIpFromHeaders(reqHeaders)
+    const rateCheck = await checkRateLimit(
+        {
+            keyPrefix: "track-hired",
+            limit: 20,
+            windowSeconds: 300,
+        },
+        `${businessProfile.id}:${clientIp}`
+    )
+
+    if (!rateCheck.success) {
+        return { success: false, error: "Too many requests. Please wait a moment." }
+    }
 
     const [listing] = await db
         .select({
@@ -86,12 +104,12 @@ export async function trackHiredDesignerService(serviceId: string): Promise<Hire
 }
 
 const customProjectSchema = z.object({
-    serviceTitle: z.string().trim().min(3, "Project title must be at least 3 characters.").max(160),
-    designerName: z.string().trim().min(2, "Designer name is required.").max(300),
-    designerEmail: z.string().trim().email("Valid designer email is required."),
-    price: z.coerce.number().positive("Price must be greater than zero."),
+    serviceTitle: z.string().trim().min(3, "Project title must be at least 3 characters.").max(160, "Project title cannot exceed 160 characters."),
+    designerName: z.string().trim().min(2, "Designer name is required.").max(200, "Designer name is too long."),
+    designerEmail: z.string().trim().toLowerCase().email("Valid designer email is required.").max(255),
+    price: z.coerce.number().positive("Price must be greater than zero.").max(999999999, "Price is too large."),
     pricingModel: z.enum(["per_project", "hourly", "per_design"]),
-    turnaroundDays: z.coerce.number().int().min(1).max(365),
+    turnaroundDays: z.coerce.number().int("Turnaround must be an integer.").min(1).max(365),
 })
 
 export async function trackCustomProject(data: {
@@ -107,8 +125,24 @@ export async function trackCustomProject(data: {
         return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid project details." }
     }
 
-    const businessProfile = await getCurrentBusiness()
-    if (!businessProfile) return { success: false, error: "Sign in with a business account to track hired services." }
+    const { session, businessProfile, reqHeaders } = await getCurrentBusiness()
+    if (!session?.user || !businessProfile) {
+        return { success: false, error: "Sign in with a business account to track hired services." }
+    }
+
+    const clientIp = getClientIpFromHeaders(reqHeaders)
+    const rateCheck = await checkRateLimit(
+        {
+            keyPrefix: "track-custom",
+            limit: 15,
+            windowSeconds: 300,
+        },
+        `${businessProfile.id}:${clientIp}`
+    )
+
+    if (!rateCheck.success) {
+        return { success: false, error: "Too many project submissions. Please wait a moment." }
+    }
 
     try {
         await db.insert(businessHiredServiceTable).values({
@@ -133,11 +167,13 @@ export async function trackCustomProject(data: {
 }
 
 export async function completeHiredDesignerService(hiredServiceId: string): Promise<HireActionResult> {
-    const parsedId = z.string().uuid().safeParse(hiredServiceId)
+    const parsedId = z.string().uuid("Invalid hired service ID.").safeParse(hiredServiceId)
     if (!parsedId.success) return { success: false, error: "Invalid hired service." }
 
-    const businessProfile = await getCurrentBusiness()
-    if (!businessProfile) return { success: false, error: "Sign in with a business account to manage hired services." }
+    const { session, businessProfile } = await getCurrentBusiness()
+    if (!session?.user || !businessProfile) {
+        return { success: false, error: "Sign in with a business account to manage hired services." }
+    }
 
     try {
         const updated = await db

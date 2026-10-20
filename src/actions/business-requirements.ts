@@ -7,6 +7,7 @@ import {
     businessRequirementsTable,
     type BusinessRequirement,
 } from "@/lib/db/schema/business-requirement"
+import { checkRateLimit, getClientIpFromHeaders } from "@/lib/server/rate-limit"
 import { and, desc, eq } from "drizzle-orm"
 import { revalidatePath } from "next/cache"
 import { headers } from "next/headers"
@@ -56,9 +57,10 @@ export type ActionResult<T = unknown> = {
 }
 
 async function getAuthenticatedBusiness() {
-    const session = await auth.api.getSession({ headers: await headers() })
+    const reqHeaders = await headers()
+    const session = await auth.api.getSession({ headers: reqHeaders })
     if (!session?.user) {
-        return { session: null, businessProfile: null }
+        return { session: null, businessProfile: null, reqHeaders }
     }
 
     const [businessProfile] = await db
@@ -67,14 +69,14 @@ async function getAuthenticatedBusiness() {
         .where(eq(business.userId, session.user.id))
         .limit(1)
 
-    return { session, businessProfile: businessProfile ?? null }
+    return { session, businessProfile: businessProfile ?? null, reqHeaders }
 }
 
 export async function createRequirementAction(
     input: CreateRequirementInput
 ): Promise<ActionResult<{ id: string }>> {
     try {
-        const { session, businessProfile } = await getAuthenticatedBusiness()
+        const { session, businessProfile, reqHeaders } = await getAuthenticatedBusiness()
 
         if (!session?.user) {
             return {
@@ -87,6 +89,24 @@ export async function createRequirementAction(
             return {
                 success: false,
                 error: "Only registered F&B business accounts can submit packaging requirements.",
+            }
+        }
+
+        // Rate limit: max 10 requirement submissions per 5 minutes
+        const clientIp = getClientIpFromHeaders(reqHeaders)
+        const rateCheck = await checkRateLimit(
+            {
+                keyPrefix: "create-req",
+                limit: 10,
+                windowSeconds: 300,
+            },
+            `${businessProfile.id}:${clientIp}`
+        )
+
+        if (!rateCheck.success) {
+            return {
+                success: false,
+                error: `Too many requirements created recently. Please wait ${rateCheck.resetInSeconds} seconds before submitting again.`,
             }
         }
 
@@ -144,7 +164,10 @@ export async function getBusinessRequirementsAction(): Promise<ActionResult<Busi
             .orderBy(desc(businessRequirementsTable.createdAt))
 
         return { success: true, data: requirements }
-    } catch (error) {
+    } catch (error: any) {
+        if (error?.digest === "DYNAMIC_SERVER_USAGE" || error?.message?.includes("Dynamic server usage")) {
+            throw error
+        }
         console.error("Error fetching business requirements:", error)
         return { success: false, error: "Could not load requirements." }
     }
