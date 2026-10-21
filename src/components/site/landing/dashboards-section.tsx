@@ -27,7 +27,7 @@ const dashboardDetails = {
 
 function DashboardPoints({ items }: { items: string[] }) {
   return (
-    <ul className="mt-6 space-y-2 text-sm text-muted-foreground">
+    <ul className="mt-5 space-y-2.5 text-sm text-muted-foreground sm:mt-6">
       {items.map((item) => (
         <li key={item} className="flex items-start gap-2.5">
           <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-primary" />
@@ -41,7 +41,7 @@ function DashboardPoints({ items }: { items: string[] }) {
 export function DashboardsSection() {
   return (
     <section className="border-t border-border py-24 md:py-32">
-      <div className="mx-auto max-w-7xl space-y-28 px-6">
+      <div className="mx-auto max-w-7xl space-y-20 px-4 sm:space-y-24 sm:px-6 lg:space-y-28">
         <FadeIn className="max-w-2xl">
           <p className="mb-3 font-mono text-xs tracking-widest text-muted-foreground uppercase">
             Three operating surfaces
@@ -51,7 +51,7 @@ export function DashboardsSection() {
           </h2>
         </FadeIn>
 
-        <div className="grid items-center gap-10 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.2fr)] lg:gap-16">
+        <div className="grid min-w-0 items-center gap-8 sm:gap-10 lg:grid-cols-[minmax(0,0.82fr)_minmax(0,1.18fr)] lg:gap-14">
           <FadeIn>
             <p className="mb-3 font-mono text-[11px] tracking-widest text-muted-foreground uppercase">01 — Business</p>
             <h3 className="text-2xl font-semibold tracking-tight md:text-3xl">The business dashboard</h3>
@@ -62,17 +62,17 @@ export function DashboardsSection() {
           </FadeIn>
           <FadeIn delay={0.1}>
             <ProductFrame url="app.unifiee.com/business">
-              <div className="max-h-[420px] overflow-hidden">
+              <div className="max-h-[400px] overflow-hidden sm:max-h-[400px] lg:max-h-[430px]">
                 <BusinessDashboardPreview />
               </div>
             </ProductFrame>
           </FadeIn>
         </div>
 
-        <div className="grid items-center gap-10 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.9fr)] lg:gap-16">
+        <div className="grid min-w-0 items-center gap-8 sm:gap-10 lg:grid-cols-[minmax(0,1.18fr)_minmax(0,0.82fr)] lg:gap-14">
           <FadeIn className="order-2 lg:order-1" delay={0.1}>
             <ProductFrame url="app.unifiee.com/manufacturer">
-              <div className="max-h-[420px] overflow-hidden">
+              <div className="max-h-[400px] overflow-hidden sm:max-h-[400px] lg:max-h-[430px]">
                 <VendorDashboardPreview />
               </div>
             </ProductFrame>
@@ -87,7 +87,7 @@ export function DashboardsSection() {
           </FadeIn>
         </div>
 
-        <div className="grid items-center gap-10 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.2fr)] lg:gap-16">
+        <div className="grid min-w-0 items-center gap-8 sm:gap-10 lg:grid-cols-[minmax(0,0.82fr)_minmax(0,1.18fr)] lg:gap-14">
           <FadeIn>
             <p className="mb-3 font-mono text-[11px] tracking-widest text-muted-foreground uppercase">03 — Designer</p>
             <h3 className="text-2xl font-semibold tracking-tight md:text-3xl">The designer studio</h3>
@@ -98,7 +98,7 @@ export function DashboardsSection() {
           </FadeIn>
           <FadeIn delay={0.1}>
             <ProductFrame url="app.unifiee.com/designer">
-              <div className="max-h-[420px] overflow-hidden">
+              <div className="max-h-[400px] overflow-hidden sm:max-h-[400px] lg:max-h-[430px]">
                 <DesignerStudioPreview />
               </div>
             </ProductFrame>

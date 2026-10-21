@@ -22,8 +22,8 @@ const stages = [true, true, true, true, false, false];
 
 export function BusinessDashboardPreview() {
   return (
-    <div className="flex min-h-[420px] bg-background text-left">
-      <aside className="hidden w-48 shrink-0 border-r border-border/50 bg-sidebar p-3 sm:block">
+    <div className="flex min-h-[360px] bg-background text-left sm:min-h-[400px] lg:min-h-[420px]">
+      <aside className="hidden w-48 shrink-0 border-r border-border/50 bg-sidebar p-3 md:block">
         <div className="mb-5 flex items-center gap-2 px-1">
           <div className="flex size-6 items-center justify-center rounded-md bg-blue-600 text-[11px] font-bold text-white">
             U
@@ -50,60 +50,61 @@ export function BusinessDashboardPreview() {
         </nav>
       </aside>
 
-      <div className="min-w-0 flex-1 space-y-4 p-4 sm:p-5">
-        <div className="flex items-start justify-between gap-3">
+      <div className="min-w-0 flex-1 space-y-3 p-3 sm:space-y-4 sm:p-5">
+        <div className="flex items-start justify-between gap-2 sm:gap-3">
           <div>
-            <p className="font-heading text-base font-semibold tracking-tight sm:text-lg">
+            <p className="font-heading text-sm font-semibold tracking-tight sm:text-lg">
               Good afternoon, Bluebird Café
             </p>
-            <p className="mt-0.5 text-[11px] text-muted-foreground">
+            <p className="mt-0.5 text-[10px] text-muted-foreground sm:text-[11px]">
               2 items are waiting for your review.
             </p>
           </div>
-          <span className="inline-flex h-8 items-center gap-1 rounded-xl bg-blue-600 px-3 text-[11px] font-medium text-white">
+          <span className="inline-flex h-7 shrink-0 items-center gap-1 rounded-lg bg-blue-600 px-2 text-[9px] font-medium text-white sm:h-8 sm:rounded-xl sm:px-3 sm:text-[11px]">
             <Plus className="size-3.5" />
-            New requirement
+            <span className="hidden sm:inline">New requirement</span>
+            <span className="sm:hidden">New</span>
           </span>
         </div>
 
-        <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 px-3 py-2.5">
-          <p className="mb-2 text-[11px] font-semibold">Needs your review</p>
-          <div className="flex items-center justify-between gap-2 border-t border-border/40 py-1.5 text-[11px]">
-            <span className="flex items-center gap-2 font-medium">
+        <div className="rounded-xl border border-amber-500/30 bg-linear-to-br from-amber-500/[0.08] via-amber-500/[0.03] to-transparent px-2.5 py-2 sm:px-3 sm:py-2.5">
+          <p className="mb-1.5 text-[10px] font-semibold sm:mb-2 sm:text-[11px]">Needs your review</p>
+          <div className="flex items-center justify-between gap-2 border-t border-border/40 py-1.5 text-[9px] sm:text-[11px]">
+            <span className="flex min-w-0 items-center gap-1.5 font-medium sm:gap-2">
               <Tag className="size-3.5 text-amber-500" />
-              3 offers received for Pizza box 12 in
+              <span className="truncate">3 offers received for Pizza box 12 in</span>
             </span>
-            <span className="rounded-md border border-amber-500/40 px-2 py-0.5 text-amber-500">
-              Review offers
+            <span className="shrink-0 rounded-md border border-amber-500/40 px-1.5 py-0.5 text-[9px] text-amber-500 sm:px-2 sm:text-[10px]">
+              Review
             </span>
           </div>
-          <div className="flex items-center justify-between gap-2 border-t border-border/40 py-1.5 text-[11px]">
-            <span className="flex items-center gap-2 font-medium">
+          <div className="flex items-center justify-between gap-2 border-t border-border/40 py-1.5 text-[9px] sm:text-[11px]">
+            <span className="flex min-w-0 items-center gap-1.5 font-medium sm:gap-2">
               <Palette className="size-3.5 text-amber-500" />
-              Artwork proof ready for Paper cups 8 oz
+              <span className="truncate">Artwork proof ready for Paper cups 8 oz</span>
             </span>
-            <span className="rounded-md border border-amber-500/40 px-2 py-0.5 text-amber-500">
-              Review proof
+            <span className="shrink-0 rounded-md border border-amber-500/40 px-1.5 py-0.5 text-[9px] text-amber-500 sm:px-2 sm:text-[10px]">
+              Review
             </span>
           </div>
         </div>
 
-        <div className="grid grid-cols-4 gap-2">
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
           {[
             ["Open requirements", "2"],
             ["Offers to review", "3"],
             ["Orders in progress", "2"],
             ["Ordered this month", "₹48,200"],
           ].map(([label, value]) => (
-            <div key={label} className="rounded-xl border border-border/60 p-3">
-              <p className="text-[10px] text-muted-foreground">{label}</p>
-              <p className="mt-1 text-lg font-semibold tracking-tight">{value}</p>
+            <div key={label} className="rounded-xl border border-border/60 bg-card/50 p-2.5 sm:p-3">
+              <p className="truncate text-[9px] text-muted-foreground sm:text-[10px]">{label}</p>
+              <p className="mt-0.5 text-base font-semibold tracking-tight sm:mt-1 sm:text-lg">{value}</p>
             </div>
           ))}
         </div>
 
-        <div className="grid gap-3 lg:grid-cols-3">
-          <div className="rounded-xl border border-border/60 lg:col-span-2">
+        <div className="grid min-w-0 gap-3 lg:grid-cols-3">
+          <div className="min-w-0 rounded-xl border border-border/60 lg:col-span-2">
             <div className="flex items-center justify-between border-b border-border/40 px-3 py-2.5">
               <p className="text-xs font-semibold">Active orders</p>
               <p className="text-[10px] text-blue-500">Review all orders</p>
@@ -113,12 +114,13 @@ export function BusinessDashboardPreview() {
                 ["Paper cups 8 oz", "GreenCup Solutions", "In Production", 4],
                 ["Pizza box 12 in", "Kraft & Co.", "Shipped", 5],
               ].map(([title, vendor, status, filled]) => (
-                <div key={title} className="grid grid-cols-[1.2fr_2fr_auto] items-center gap-3 py-2.5">
+                <div key={title} className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-2 py-2.5 sm:grid-cols-[minmax(0,1.2fr)_minmax(56px,2fr)_auto]">
                   <div className="min-w-0">
                     <p className="truncate text-xs font-semibold">{title}</p>
                     <p className="truncate text-[10px] text-muted-foreground">{vendor}</p>
                   </div>
-                  <div className="flex gap-1">
+                  <p className="text-right text-[9px] font-medium whitespace-nowrap sm:order-3 sm:text-[10px]">{status}</p>
+                  <div className="col-span-2 flex gap-1 sm:col-span-1 sm:order-2">
                     {stages.map((_, i) => (
                       <span
                         key={i}
@@ -126,12 +128,11 @@ export function BusinessDashboardPreview() {
                       />
                     ))}
                   </div>
-                  <p className="text-[10px] font-medium whitespace-nowrap">{status}</p>
                 </div>
               ))}
             </div>
           </div>
-          <div className="space-y-2">
+          <div className="hidden space-y-2 lg:block">
             <div className="rounded-xl border border-border/60 p-3">
               <p className="text-xs font-semibold">Start with AI intake</p>
               <p className="mt-1 text-[10px] leading-relaxed text-muted-foreground">
@@ -161,27 +162,27 @@ export function BusinessDashboardPreview() {
 
 export function VendorDashboardPreview() {
   return (
-    <div className="min-h-[380px] space-y-4 bg-background p-4 text-left sm:p-5">
-      <div className="relative overflow-hidden rounded-2xl border border-primary/20 bg-linear-to-br from-primary/10 via-background to-primary/5 p-5">
+    <div className="min-h-[340px] space-y-3 bg-background p-3 text-left sm:min-h-[380px] sm:space-y-4 sm:p-5">
+      <div className="relative overflow-hidden rounded-2xl border border-primary/20 bg-linear-to-br from-primary/10 via-background to-primary/5 p-3 sm:p-5">
         <div className="flex flex-wrap items-center gap-2">
-          <span className="inline-flex items-center gap-1 rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
+          <span className="inline-flex items-center gap-1 rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[9px] font-semibold text-primary sm:text-[10px]">
             <ShieldCheck className="size-3" />
-            Verified Packaging Partner
+            Verified partner
           </span>
-          <span className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
-            <span className="size-1.5 rounded-full bg-emerald-500" />
-            Instant Escrow Settlement Enabled
+          <span className="flex items-center gap-1.5 text-[9px] text-muted-foreground sm:text-[10px]">
+            <span className="size-1.5 animate-pulse rounded-full bg-emerald-500" />
+            Escrow enabled
           </span>
         </div>
-        <p className="font-heading mt-2 text-xl font-semibold tracking-tight">
+        <p className="font-heading mt-2 text-base font-semibold tracking-tight sm:text-xl">
           Good afternoon, GreenCup Solutions
         </p>
-        <p className="mt-1 max-w-lg text-[11px] text-muted-foreground">
-          Manage offerings, review buyer orders, and track escrow on the UNIFIÉE supply network.
+        <p className="mt-1 max-w-lg text-[10px] text-muted-foreground sm:text-[11px]">
+          Manage offerings, review buyer orders, and track escrow in one place.
         </p>
       </div>
 
-      <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
+      <div className="grid grid-cols-4 gap-1.5 sm:gap-2">
         {[
           ["Total Revenue", "₹2,40,000", IndianRupee, "Across 18 orders"],
           ["In Escrow", "₹36,400", Shield, "Released on delivery"],
@@ -190,23 +191,23 @@ export function VendorDashboardPreview() {
         ].map(([label, value, Icon, detail]) => {
           const MetricIcon = Icon as typeof IndianRupee;
           return (
-            <div key={String(label)} className="rounded-xl border border-border/60 p-3">
-              <div className="flex items-center justify-between">
-                <p className="text-[9px] font-semibold uppercase tracking-wide text-muted-foreground">
+            <div key={String(label)} className="min-w-0 rounded-xl border border-border/60 bg-card/50 p-2 sm:p-3">
+              <div className="flex items-center justify-between gap-1">
+                <p className="truncate text-[7px] font-semibold uppercase tracking-wide text-muted-foreground sm:text-[9px]">
                   {label as string}
                 </p>
-                <span className="flex size-7 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                <span className="hidden size-7 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary sm:flex">
                   <MetricIcon className="size-3.5" />
                 </span>
               </div>
-              <p className="mt-2 text-lg font-semibold tracking-tight">{value as string}</p>
-              <p className="mt-1 text-[10px] text-muted-foreground">{detail as string}</p>
+              <p className="mt-1 truncate text-[11px] font-semibold tracking-tight sm:mt-2 sm:text-lg">{value as string}</p>
+              <p className="mt-1 hidden truncate text-[10px] text-muted-foreground sm:block">{detail as string}</p>
             </div>
           );
         })}
       </div>
 
-      <div className="grid gap-3 lg:grid-cols-2">
+      <div className="grid gap-3 2xl:grid-cols-2">
         <div className="rounded-xl border border-border/60">
           <div className="border-b border-border/40 px-3 py-2.5">
             <p className="text-xs font-semibold">Recent Customer Orders</p>
@@ -254,7 +255,7 @@ export function VendorDashboardPreview() {
 
 export function DesignerStudioPreview() {
   return (
-    <div className="min-h-[380px] space-y-4 bg-background p-4 text-left sm:p-5">
+    <div className="min-h-[340px] space-y-3 bg-background p-3 text-left sm:min-h-[380px] sm:space-y-4 sm:p-5">
       <div>
         <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
           Your creative workspace
@@ -314,8 +315,18 @@ export function DesignerStudioPreview() {
             ["Paper cup identity system", "₹18,000 / project"],
             ["Seasonal sleeve variants", "₹9,500 / set"],
           ].map(([title, price]) => (
-            <div key={title} className="overflow-hidden rounded-xl border bg-card">
-              <div className="h-16 bg-linear-to-br from-muted to-muted/40" />
+            <div key={title} className="group overflow-hidden rounded-xl border bg-card">
+              <div className="relative flex h-20 items-center justify-center overflow-hidden bg-linear-to-br from-amber-100 via-orange-50 to-stone-200 dark:from-amber-950/50 dark:via-stone-900 dark:to-stone-800">
+                <div className="absolute -left-5 -top-8 size-24 rounded-full bg-white/30 blur-2xl" />
+                <div className="absolute -right-3 -bottom-10 size-24 rounded-full bg-orange-400/20 blur-2xl" />
+                <div className="relative mt-1 flex h-14 w-10 flex-col items-center drop-shadow-md transition-transform duration-300 group-hover:rotate-[-4deg] group-hover:scale-105">
+                  <div className="h-2 w-10 rounded-t-md bg-stone-200 dark:bg-stone-600" />
+                  <div className="relative flex w-9 flex-1 items-center justify-center rounded-b-md bg-[#f7f2e8] text-[7px] font-semibold tracking-[0.12em] text-stone-800">
+                    <span className="absolute inset-x-0 top-3 h-1 bg-emerald-700/80" />
+                    <span className="relative mt-1">ROAST</span>
+                  </div>
+                </div>
+              </div>
               <div className="flex items-center justify-between p-3">
                 <div>
                   <p className="text-[10px] text-muted-foreground">Paper cups</p>

@@ -21,19 +21,26 @@ export function CapabilitiesSection() {
           </h2>
         </FadeIn>
 
-        <StaggerContainer className="grid auto-rows-fr grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <FadeInItem className="relative col-span-1 flex flex-col justify-between overflow-hidden rounded-2xl border border-border/70 bg-card p-7 sm:col-span-2 lg:row-span-2">
+        <StaggerContainer className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <FadeInItem className="group relative col-span-1 flex flex-col justify-between overflow-hidden rounded-2xl border border-border/70 bg-card p-6 transition-colors hover:border-primary/30 sm:col-span-2 lg:row-span-2 lg:p-7">
+            <div className="pointer-events-none absolute -right-24 -top-28 size-64 rounded-full bg-primary/5 blur-3xl transition-colors duration-500 group-hover:bg-primary/10" />
             <div>
-              <div className="mb-5 flex size-9 items-center justify-center rounded-lg border border-border bg-muted">
+              <div className="relative mb-5 flex size-9 items-center justify-center rounded-lg border border-border bg-muted">
                 <Brain className="size-4 text-muted-foreground" />
               </div>
-              <h3 className="text-xl font-semibold tracking-tight">AI Decision Support</h3>
-              <p className="mt-2.5 max-w-md text-sm leading-relaxed text-muted-foreground">
+              <h3 className="relative text-xl font-semibold tracking-tight">AI Decision Support</h3>
+              <p className="relative mt-2.5 max-w-md text-sm leading-relaxed text-muted-foreground">
                 The platform interprets operational data — dine-in ratios, material restrictions, budget limits — to surface the exact specification you need.
               </p>
             </div>
-            <div className="mt-8 overflow-hidden rounded-xl border border-border bg-muted/40 font-mono text-[11px]">
-              <div className="border-b border-border/60 px-4 py-2 text-muted-foreground">intake · live</div>
+            <div className="relative mt-7 overflow-hidden rounded-xl border border-border bg-background/80 font-mono text-[11px] shadow-sm">
+              <div className="flex items-center justify-between border-b border-border/60 px-4 py-2">
+                <span className="text-muted-foreground">intake · live</span>
+                <span className="flex items-center gap-1.5 text-[9px] text-emerald-500">
+                  <span className="size-1.5 animate-pulse rounded-full bg-emerald-500" />
+                  ready
+                </span>
+              </div>
               <div className="space-y-1.5 p-4">
                 <p className="text-muted-foreground">→ Analyzing operational profile...</p>
                 <p className="font-medium text-foreground">Recommended: 90gsm PE-coated kraft, 8oz taper</p>
@@ -42,27 +49,31 @@ export function CapabilitiesSection() {
             </div>
           </FadeInItem>
 
-          <FadeInItem className="flex flex-col justify-between rounded-2xl border border-border/70 bg-card p-6">
-            <Zap className="size-4 text-muted-foreground" />
-            <div>
-              <p className="font-heading mt-6 text-3xl font-semibold tracking-tight text-foreground">One brief</p>
-              <p className="mt-2 text-xs leading-snug text-muted-foreground">
+          <FadeInItem className="flex min-h-40 flex-col justify-between self-start rounded-2xl border border-border/70 bg-card p-5 transition-colors hover:border-primary/30 lg:min-h-44">
+            <div className="flex size-8 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+              <Zap className="size-4" />
+            </div>
+            <div className="mt-5">
+              <p className="font-heading text-xl font-semibold tracking-tight text-foreground">One brief</p>
+              <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">
                 Start with what you need. Shape it into a structured requirement.
               </p>
             </div>
           </FadeInItem>
 
-          <FadeInItem className="flex flex-col justify-between rounded-2xl border border-border/70 bg-card p-6">
-            <Globe className="size-4 text-muted-foreground" />
-            <div>
-              <p className="font-heading mt-6 text-3xl font-semibold tracking-tight text-foreground">More clarity</p>
-              <p className="mt-2 text-xs leading-snug text-muted-foreground">
+          <FadeInItem className="flex min-h-40 flex-col justify-between self-start rounded-2xl border border-border/70 bg-card p-5 transition-colors hover:border-primary/30 lg:min-h-44">
+            <div className="flex size-8 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+              <Globe className="size-4" />
+            </div>
+            <div className="mt-5">
+              <p className="font-heading text-xl font-semibold tracking-tight text-foreground">More clarity</p>
+              <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">
                 Compare supplier offers with the details that shape the decision.
               </p>
             </div>
           </FadeInItem>
 
-          <FadeInItem className="col-span-1 rounded-2xl border border-border/70 bg-card p-6 sm:col-span-2">
+          <FadeInItem className="col-span-1 min-h-36 self-start rounded-2xl border border-border/70 bg-card p-5 transition-colors hover:border-primary/30 sm:col-span-2 lg:min-h-40">
             <div className="mb-5 flex items-center gap-2.5">
               <div className="flex size-7 items-center justify-center rounded-md border border-border bg-muted">
                 <GitBranch className="size-3.5 text-muted-foreground" />
@@ -85,7 +96,7 @@ export function CapabilitiesSection() {
             </div>
           </FadeInItem>
 
-          <FadeInItem className="col-span-1 rounded-2xl border border-border/70 bg-card p-6 sm:col-span-2">
+          <FadeInItem className="col-span-1 min-h-36 self-start rounded-2xl border border-border/70 bg-card p-5 transition-colors hover:border-primary/30 sm:col-span-2 lg:min-h-40">
             <div className="mb-5 flex items-center gap-2.5">
               <div className="flex size-7 items-center justify-center rounded-md border border-border bg-muted">
                 <Network className="size-3.5 text-muted-foreground" />
@@ -104,7 +115,7 @@ export function CapabilitiesSection() {
             </div>
           </FadeInItem>
 
-          <FadeInItem className="col-span-1 flex flex-col justify-between gap-5 rounded-2xl border border-border/70 bg-card p-6 sm:col-span-2 sm:flex-row sm:items-center lg:col-span-4">
+          <FadeInItem className="col-span-1 flex flex-col justify-between gap-5 self-start rounded-2xl border border-border/70 bg-card p-5 transition-colors hover:border-primary/30 sm:col-span-2 sm:flex-row sm:items-center lg:col-span-2">
             <div className="flex items-center gap-3.5">
               <div className="flex size-9 items-center justify-center rounded-lg border border-border bg-muted">
                 <Layers className="size-4 text-muted-foreground" />

@@ -47,10 +47,10 @@ export function HeroSection() {
         delay={0.15}
         blur={false}
         viewport={{ once: true, amount: 0.05 }}
-        className="relative mx-auto mt-14 max-w-6xl px-4 sm:px-6"
+        className="relative mx-auto mt-10 max-w-6xl px-3 sm:mt-14 sm:px-6"
       >
         <ProductFrame url="app.unifiee.com/business">
-          <div className="max-h-[520px] overflow-hidden">
+          <div className="max-h-[300px] overflow-hidden sm:max-h-[400px] lg:max-h-[520px]">
             <BusinessDashboardPreview />
           </div>
         </ProductFrame>
