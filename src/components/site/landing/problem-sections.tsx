@@ -42,9 +42,9 @@ export function ProblemSection() {
             <FadeInItem
               key={point.label}
               whileHover={{ y: -4, transition: { duration: 0.2 } }}
-              className="group rounded-2xl border border-border/70 bg-card/40 p-6 transition-colors duration-300 hover:border-primary/30 hover:bg-card/80 sm:p-7"
+              className="group rounded-2xl border border-border/70 bg-card/40 p-6 transition-colors duration-300 dark:hover:border-blue-400/30 hover:border-primary/30 hover:bg-card/80 sm:p-7"
             >
-              <p className="font-mono text-[10px] tracking-[0.18em] text-primary uppercase">
+              <p className="font-mono text-[10px] tracking-[0.18em] text-primary dark:text-blue-400 uppercase">
                 {point.label}
               </p>
               <h3 className="mt-7 text-lg font-medium leading-snug tracking-tight text-foreground">

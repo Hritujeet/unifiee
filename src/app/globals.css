@@ -130,18 +130,6 @@
     @apply font-sans bg-background text-foreground;
   }
 
-  @media (pointer: fine) and (hover: hover) {
-    html.custom-cursor-enabled,
-    html.custom-cursor-enabled body,
-    html.custom-cursor-enabled body * {
-      cursor: none !important;
-    }
-
-    html.custom-cursor-enabled [data-cursor="native"] {
-      cursor: auto !important;
-    }
-  }
-
   h1,
   h2,
   h3,

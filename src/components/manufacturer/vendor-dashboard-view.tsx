@@ -102,7 +102,7 @@ export default function VendorDashboardView({
                         </div>
 
                         <h1 className="font-heading text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight text-foreground">
-                            {getGreeting()}, {companyName || vendorName}
+                            {getGreeting()}, {vendorName || companyName || "Partner"}
                         </h1>
 
                         <p className="max-w-2xl text-xs sm:text-sm text-muted-foreground leading-relaxed">
