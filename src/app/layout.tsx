@@ -7,6 +7,7 @@ import TanstackQueryProvider from "@/components/providers/tanstack-query-provide
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import NextTopLoader from "nextjs-toploader";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { CustomCursor } from "@/components/site/custom-cursor";
 
 const dmSansHeading = DM_Sans({ subsets: ['latin'], variable: '--font-heading' });
 
@@ -46,6 +47,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <ThemeProvider>
           <TanstackQueryProvider>
             <TooltipProvider>
+              <CustomCursor />
               <Toaster />
               {children}
             </TooltipProvider>

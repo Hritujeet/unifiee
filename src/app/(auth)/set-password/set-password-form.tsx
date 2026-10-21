@@ -75,19 +75,17 @@ export default function SetPasswordForm() {
   const busy = mutation.isPending || isRedirecting
 
   return (
-    <div className="w-full max-w-md mx-auto mt-20">
-      <Card className="overflow-hidden rounded-2xl ring-1 ring-border/60 shadow-xl shadow-black/5 dark:shadow-black/20 animate-in fade-in slide-in-from-bottom-4 duration-700 ease-out">
-        <CardContent className="flex flex-col items-center px-8 py-8">
-          <h1 className="font-heading text-2xl font-semibold tracking-tight text-foreground mb-2">
+    <div className="w-full max-w-sm">
+      <Card className="border-0 bg-transparent shadow-none">
+        <CardContent className="flex flex-col px-0 py-0">
+          <h1 className="font-heading text-2xl font-semibold tracking-tight text-foreground">
             Set Password
           </h1>
-          <div className="text-sm text-muted-foreground mb-6 text-center">
-            <ul className="my-2 text-left list-disc ml-6 space-y-1">
-              <li>Password must be at least 8 characters long</li>
-              <li>You will use this password to access your account with email as well as Google</li>
-              <li>It is recommended to use a mix of letters, numbers, and symbols</li>
-            </ul>
-          </div>
+          <ul className="mt-3 mb-8 space-y-1 text-sm text-muted-foreground">
+            <li>Password must be at least 8 characters long</li>
+            <li>You will use this password to sign in with email as well as Google</li>
+            <li>A mix of letters, numbers, and symbols is recommended</li>
+          </ul>
 
           <form onSubmit={handleSubmit(onSubmit, onError)} className="flex w-full flex-col gap-4" noValidate>
             <div className="flex flex-col gap-1.5">
