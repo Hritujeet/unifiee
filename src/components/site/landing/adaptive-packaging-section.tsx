@@ -1,6 +1,5 @@
 import Image from "next/image";
 import { CheckCircle2, Layers } from "lucide-react";
-import { FadeIn } from "@/components/site/animations";
 
 const benefits = [
   "Zero new creative cycles for variant launches",
@@ -13,7 +12,8 @@ export function AdaptivePackagingSection() {
     <section className="py-24 md:py-32">
       <div className="mx-auto max-w-7xl px-6">
         <div className="grid items-center gap-10 lg:grid-cols-2 lg:gap-20">
-          <FadeIn>
+          {/* Text column */}
+          <div>
             <p className="mb-4 font-mono text-xs tracking-widest text-muted-foreground uppercase">
               Adaptive Packaging
             </p>
@@ -29,14 +29,19 @@ export function AdaptivePackagingSection() {
             </p>
             <ul className="mt-7 space-y-2.5">
               {benefits.map((benefit) => (
-                <li key={benefit} className="flex items-start gap-2.5 text-sm text-muted-foreground">
+                <li
+                  key={benefit}
+                  className="flex items-start gap-2.5 text-sm text-muted-foreground"
+                >
                   <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-primary" />
                   {benefit}
                 </li>
               ))}
             </ul>
-          </FadeIn>
-          <FadeIn delay={0.2} className="group relative h-[22rem] w-full overflow-hidden rounded-2xl border border-border shadow-[0_24px_80px_-36px_rgba(0,0,0,0.55)] sm:h-110 lg:h-125">
+          </div>
+
+          {/* Image column */}
+          <div className="group relative h-[22rem] w-full overflow-hidden rounded-2xl border border-border shadow-[0_24px_80px_-36px_rgba(0,0,0,0.55)] sm:h-110 lg:h-125">
             <Image
               src="https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=1000&q=80&auto=format&fit=crop"
               alt="Warm café interior inspiring a seasonal packaging collection"
@@ -70,7 +75,7 @@ export function AdaptivePackagingSection() {
                 <span className="ml-1 font-mono text-[9px] tracking-wide text-white/65">BRAND PALETTE</span>
               </div>
             </div>
-          </FadeIn>
+          </div>
         </div>
       </div>
     </section>

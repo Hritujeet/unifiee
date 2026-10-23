@@ -3,21 +3,16 @@ import { cn } from "@/lib/utils";
 import { MessageSquare } from "lucide-react";
 import Link from "next/link";
 import { FadeIn } from "@/components/site/animations";
+import { CtaDotField } from "@/components/site/landing/cta-dot-field";
 
 export function CtaSection() {
   return (
     <section className="relative overflow-hidden py-28 md:py-36">
-      <div
-        className="absolute inset-0 opacity-40"
-        style={{
-          backgroundImage: "radial-gradient(circle at 1px 1px, var(--color-foreground) 1px, transparent 0)",
-          backgroundSize: "20px 20px",
-        }}
-      />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,color-mix(in_oklch,var(--primary)_12%,transparent),transparent_65%)]" />
+      <CtaDotField />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,color-mix(in_oklch,var(--primary)_12%,transparent),transparent_65%)]" />
 
       <FadeIn className="relative mx-auto max-w-3xl px-6">
-        <div className="rounded-3xl border border-border/70 bg-background/80 p-8 shadow-[0_30px_80px_-40px_rgba(0,0,0,0.5)] backdrop-blur-md md:p-12">
+        <div className="rounded-3xl border border-border/80 bg-card/95 dark:bg-neutral-950/95 p-8 shadow-[0_24px_70px_-24px_rgba(0,0,0,0.5)] md:p-12">
           <p className="font-mono text-[11px] tracking-[0.2em] text-muted-foreground uppercase">
             Start with one requirement
           </p>

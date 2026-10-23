@@ -1,3 +1,5 @@
+"use client";
+
 import {
   Brain,
   GitBranch,
@@ -6,24 +8,61 @@ import {
   Network,
   Zap,
 } from "lucide-react";
-import { FadeIn, FadeInItem, StaggerContainer } from "@/components/site/animations";
+import { motion } from "motion/react";
+
+const cardVariants = {
+  hidden: { opacity: 0, y: 18, scale: 0.98 },
+  show: (custom: number) => ({
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: {
+      duration: 0.55,
+      delay: custom * 0.06,
+      ease: [0.22, 1, 0.36, 1] as const,
+    },
+  }),
+};
+
+const headingVariants = {
+  hidden: { opacity: 0, y: 16 },
+  show: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.55, ease: [0.22, 1, 0.36, 1] as const },
+  },
+};
 
 export function CapabilitiesSection() {
   return (
-    <section id="platform" className="scroll-mt-24 py-24 md:py-32">
+    <section id="platform" className="scroll-mt-24 py-24 md:py-32 overflow-x-clip">
       <div className="mx-auto max-w-7xl px-6">
-        <FadeIn className="mb-12">
+        <motion.div
+          className="mb-12"
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true, margin: "-8% 0px" }}
+          variants={headingVariants}
+        >
           <p className="mb-3 font-mono text-xs tracking-widest text-muted-foreground uppercase">
             Platform Capabilities
           </p>
           <h2 className="text-3xl font-semibold tracking-tight text-foreground md:text-4xl">
             Infrastructure at every layer.
           </h2>
-        </FadeIn>
+        </motion.div>
 
-        <StaggerContainer className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <FadeInItem className="group relative col-span-1 flex flex-col justify-between overflow-hidden rounded-2xl border border-border/70 bg-card p-6 transition-colors hover:border-primary/30 sm:col-span-2 lg:row-span-2 lg:p-7">
-            <div className="pointer-events-none absolute -right-24 -top-28 size-64 rounded-full bg-primary/5 blur-3xl transition-colors duration-500 group-hover:bg-primary/10" />
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {/* Large AI card — spans 2 cols, 2 rows */}
+          <motion.div
+            custom={0}
+            variants={cardVariants}
+            initial="hidden"
+            whileInView="show"
+            viewport={{ once: true, margin: "-5% 0px" }}
+            className="group relative col-span-1 flex flex-col justify-between overflow-hidden rounded-2xl border border-border/70 bg-card p-6 transition-colors hover:border-primary/30 sm:col-span-2 lg:row-span-2 lg:p-7"
+          >
+            <div className="pointer-events-none absolute -right-24 -top-28 size-64 rounded-full bg-[radial-gradient(circle,color-mix(in_oklch,var(--primary)_8%,transparent)_0%,transparent_70%)] opacity-70 transition-opacity duration-500 group-hover:opacity-100" />
             <div>
               <div className="relative mb-5 flex size-9 items-center justify-center rounded-lg border border-border bg-muted">
                 <Brain className="size-4 text-muted-foreground" />
@@ -47,9 +86,16 @@ export function CapabilitiesSection() {
                 <p className="text-muted-foreground">Unit cost estimate: ₹4.20 – ₹4.80</p>
               </div>
             </div>
-          </FadeInItem>
+          </motion.div>
 
-          <FadeInItem className="flex min-h-40 flex-col justify-between self-start rounded-2xl border border-border/70 bg-card p-5 transition-colors hover:border-primary/30 lg:min-h-44">
+          <motion.div
+            custom={1}
+            variants={cardVariants}
+            initial="hidden"
+            whileInView="show"
+            viewport={{ once: true, margin: "-5% 0px" }}
+            className="flex min-h-40 flex-col justify-between self-start rounded-2xl border border-border/70 bg-card p-5 transition-colors hover:border-primary/30 lg:min-h-44"
+          >
             <div className="flex size-8 items-center justify-center rounded-lg bg-muted text-muted-foreground">
               <Zap className="size-4" />
             </div>
@@ -59,9 +105,16 @@ export function CapabilitiesSection() {
                 Start with what you need. Shape it into a structured requirement.
               </p>
             </div>
-          </FadeInItem>
+          </motion.div>
 
-          <FadeInItem className="flex min-h-40 flex-col justify-between self-start rounded-2xl border border-border/70 bg-card p-5 transition-colors hover:border-primary/30 lg:min-h-44">
+          <motion.div
+            custom={2}
+            variants={cardVariants}
+            initial="hidden"
+            whileInView="show"
+            viewport={{ once: true, margin: "-5% 0px" }}
+            className="flex min-h-40 flex-col justify-between self-start rounded-2xl border border-border/70 bg-card p-5 transition-colors hover:border-primary/30 lg:min-h-44"
+          >
             <div className="flex size-8 items-center justify-center rounded-lg bg-muted text-muted-foreground">
               <Globe className="size-4" />
             </div>
@@ -71,9 +124,16 @@ export function CapabilitiesSection() {
                 Compare supplier offers with the details that shape the decision.
               </p>
             </div>
-          </FadeInItem>
+          </motion.div>
 
-          <FadeInItem className="col-span-1 min-h-36 self-start rounded-2xl border border-border/70 bg-card p-5 transition-colors hover:border-primary/30 sm:col-span-2 lg:min-h-40">
+          <motion.div
+            custom={3}
+            variants={cardVariants}
+            initial="hidden"
+            whileInView="show"
+            viewport={{ once: true, margin: "-5% 0px" }}
+            className="col-span-1 min-h-36 self-start rounded-2xl border border-border/70 bg-card p-5 transition-colors hover:border-primary/30 sm:col-span-2 lg:min-h-40"
+          >
             <div className="mb-5 flex items-center gap-2.5">
               <div className="flex size-7 items-center justify-center rounded-md border border-border bg-muted">
                 <GitBranch className="size-3.5 text-muted-foreground" />
@@ -94,9 +154,16 @@ export function CapabilitiesSection() {
                 </div>
               ))}
             </div>
-          </FadeInItem>
+          </motion.div>
 
-          <FadeInItem className="col-span-1 min-h-36 self-start rounded-2xl border border-border/70 bg-card p-5 transition-colors hover:border-primary/30 sm:col-span-2 lg:min-h-40">
+          <motion.div
+            custom={4}
+            variants={cardVariants}
+            initial="hidden"
+            whileInView="show"
+            viewport={{ once: true, margin: "-5% 0px" }}
+            className="col-span-1 min-h-36 self-start rounded-2xl border border-border/70 bg-card p-5 transition-colors hover:border-primary/30 sm:col-span-2 lg:min-h-40"
+          >
             <div className="mb-5 flex items-center gap-2.5">
               <div className="flex size-7 items-center justify-center rounded-md border border-border bg-muted">
                 <Network className="size-3.5 text-muted-foreground" />
@@ -113,9 +180,16 @@ export function CapabilitiesSection() {
                 </span>
               ))}
             </div>
-          </FadeInItem>
+          </motion.div>
 
-          <FadeInItem className="col-span-1 flex flex-col justify-between gap-5 self-start rounded-2xl border border-border/70 bg-card p-5 transition-colors hover:border-primary/30 sm:col-span-2 sm:flex-row sm:items-center lg:col-span-2">
+          <motion.div
+            custom={5}
+            variants={cardVariants}
+            initial="hidden"
+            whileInView="show"
+            viewport={{ once: true, margin: "-5% 0px" }}
+            className="col-span-1 flex flex-col justify-between gap-5 self-start rounded-2xl border border-border/70 bg-card p-5 transition-colors hover:border-primary/30 sm:col-span-2 sm:flex-row sm:items-center lg:col-span-2"
+          >
             <div className="flex items-center gap-3.5">
               <div className="flex size-9 items-center justify-center rounded-lg border border-border bg-muted">
                 <Layers className="size-4 text-muted-foreground" />
@@ -134,8 +208,8 @@ export function CapabilitiesSection() {
                 </span>
               ))}
             </div>
-          </FadeInItem>
-        </StaggerContainer>
+          </motion.div>
+        </div>
       </div>
     </section>
   );

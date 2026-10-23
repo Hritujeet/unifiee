@@ -12,7 +12,7 @@ export function ProductFrame({
   return (
     <div
       className={cn(
-        "group/frame relative overflow-hidden rounded-2xl border border-border/70 bg-background shadow-[0_24px_80px_-24px_rgba(0,0,0,0.5)] ring-1 ring-white/5 transition-shadow duration-500 hover:shadow-[0_30px_90px_-28px_rgba(37,99,235,0.25)]",
+        "group/frame transform-gpu relative overflow-hidden rounded-2xl border border-border/70 bg-card shadow-[0_24px_80px_-24px_rgba(0,0,0,0.5)] ring-1 ring-white/5 transition-shadow duration-500 hover:shadow-[0_30px_90px_-28px_rgba(37,99,235,0.25)]",
         className,
       )}
     >
