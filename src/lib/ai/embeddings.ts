@@ -8,7 +8,7 @@ import { after } from "next/server";
 import { db } from "@/lib/db";
 import { aiDocumentsTable } from "@/lib/db/schema/ai-document";
 import { eq, and } from "drizzle-orm";
-import { getEmbeddingModel } from "./models";
+import { getEmbeddingModel, MODEL_IDS } from "./models";
 import { stripPii } from "./privacy";
 import { logAiUsage } from "./logger";
 import { throttleMistral, withAiRetry } from "./rate-limit";
@@ -79,7 +79,7 @@ export async function embedTexts(texts: string[]): Promise<number[][]> {
         logAiUsage({
             task: "embedMany",
             provider: "mistral",
-            modelId: "mistral-embed",
+            modelId: MODEL_IDS.MISTRAL_EMBED,
             latencyMs: Date.now() - start,
             tokens: {
                 total: result.usage?.tokens ?? 0,
@@ -92,7 +92,7 @@ export async function embedTexts(texts: string[]): Promise<number[][]> {
         logAiUsage({
             task: "embedMany",
             provider: "mistral",
-            modelId: "mistral-embed",
+            modelId: MODEL_IDS.MISTRAL_EMBED,
             latencyMs: Date.now() - start,
             status: "error",
             error: String(error),
@@ -128,7 +128,7 @@ export async function embedSingleQuery(query: string): Promise<number[] | null> 
         logAiUsage({
             task: "embedSingleQuery",
             provider: "mistral",
-            modelId: "mistral-embed",
+            modelId: MODEL_IDS.MISTRAL_EMBED,
             latencyMs: Date.now() - start,
             status: "success",
         });

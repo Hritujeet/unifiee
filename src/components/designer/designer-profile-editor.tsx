@@ -18,7 +18,11 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { designerPackagingSpecializations } from "@/lib/zod-schema"
-import { LoaderCircle, PencilLine } from "lucide-react"
+import { LoaderCircle, PencilLine, Sparkles } from "lucide-react"
+import { AiButton } from "@/components/ai/ai-button"
+import { AiBadge } from "@/components/ai/ai-badge"
+import { AiSuggestionCard } from "@/components/ai/ai-suggestion-card"
+import { AiErrorState } from "@/components/ai/ai-error-state"
 
 type DesignerProfile = {
     fullName: string
@@ -56,6 +60,8 @@ type DesignerProfile = {
 function Field({
     label,
     name,
+    value,
+    onChange,
     defaultValue,
     placeholder,
     type = "text",
@@ -65,6 +71,8 @@ function Field({
 }: {
     label: string
     name: string
+    value?: string | number
+    onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void
     defaultValue?: string | number | null
     placeholder?: string
     type?: string
@@ -78,7 +86,9 @@ function Field({
             <Input
                 name={name}
                 type={type}
-                defaultValue={defaultValue ?? ""}
+                value={value}
+                onChange={onChange}
+                defaultValue={value === undefined ? defaultValue ?? "" : undefined}
                 placeholder={placeholder}
                 required={required}
                 min={min}
@@ -123,6 +133,50 @@ export function DesignerProfileEditor({ designer }: { designer: DesignerProfile 
     const [pricingModel, setPricingModel] = useState(designer.pricingModel ?? "per_project")
     const router = useRouter()
 
+    // Controlled headline & bio for AI updates
+    const [headline, setHeadline] = useState(designer.headline ?? "")
+    const [bio, setBio] = useState(designer.bio ?? "")
+
+    // AI Bio state
+    const [isGeneratingBio, setIsGeneratingBio] = useState(false)
+    const [bioSuggestion, setBioSuggestion] = useState<{ headline: string; bio: string } | null>(null)
+    const [aiError, setAiError] = useState<string | null>(null)
+
+    const handleGenerateBio = async () => {
+        setIsGeneratingBio(true)
+        setAiError(null)
+
+        try {
+            const res = await fetch("/api/ai/designer/assist", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    mode: "bio_writer",
+                    specialties: designer.specializations || designer.packagingDesignSpecializations || [],
+                    tools: designer.softwareTools || [],
+                    experienceYears: designer.yearsOfExperience || 3,
+                    roughNotes: bio,
+                }),
+            })
+
+            const data = await res.json()
+            if (!res.ok) throw new Error(data.error || "Failed to generate bio.")
+
+            setBioSuggestion({
+                headline: data.bio.headline,
+                bio: data.bio.bio,
+            })
+            toast.success("AI generated portfolio headline and bio!")
+        } catch (err: unknown) {
+            console.error("AI bio writer error:", err)
+            const msg = err instanceof Error ? err.message : "Bio generation failed."
+            setAiError(msg)
+            toast.error(msg)
+        } finally {
+            setIsGeneratingBio(false)
+        }
+    }
+
     async function handleSubmit(formData: FormData) {
         setSaving(true)
         try {
@@ -132,7 +186,7 @@ export function DesignerProfileEditor({ designer }: { designer: DesignerProfile 
                 return
             }
 
-            toast.success("Profile updated")
+            toast.success("Profile updated successfully!")
             setOpen(false)
             router.refresh()
         } catch {
@@ -145,18 +199,58 @@ export function DesignerProfileEditor({ designer }: { designer: DesignerProfile 
     return (
         <Dialog open={open} onOpenChange={(nextOpen) => !saving && setOpen(nextOpen)}>
             <DialogTrigger asChild>
-                <Button variant="outline"><PencilLine data-icon="inline-start" /> Edit profile</Button>
+                <Button variant="outline"><PencilLine className="size-4 mr-1.5" /> Edit profile</Button>
             </DialogTrigger>
             <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-3xl">
                 <DialogHeader>
-                    <DialogTitle>Edit your designer profile</DialogTitle>
+                    <DialogTitle className="flex items-center gap-2">
+                        <span>Edit your designer profile</span>
+                        <AiBadge variant="ai-assisted" label="AI Bio Writer Ready" />
+                    </DialogTitle>
                     <DialogDescription>
                         Update how brands see your studio, your availability, and how you price and deliver work.
                     </DialogDescription>
                 </DialogHeader>
+
+                {aiError && (
+                    <AiErrorState message={aiError} onDismiss={() => setAiError(null)} />
+                )}
+
                 <form action={handleSubmit} className="space-y-7">
                     <section className="space-y-4">
-                        <h3 className="border-b pb-2 font-heading font-semibold">Profile and availability</h3>
+                        <div className="flex items-center justify-between border-b pb-2">
+                            <h3 className="font-heading font-semibold text-foreground">Profile and availability</h3>
+                            <AiButton
+                                type="button"
+                                size="sm"
+                                variant="outline"
+                                loading={isGeneratingBio}
+                                onClick={handleGenerateBio}
+                            >
+                                AI Bio Writer
+                            </AiButton>
+                        </div>
+
+                        {bioSuggestion && (
+                            <AiSuggestionCard
+                                title="AI Generated Portfolio Bio & Headline"
+                                original={bio || undefined}
+                                suggestion={`${bioSuggestion.headline}\n\n${bioSuggestion.bio}`}
+                                rationale="Highlights packaging expertise, 3D mockups, and client collaboration."
+                                onAccept={(acceptedText) => {
+                                    setHeadline(bioSuggestion.headline)
+                                    setBio(bioSuggestion.bio)
+                                    setBioSuggestion(null)
+                                    toast.success("Headline and bio applied!")
+                                }}
+                                onEdit={(edited) => {
+                                    setBio(edited)
+                                    setBioSuggestion(null)
+                                }}
+                                onDismiss={() => setBioSuggestion(null)}
+                            />
+                        )}
+
                         <div className="grid gap-4 sm:grid-cols-2">
                             <Field label="Full name" name="fullName" defaultValue={designer.fullName} required />
                             <Field label="Display name or studio" name="displayName" defaultValue={designer.displayName} />
@@ -180,10 +274,27 @@ export function DesignerProfileEditor({ designer }: { designer: DesignerProfile 
                             </Select>
                             <input type="hidden" name="availabilityStatus" value={availabilityStatus} />
                         </div>
-                        <Field label="Professional headline" name="headline" defaultValue={designer.headline} placeholder="Packaging designer for growing food brands" />
+
+                        <div className="space-y-2">
+                            <Label htmlFor="headline">Professional headline</Label>
+                            <Input
+                                id="headline"
+                                name="headline"
+                                value={headline}
+                                onChange={(e) => setHeadline(e.target.value)}
+                                placeholder="Packaging designer for growing food & beverage brands"
+                            />
+                        </div>
+
                         <label className="block space-y-2 text-sm font-medium">
-                            About you
-                            <Textarea name="bio" defaultValue={designer.bio ?? ""} className="min-h-24" placeholder="Share your approach and experience with brands." />
+                            About you (Bio)
+                            <Textarea
+                                name="bio"
+                                value={bio}
+                                onChange={(e) => setBio(e.target.value)}
+                                className="min-h-24 text-xs leading-relaxed"
+                                placeholder="Share your design background, packaging tools, and approach to client work."
+                            />
                         </label>
                     </section>
 
@@ -278,7 +389,7 @@ export function DesignerProfileEditor({ designer }: { designer: DesignerProfile 
                     <div className="flex justify-end gap-2 border-t pt-4">
                         <Button type="button" variant="outline" onClick={() => setOpen(false)} disabled={saving}>Cancel</Button>
                         <Button type="submit" disabled={saving}>
-                            {saving && <LoaderCircle className="animate-spin" />}
+                            {saving && <LoaderCircle className="animate-spin mr-1.5" />}
                             Save profile
                         </Button>
                     </div>

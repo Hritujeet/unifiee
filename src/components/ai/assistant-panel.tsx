@@ -56,6 +56,13 @@ export function AssistantPanel({ role = "business", userName }: AssistantPanelPr
         }
     }, [messages, isOpen, isLoading]);
 
+    // Abort active stream on unmount
+    React.useEffect(() => {
+        return () => {
+            abortControllerRef.current?.abort();
+        };
+    }, []);
+
     // Role-specific suggested starter questions
     const quickPrompts = React.useMemo(() => {
         if (role === "business") {

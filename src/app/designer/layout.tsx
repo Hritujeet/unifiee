@@ -10,6 +10,7 @@ import { headers } from "next/headers"
 import { redirect } from "next/navigation"
 import Link from "next/link"
 import { UserRound } from "lucide-react"
+import { AssistantPanel } from "@/components/ai/assistant-panel"
 
 export default async function DesignerLayout({ children }: { children: React.ReactNode }) {
     const session = await auth.api.getSession({ headers: await headers() })
@@ -47,6 +48,7 @@ export default async function DesignerLayout({ children }: { children: React.Rea
                     <main className="flex flex-1 flex-col gap-4 bg-background p-4 md:gap-8 md:p-7 lg:p-8">
                         {children}
                     </main>
+                    <AssistantPanel role="designer" userName={session.user.name || undefined} />
                 </SidebarInset>
             </SidebarProvider>
         </RoleProvider>

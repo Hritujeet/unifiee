@@ -107,7 +107,7 @@ const OnboardingForm = () => {
     };
 
     return (
-        <section className="min-h-screen flex flex-col items-center justify-start py-20 px-4 sm:px-8 overflow-hidden">
+        <section className="min-h-screen flex flex-col items-center justify-center py-20 px-4 sm:px-8 overflow-hidden">
             {/* Persistent Heading */}
             <motion.div
                 initial={{ opacity: 0, y: 20, filter: "blur(12px)" }}
@@ -194,11 +194,10 @@ const OnboardingForm = () => {
                                         <FieldLabel
                                             key={opt.value}
                                             htmlFor={opt.value}
-                                            className={`cursor-pointer transition-all duration-300 border rounded-2xl overflow-hidden p-0 block h-full ${
-                                                selected
+                                            className={`cursor-pointer transition-all duration-300 border rounded-2xl overflow-hidden p-0 block h-full ${selected
                                                     ? "border-primary bg-primary/5 ring-2 ring-primary/25 shadow-md"
                                                     : "border-border hover:border-primary/40 hover:bg-muted/40"
-                                            }`}
+                                                }`}
                                         >
                                             <Field orientation="horizontal" className="p-0 h-full">
                                                 <FieldContent className="px-6 py-6 gap-2 h-full justify-start">
@@ -279,11 +278,10 @@ const OnboardingForm = () => {
                                         <FieldLabel
                                             key={opt.value}
                                             htmlFor={opt.value}
-                                            className={`cursor-pointer transition-all duration-300 border rounded-2xl overflow-hidden p-0 block h-full ${
-                                                selected
+                                            className={`cursor-pointer transition-all duration-300 border rounded-2xl overflow-hidden p-0 block h-full ${selected
                                                     ? "border-primary bg-primary/5 ring-2 ring-primary/25 shadow-md"
                                                     : "border-border hover:border-primary/40 hover:bg-muted/40"
-                                            }`}
+                                                }`}
                                         >
                                             <Field orientation="horizontal" className="p-0 h-full">
                                                 <FieldContent className="px-6 py-6 gap-2 h-full justify-start">
@@ -355,7 +353,7 @@ const OnboardingForm = () => {
                             <ManufacturerOnboardingForm />
                         </motion.div>
                     )}
-                    
+
                     {step === "designer" && (
                         <motion.div
                             key="designer-form"

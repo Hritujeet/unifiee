@@ -35,7 +35,6 @@ const specializationLabels: Record<string, string> = {
 export default async function DesignerDashboardPage() {
     const designer = await getCurrentDesigner()
     const name = designer?.displayName || designer?.fullName || "Designer"
-    const firstName = name.trim().split(/\s+/)[0]
     const specializations = designer?.packagingDesignSpecializations ?? []
     const [listedServiceCount, servicePreview] = designer
         ? await Promise.all([
@@ -78,7 +77,7 @@ export default async function DesignerDashboardPage() {
         <div className="mx-auto w-full max-w-[1440px] space-y-7">
             <PageHeading
                 eyebrow="Your creative workspace"
-                title={`Good to have you here, ${firstName}.`}
+                title={`Good to have you here, ${name}.`}
                 description="Keep your packaging services clear, useful, and easy for brands to browse."
             />
 

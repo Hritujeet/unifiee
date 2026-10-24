@@ -9,6 +9,11 @@ import {
     Loader2,
     Radio,
     Sparkles,
+    CheckCircle2,
+    Store,
+    ExternalLink,
+    HelpCircle,
+    Info,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -21,6 +26,9 @@ import {
     PackagingUse,
 } from "@/lib/business-workflow-store"
 import { createRequirementAction } from "@/actions/business-requirements"
+import { AiBadge } from "@/components/ai/ai-badge"
+import { AiButton } from "@/components/ai/ai-button"
+import { AiErrorState } from "@/components/ai/ai-error-state"
 import { toast } from "sonner"
 
 interface ParsedRequirementForm {
@@ -33,6 +41,19 @@ interface ParsedRequirementForm {
     brandingNeeded: boolean
     deliveryLocation: string
     requiredByDate: string
+}
+
+interface MissingField {
+    field: string
+    question: string
+}
+
+interface MatchingVendor {
+    id: string
+    title: string
+    snippet: string
+    similarityScore: number
+    metadata?: Record<string, unknown>
 }
 
 const PRESET_PROMPTS = [
@@ -60,97 +81,87 @@ export default function NewRequirementPage() {
     const [rawPrompt, setRawPrompt] = useState("")
     const [isParsing, setIsParsing] = useState(false)
     const [isSaving, setIsSaving] = useState(false)
+    const [parseError, setParseError] = useState<string | null>(null)
     const [structuredSpec, setStructuredSpec] = useState<ParsedRequirementForm | null>(null)
+    const [confidenceScore, setConfidenceScore] = useState<number | null>(null)
+    const [missingFields, setMissingFields] = useState<MissingField[]>([])
+    const [matchingVendors, setMatchingVendors] = useState<MatchingVendor[]>([])
 
-    // AI Parser - extracts Section 5 structured fields from plain language
-    const handleParseWithAi = () => {
-        if (!rawPrompt.trim()) {
-            toast.error("Please enter a description of your packaging needs.")
+    // AI Parser: Real LLM Structured Extraction (Gemini Flash) with Hybrid RAG Supplier Matching
+    const handleParseWithAi = async () => {
+        if (!rawPrompt.trim() || rawPrompt.trim().length < 5) {
+            toast.error("Please enter a description of your packaging needs (at least 5 characters).")
             return
         }
 
         setIsParsing(true)
-        setTimeout(() => {
-            const text = rawPrompt.toLowerCase()
+        setParseError(null)
 
-            // 1. Packaging Use
-            let use: PackagingUse = "other"
-            if (text.includes("coffee") || text.includes("tea") || text.includes("beverage")) use = "coffee"
-            else if (text.includes("dessert") || text.includes("pastry") || text.includes("cake") || text.includes("bakery")) use = "dessert"
-            else if (text.includes("takeaway")) use = "takeaway"
-            else if (text.includes("delivery") || text.includes("kitchen")) use = "delivery"
-            else if (text.includes("food") || text.includes("pizza") || text.includes("burger")) use = "food"
-
-            // 2. Packaging Type
-            let type: PackagingType = "custom"
-            if (text.includes("cup")) type = "cups"
-            else if (text.includes("box") || text.includes("carton")) type = "boxes"
-            else if (text.includes("bag")) type = "bags"
-            else if (text.includes("cutlery") || text.includes("spoon") || text.includes("fork")) type = "cutlery"
-            else if (text.includes("container") || text.includes("bowl") || text.includes("tray")) type = "containers"
-
-            // 3. Quantity
-            const qtyMatch = rawPrompt.match(/\b\d{1,3}(,\d{3})*(\s*(units|pcs|pieces|nos))?\b/i)
-            const quantity = qtyMatch ? `${qtyMatch[0]} units`.replace(/units units/i, "units") : "1,000 units"
-
-            // 4. Size
-            let size = "Custom specifications"
-            const sizeMatch = rawPrompt.match(/\b\d+(\.\d+)?\s*(x|\*)\s*\d+(\.\d+)?(\s*(x|\*)\s*\d+(\.\d+)?)?\s*(inch|in|cm|mm|oz|ml)?\b/i)
-            if (sizeMatch) {
-                size = sizeMatch[0]
-            } else if (text.includes("8 oz") || text.includes("8oz")) size = "8 oz (80mm rim)"
-            else if (text.includes("12 oz") || text.includes("12oz")) size = "12 oz (90mm rim)"
-            else if (text.includes("12 in") || text.includes("12 inch")) size = "12 x 12 x 2 inches"
-            else if (text.includes("10 in") || text.includes("10 inch")) size = "10 x 10 x 2 inches"
-
-            // 5. Material
-            let material = "Standard commercial grade board"
-            if (text.includes("corrugated") || text.includes("e-flute") || text.includes("kraft")) {
-                material = "3-ply Recycled Kraft Board (E-Flute)"
-            } else if (text.includes("double-wall") || text.includes("double wall")) {
-                material = "Food-grade Double Wall Board (280 GSM)"
-            } else if (text.includes("kraft paper") || text.includes("brown kraft")) {
-                material = "Virgin Kraft Paper (120 GSM)"
-            } else if (text.includes("food-grade") || text.includes("food grade")) {
-                material = "Food-Grade Bleached Sulphate Board"
-            }
-
-            // 6. Branding Needed (yes/no)
-            const brandingNeeded = !text.includes("unbranded") && !text.includes("no logo") && (text.includes("logo") || text.includes("print") || text.includes("brand") || text.includes("custom"))
-
-            // 7. Delivery Location
-            let deliveryLocation = "Bandra West, Mumbai, MH"
-            if (text.includes("mumbai") || text.includes("bandra") || text.includes("andheri")) deliveryLocation = "Bandra West, Mumbai, MH"
-            else if (text.includes("bengaluru") || text.includes("bangalore") || text.includes("indiranagar")) deliveryLocation = "Indiranagar, Bengaluru, KA"
-            else if (text.includes("delhi") || text.includes("connaught")) deliveryLocation = "Connaught Place, New Delhi, DL"
-            else if (text.includes("hyderabad")) deliveryLocation = "Jubilee Hills, Hyderabad, TS"
-            else if (text.includes("pune")) deliveryLocation = "Koregaon Park, Pune, MH"
-
-            // 8. Required-by date
-            let requiredByDate = "In 14 days"
-            if (text.includes("10 days")) requiredByDate = "In 10 days"
-            else if (text.includes("2 weeks") || text.includes("two weeks")) requiredByDate = "In 14 days"
-            else if (text.includes("next month")) requiredByDate = "In 30 days"
-            else if (text.includes("urgent") || text.includes("1 week") || text.includes("one week")) requiredByDate = "In 7 days"
-
-            // Title
-            const title = `${type.charAt(0).toUpperCase() + type.slice(1)} (${size})`
-
-            setStructuredSpec({
-                title,
-                packagingUse: use,
-                packagingType: type,
-                quantity,
-                size,
-                material,
-                brandingNeeded,
-                deliveryLocation,
-                requiredByDate,
+        try {
+            const res = await fetch("/api/ai/requirements/extract", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ prompt: rawPrompt }),
             })
 
+            const data = await res.json()
+
+            if (!res.ok) {
+                throw new Error(data.error || "Failed to parse requirements.")
+            }
+
+            const parsed = data.structured
+            const validUse: PackagingUse = [
+                "coffee",
+                "food",
+                "dessert",
+                "delivery",
+                "takeaway",
+                "other",
+            ].includes(parsed.packagingUse)
+                ? (parsed.packagingUse as PackagingUse)
+                : "other"
+
+            const validType: PackagingType = [
+                "cups",
+                "boxes",
+                "bags",
+                "cutlery",
+                "containers",
+                "custom",
+            ].includes(parsed.packagingType)
+                ? (parsed.packagingType as PackagingType)
+                : "custom"
+
+            setStructuredSpec({
+                title: parsed.title || `${validType.toUpperCase()} - Custom Packaging`,
+                packagingUse: validUse,
+                packagingType: validType,
+                quantity: parsed.quantity || "",
+                size: parsed.size || "",
+                material: parsed.material || "",
+                brandingNeeded: parsed.brandingNeeded ?? true,
+                deliveryLocation: parsed.deliveryLocation || "",
+                requiredByDate: parsed.requiredByDate || "",
+            })
+
+            setConfidenceScore(parsed.confidenceScore ?? 0.9)
+            setMissingFields(parsed.missingFields || [])
+            setMatchingVendors(data.matchingVendors || [])
+
+            toast.success("AI parsed specification and discovered matching supplier catalogs!")
+        } catch (err: unknown) {
+            console.error("AI parse error:", err)
+            const msg = err instanceof Error ? err.message : "Failed to extract specification."
+            setParseError(msg)
+            toast.error(msg)
+        } finally {
             setIsParsing(false)
-            toast.success("AI parsed requirements into Section 5 structured fields!")
-        }, 700)
+        }
+    }
+
+    const isFieldMissing = (fieldName: string) => {
+        return missingFields.find((m) => m.field.toLowerCase() === fieldName.toLowerCase())
     }
 
     const handleBroadcast = async () => {
@@ -162,12 +173,12 @@ export default function NewRequirementPage() {
                 title: structuredSpec.title,
                 packagingUse: structuredSpec.packagingUse,
                 packagingType: structuredSpec.packagingType,
-                quantity: structuredSpec.quantity,
-                size: structuredSpec.size,
-                material: structuredSpec.material,
+                quantity: structuredSpec.quantity || "1,000 units",
+                size: structuredSpec.size || "Custom size",
+                material: structuredSpec.material || "Standard commercial board",
                 brandingNeeded: structuredSpec.brandingNeeded,
-                deliveryLocation: structuredSpec.deliveryLocation,
-                requiredByDate: structuredSpec.requiredByDate,
+                deliveryLocation: structuredSpec.deliveryLocation || "Delivery address",
+                requiredByDate: structuredSpec.requiredByDate || "Flexible timeframe",
                 rawDescription: rawPrompt,
             })
 
@@ -187,7 +198,7 @@ export default function NewRequirementPage() {
     }
 
     return (
-        <div className="mx-auto w-full max-w-4xl space-y-8 text-foreground">
+        <div className="mx-auto w-full max-w-4xl space-y-8 text-foreground pb-12">
             {/* Header with back navigation & breadcrumb */}
             <div className="flex items-center gap-3.5 border-b border-border/40 pb-5">
                 <Button asChild variant="outline" size="icon" className="size-9 rounded-xl border-border/50 hover:bg-muted/50">
@@ -203,32 +214,33 @@ export default function NewRequirementPage() {
                         <span>/</span>
                         <span className="text-foreground font-medium">New AI Intake</span>
                     </div>
-                    <h1 className="text-2xl font-bold tracking-tight text-foreground font-heading">
-                        Submit Packaging Requirement
+                    <h1 className="text-2xl font-bold tracking-tight text-foreground font-heading flex items-center gap-2.5">
+                        <span>Submit Packaging Requirement</span>
+                        <AiBadge variant="ai-assisted" label="AI Builder" />
                     </h1>
                 </div>
             </div>
 
             {/* MVP Brief Section 5 Info Callout */}
-            <div className="rounded-xl border border-blue-500/20 bg-blue-500/5 p-4 text-xs text-muted-foreground flex items-start gap-3">
-                <Sparkles className="size-4 text-blue-500 shrink-0 mt-0.5" />
+            <div className="rounded-xl border border-purple-500/25 bg-gradient-to-r from-purple-500/[0.08] via-indigo-500/[0.04] to-transparent p-4 text-xs text-muted-foreground flex items-start gap-3">
+                <Sparkles className="size-4 text-purple-600 dark:text-purple-400 shrink-0 mt-0.5" />
                 <div className="space-y-1">
-                    <span className="font-semibold text-foreground">AI-Assisted Requirement Capture (Eureka MVP Section 5)</span>
+                    <span className="font-semibold text-foreground">AI-Powered Specification Intake (Eureka MVP Section 5)</span>
                     <p className="leading-relaxed">
-                        Describe what you need in plain words. UNIFIÉE parses it into the 8 canonical structured fields (use, type, quantity, size, material, branding, location, date) and broadcasts to all packaging vendors.
+                        Describe what you need in plain words. UNIFIÉE parses it into canonical structured fields, checks for missing specifications, finds matching suppliers, and broadcasts to verified manufacturers.
                     </p>
                 </div>
             </div>
 
             {/* Step 1: Plain Language Intake */}
-            <Card>
+            <Card className="border-border/60 shadow-xs">
                 <CardHeader className="space-y-1 pb-4">
                     <CardTitle className="text-base font-semibold flex items-center gap-2">
-                        <span className="flex size-6 items-center justify-center rounded-full bg-blue-600/10 text-blue-600 text-xs font-bold">1</span>
+                        <span className="flex size-6 items-center justify-center rounded-full bg-purple-600/10 text-purple-600 text-xs font-bold">1</span>
                         <span>Describe your packaging in plain language</span>
                     </CardTitle>
                     <CardDescription>
-                        Mention dimensions, material, quantity, whether you need custom printing, and your delivery city.
+                        Mention dimensions, material, quantity, custom printing needs, and your delivery city.
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -237,8 +249,16 @@ export default function NewRequirementPage() {
                         placeholder="e.g. Need 2,500 matte black 12x12x2 inch corrugated pizza boxes with 2-color brand logo for takeaway pizza in Bandra, Mumbai. Needed in 14 days."
                         value={rawPrompt}
                         onChange={(e) => setRawPrompt(e.target.value)}
-                        className="text-sm bg-muted/20 resize-none p-3.5 leading-relaxed"
+                        className="text-sm bg-muted/20 resize-none p-3.5 leading-relaxed focus-visible:ring-purple-500"
                     />
+
+                    {parseError && (
+                        <AiErrorState
+                            message={parseError}
+                            onRetry={handleParseWithAi}
+                            onDismiss={() => setParseError(null)}
+                        />
+                    )}
 
                     <div className="space-y-2">
                         <span className="text-xs font-medium text-muted-foreground block">
@@ -250,10 +270,10 @@ export default function NewRequirementPage() {
                                     key={idx}
                                     type="button"
                                     onClick={() => setRawPrompt(p.prompt)}
-                                    className="text-left text-xs p-3 rounded-lg border border-border/50 bg-card hover:border-blue-500/40 hover:bg-blue-500/5 transition-all cursor-pointer space-y-1"
+                                    className="text-left text-xs p-3 rounded-lg border border-border/50 bg-card hover:border-purple-500/40 hover:bg-purple-500/5 transition-all cursor-pointer space-y-1"
                                 >
                                     <div className="font-semibold text-foreground flex items-center gap-1.5">
-                                        <Sparkles className="size-3 text-blue-500" />
+                                        <Sparkles className="size-3 text-purple-500" />
                                         <span>{p.label}</span>
                                     </div>
                                     <p className="text-muted-foreground line-clamp-2 leading-relaxed">
@@ -265,226 +285,345 @@ export default function NewRequirementPage() {
                     </div>
 
                     <div className="flex justify-end pt-2">
-                        <Button
+                        <AiButton
                             onClick={handleParseWithAi}
+                            loading={isParsing}
                             disabled={isParsing || !rawPrompt.trim()}
-                            className="bg-blue-600 hover:bg-blue-500 text-white font-medium text-xs sm:text-sm h-10 px-5 gap-2"
+                            size="md"
                         >
-                            {isParsing ? (
-                                <>
-                                    <Loader2 className="size-4 animate-spin" />
-                                    <span>Parsing structured fields...</span>
-                                </>
-                            ) : (
-                                <>
-                                    <Sparkles className="size-4" />
-                                    <span>Parse with AI</span>
-                                </>
-                            )}
-                        </Button>
+                            <span>{isParsing ? "Extracting Specifications..." : "Parse with AI"}</span>
+                        </AiButton>
                     </div>
                 </CardContent>
             </Card>
 
-            {/* Step 2: The 8 Canonical Structured Fields (Section 5) */}
+            {/* Step 2: The Canonical Structured Fields */}
             {structuredSpec && (
-                <Card className="border-blue-500/30 bg-card shadow-sm animate-in fade-in-50 duration-200">
-                    <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border/40 pb-4">
-                        <div className="space-y-1">
-                            <CardTitle className="text-base font-semibold flex items-center gap-2">
-                                <span className="flex size-6 items-center justify-center rounded-full bg-emerald-600/10 text-emerald-600 text-xs font-bold">2</span>
-                                <span>Structured Specification Fields (Review & Edit)</span>
-                            </CardTitle>
-                            <CardDescription>
-                                Verified fields generated from your description. Edit any field before broadcasting.
-                            </CardDescription>
-                        </div>
-                        <Badge variant="secondary" className="text-xs font-semibold px-3 py-1 uppercase tracking-wider self-start sm:self-center">
-                            {structuredSpec.packagingType} • {structuredSpec.packagingUse}
-                        </Badge>
-                    </CardHeader>
-
-                    <CardContent className="space-y-6 pt-6">
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            {/* 1. Packaging Title */}
-                            <div className="space-y-1.5 sm:col-span-2">
-                                <Label className="text-xs font-medium text-muted-foreground">Requirement Title</Label>
-                                <Input
-                                    value={structuredSpec.title}
-                                    onChange={(e) => setStructuredSpec({ ...structuredSpec, title: e.target.value })}
-                                    className="h-9 text-sm"
-                                />
+                <div className="space-y-6 animate-in fade-in-50 duration-300">
+                    <Card className="border-purple-500/30 bg-card shadow-sm">
+                        <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border/40 pb-4">
+                            <div className="space-y-1">
+                                <CardTitle className="text-base font-semibold flex items-center gap-2">
+                                    <span className="flex size-6 items-center justify-center rounded-full bg-emerald-600/10 text-emerald-600 text-xs font-bold">2</span>
+                                    <span>Structured Specification Fields (Review & Edit)</span>
+                                </CardTitle>
+                                <CardDescription>
+                                    Review AI-filled fields below. Fields with warning badges need your input.
+                                </CardDescription>
                             </div>
-
-                            {/* 2. Packaging Use */}
-                            <div className="space-y-1.5">
-                                <Label className="text-xs font-medium text-muted-foreground">
-                                    Packaging Use (Section 5.1)
-                                </Label>
-                                <select
-                                    value={structuredSpec.packagingUse}
-                                    onChange={(e) => setStructuredSpec({ ...structuredSpec, packagingUse: e.target.value as PackagingUse })}
-                                    className="h-9 w-full rounded-md border border-input bg-card px-3 text-xs text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                                >
-                                    <option value="coffee">Coffee / Beverages</option>
-                                    <option value="food">Food / Mains</option>
-                                    <option value="dessert">Dessert / Bakery</option>
-                                    <option value="delivery">Delivery</option>
-                                    <option value="takeaway">Takeaway Counter</option>
-                                    <option value="other">Other</option>
-                                </select>
+                            <div className="flex items-center gap-2">
+                                {confidenceScore !== null && (
+                                    <Badge variant="outline" className="border-purple-500/30 text-purple-600 dark:text-purple-400 text-xs font-medium">
+                                        {Math.round(confidenceScore * 100)}% Confidence
+                                    </Badge>
+                                )}
+                                <Badge variant="secondary" className="text-xs font-semibold px-3 py-1 uppercase tracking-wider">
+                                    {structuredSpec.packagingType} • {structuredSpec.packagingUse}
+                                </Badge>
                             </div>
+                        </CardHeader>
 
-                            {/* 3. Packaging Type */}
-                            <div className="space-y-1.5">
-                                <Label className="text-xs font-medium text-muted-foreground">
-                                    Packaging Type (Section 5.2)
-                                </Label>
-                                <select
-                                    value={structuredSpec.packagingType}
-                                    onChange={(e) => setStructuredSpec({ ...structuredSpec, packagingType: e.target.value as PackagingType })}
-                                    className="h-9 w-full rounded-md border border-input bg-card px-3 text-xs text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                                >
-                                    <option value="cups">Cups</option>
-                                    <option value="boxes">Boxes</option>
-                                    <option value="bags">Bags</option>
-                                    <option value="cutlery">Cutlery</option>
-                                    <option value="containers">Containers</option>
-                                    <option value="custom">Custom</option>
-                                </select>
-                            </div>
+                        <CardContent className="space-y-6 pt-6">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                {/* 1. Packaging Title */}
+                                <div className="space-y-1.5 sm:col-span-2">
+                                    <div className="flex items-center justify-between">
+                                        <Label className="text-xs font-medium text-muted-foreground">Requirement Title</Label>
+                                        <AiBadge variant="ai-filled" label="Generated Title" />
+                                    </div>
+                                    <Input
+                                        value={structuredSpec.title}
+                                        onChange={(e) => setStructuredSpec({ ...structuredSpec, title: e.target.value })}
+                                        className="h-9 text-sm"
+                                    />
+                                </div>
 
-                            {/* 4. Quantity */}
-                            <div className="space-y-1.5">
-                                <Label className="text-xs font-medium text-muted-foreground">
-                                    Target Quantity (Section 5.3)
-                                </Label>
-                                <Input
-                                    value={structuredSpec.quantity}
-                                    onChange={(e) => setStructuredSpec({ ...structuredSpec, quantity: e.target.value })}
-                                    className="h-9 text-xs"
-                                />
-                            </div>
+                                {/* 2. Packaging Use */}
+                                <div className="space-y-1.5">
+                                    <div className="flex items-center justify-between">
+                                        <Label className="text-xs font-medium text-muted-foreground">
+                                            Packaging Use (Section 5.1)
+                                        </Label>
+                                        <AiBadge variant="ai-filled" />
+                                    </div>
+                                    <select
+                                        value={structuredSpec.packagingUse}
+                                        onChange={(e) => setStructuredSpec({ ...structuredSpec, packagingUse: e.target.value as PackagingUse })}
+                                        className="h-9 w-full rounded-md border border-input bg-card px-3 text-xs text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                                    >
+                                        <option value="coffee">Coffee / Beverages</option>
+                                        <option value="food">Food / Mains</option>
+                                        <option value="dessert">Dessert / Bakery</option>
+                                        <option value="delivery">Delivery</option>
+                                        <option value="takeaway">Takeaway Counter</option>
+                                        <option value="other">Other</option>
+                                    </select>
+                                </div>
 
-                            {/* 5. Size */}
-                            <div className="space-y-1.5">
-                                <Label className="text-xs font-medium text-muted-foreground">
-                                    Size / Dimensions (Section 5.4)
-                                </Label>
-                                <Input
-                                    value={structuredSpec.size}
-                                    onChange={(e) => setStructuredSpec({ ...structuredSpec, size: e.target.value })}
-                                    className="h-9 text-xs"
-                                />
-                            </div>
+                                {/* 3. Packaging Type */}
+                                <div className="space-y-1.5">
+                                    <div className="flex items-center justify-between">
+                                        <Label className="text-xs font-medium text-muted-foreground">
+                                            Packaging Type (Section 5.2)
+                                        </Label>
+                                        <AiBadge variant="ai-filled" />
+                                    </div>
+                                    <select
+                                        value={structuredSpec.packagingType}
+                                        onChange={(e) => setStructuredSpec({ ...structuredSpec, packagingType: e.target.value as PackagingType })}
+                                        className="h-9 w-full rounded-md border border-input bg-card px-3 text-xs text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                                    >
+                                        <option value="cups">Cups</option>
+                                        <option value="boxes">Boxes</option>
+                                        <option value="bags">Bags</option>
+                                        <option value="cutlery">Cutlery</option>
+                                        <option value="containers">Containers</option>
+                                        <option value="custom">Custom</option>
+                                    </select>
+                                </div>
 
-                            {/* 6. Material */}
-                            <div className="space-y-1.5 sm:col-span-2">
-                                <Label className="text-xs font-medium text-muted-foreground">
-                                    Material Specification (Section 5.5)
-                                </Label>
-                                <Input
-                                    value={structuredSpec.material}
-                                    onChange={(e) => setStructuredSpec({ ...structuredSpec, material: e.target.value })}
-                                    className="h-9 text-xs"
-                                />
-                            </div>
+                                {/* 4. Quantity */}
+                                <div className="space-y-1.5">
+                                    <div className="flex items-center justify-between">
+                                        <Label className="text-xs font-medium text-muted-foreground">
+                                            Target Quantity (Section 5.3)
+                                        </Label>
+                                        {isFieldMissing("quantity") || !structuredSpec.quantity ? (
+                                            <AiBadge variant="needs-input" />
+                                        ) : (
+                                            <AiBadge variant="ai-filled" />
+                                        )}
+                                    </div>
+                                    <Input
+                                        value={structuredSpec.quantity}
+                                        placeholder="e.g. 5,000 units"
+                                        onChange={(e) => setStructuredSpec({ ...structuredSpec, quantity: e.target.value })}
+                                        className="h-9 text-xs"
+                                    />
+                                    {isFieldMissing("quantity") && (
+                                        <p className="text-[11px] text-amber-600 dark:text-amber-400 font-medium">
+                                            {isFieldMissing("quantity")?.question}
+                                        </p>
+                                    )}
+                                </div>
 
-                            {/* 7. Branding Needed (yes/no) */}
-                            <div className="space-y-1.5">
-                                <Label className="text-xs font-medium text-muted-foreground">
-                                    Branding Needed (Section 5.6)
-                                </Label>
-                                <div className="flex items-center gap-3 pt-1">
-                                    <label className="flex items-center gap-2 text-xs cursor-pointer">
-                                        <input
-                                            type="radio"
-                                            name="branding"
-                                            checked={structuredSpec.brandingNeeded === true}
-                                            onChange={() => setStructuredSpec({ ...structuredSpec, brandingNeeded: true })}
-                                            className="accent-blue-600"
-                                        />
-                                        <span>Yes (Custom print & logo)</span>
-                                    </label>
-                                    <label className="flex items-center gap-2 text-xs cursor-pointer">
-                                        <input
-                                            type="radio"
-                                            name="branding"
-                                            checked={structuredSpec.brandingNeeded === false}
-                                            onChange={() => setStructuredSpec({ ...structuredSpec, brandingNeeded: false })}
-                                            className="accent-blue-600"
-                                        />
-                                        <span>No (Plain / Generic)</span>
-                                    </label>
+                                {/* 5. Size */}
+                                <div className="space-y-1.5">
+                                    <div className="flex items-center justify-between">
+                                        <Label className="text-xs font-medium text-muted-foreground">
+                                            Size / Dimensions (Section 5.4)
+                                        </Label>
+                                        {isFieldMissing("size") || !structuredSpec.size ? (
+                                            <AiBadge variant="needs-input" />
+                                        ) : (
+                                            <AiBadge variant="ai-filled" />
+                                        )}
+                                    </div>
+                                    <Input
+                                        value={structuredSpec.size}
+                                        placeholder="e.g. 12x12x2 inch, 8 oz"
+                                        onChange={(e) => setStructuredSpec({ ...structuredSpec, size: e.target.value })}
+                                        className="h-9 text-xs"
+                                    />
+                                    {isFieldMissing("size") && (
+                                        <p className="text-[11px] text-amber-600 dark:text-amber-400 font-medium">
+                                            {isFieldMissing("size")?.question}
+                                        </p>
+                                    )}
+                                </div>
+
+                                {/* 6. Material */}
+                                <div className="space-y-1.5 sm:col-span-2">
+                                    <div className="flex items-center justify-between">
+                                        <Label className="text-xs font-medium text-muted-foreground">
+                                            Material Specification (Section 5.5)
+                                        </Label>
+                                        {isFieldMissing("material") || !structuredSpec.material ? (
+                                            <AiBadge variant="needs-input" />
+                                        ) : (
+                                            <AiBadge variant="ai-filled" />
+                                        )}
+                                    </div>
+                                    <Input
+                                        value={structuredSpec.material}
+                                        placeholder="e.g. 3-ply corrugated kraft board, 280 GSM food-grade cupstock"
+                                        onChange={(e) => setStructuredSpec({ ...structuredSpec, material: e.target.value })}
+                                        className="h-9 text-xs"
+                                    />
+                                    {isFieldMissing("material") && (
+                                        <p className="text-[11px] text-amber-600 dark:text-amber-400 font-medium">
+                                            {isFieldMissing("material")?.question}
+                                        </p>
+                                    )}
+                                </div>
+
+                                {/* 7. Branding Needed (yes/no) */}
+                                <div className="space-y-1.5">
+                                    <div className="flex items-center justify-between">
+                                        <Label className="text-xs font-medium text-muted-foreground">
+                                            Branding Needed (Section 5.6)
+                                        </Label>
+                                        <AiBadge variant="ai-filled" />
+                                    </div>
+                                    <div className="flex items-center gap-3 pt-1">
+                                        <label className="flex items-center gap-2 text-xs cursor-pointer">
+                                            <input
+                                                type="radio"
+                                                name="branding"
+                                                checked={structuredSpec.brandingNeeded === true}
+                                                onChange={() => setStructuredSpec({ ...structuredSpec, brandingNeeded: true })}
+                                                className="accent-purple-600"
+                                            />
+                                            <span>Yes (Custom print & logo)</span>
+                                        </label>
+                                        <label className="flex items-center gap-2 text-xs cursor-pointer">
+                                            <input
+                                                type="radio"
+                                                name="branding"
+                                                checked={structuredSpec.brandingNeeded === false}
+                                                onChange={() => setStructuredSpec({ ...structuredSpec, brandingNeeded: false })}
+                                                className="accent-purple-600"
+                                            />
+                                            <span>No (Plain / Generic)</span>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                {/* 8. Required-by date */}
+                                <div className="space-y-1.5">
+                                    <div className="flex items-center justify-between">
+                                        <Label className="text-xs font-medium text-muted-foreground">
+                                            Required-By Date (Section 5.8)
+                                        </Label>
+                                        {isFieldMissing("requiredByDate") || !structuredSpec.requiredByDate ? (
+                                            <AiBadge variant="needs-input" />
+                                        ) : (
+                                            <AiBadge variant="ai-filled" />
+                                        )}
+                                    </div>
+                                    <Input
+                                        value={structuredSpec.requiredByDate}
+                                        placeholder="e.g. Within 14 days, Next month"
+                                        onChange={(e) => setStructuredSpec({ ...structuredSpec, requiredByDate: e.target.value })}
+                                        className="h-9 text-xs"
+                                    />
+                                    {isFieldMissing("requiredByDate") && (
+                                        <p className="text-[11px] text-amber-600 dark:text-amber-400 font-medium">
+                                            {isFieldMissing("requiredByDate")?.question}
+                                        </p>
+                                    )}
+                                </div>
+
+                                {/* 9. Delivery Location */}
+                                <div className="space-y-1.5 sm:col-span-2">
+                                    <div className="flex items-center justify-between">
+                                        <Label className="text-xs font-medium text-muted-foreground">
+                                            Delivery Location (Section 5.7)
+                                        </Label>
+                                        {isFieldMissing("deliveryLocation") || !structuredSpec.deliveryLocation ? (
+                                            <AiBadge variant="needs-input" />
+                                        ) : (
+                                            <AiBadge variant="ai-filled" />
+                                        )}
+                                    </div>
+                                    <Input
+                                        value={structuredSpec.deliveryLocation}
+                                        placeholder="e.g. Bandra West, Mumbai, MH"
+                                        onChange={(e) => setStructuredSpec({ ...structuredSpec, deliveryLocation: e.target.value })}
+                                        className="h-9 text-xs"
+                                    />
+                                    {isFieldMissing("deliveryLocation") && (
+                                        <p className="text-[11px] text-amber-600 dark:text-amber-400 font-medium">
+                                            {isFieldMissing("deliveryLocation")?.question}
+                                        </p>
+                                    )}
                                 </div>
                             </div>
 
-                            {/* 8. Required-by date */}
-                            <div className="space-y-1.5">
-                                <Label className="text-xs font-medium text-muted-foreground">
-                                    Required-By Date (Section 5.8)
-                                </Label>
-                                <Input
-                                    value={structuredSpec.requiredByDate}
-                                    onChange={(e) => setStructuredSpec({ ...structuredSpec, requiredByDate: e.target.value })}
-                                    className="h-9 text-xs"
-                                />
+                            {/* Broadcast Callout */}
+                            <div className="rounded-xl border border-border/50 bg-muted/20 p-4 text-xs text-muted-foreground flex items-center justify-between gap-4">
+                                <div className="flex items-center gap-2.5">
+                                    <Radio className="size-4 text-purple-600 animate-pulse shrink-0" />
+                                    <span>
+                                        <strong>Broadcast Model (Section 6)</strong>: Upon broadcast, this requirement will be instantly visible to all verified packaging suppliers on UNIFIÉE.
+                                    </span>
+                                </div>
                             </div>
 
-                            {/* 9. Delivery Location */}
-                            <div className="space-y-1.5 sm:col-span-2">
-                                <Label className="text-xs font-medium text-muted-foreground">
-                                    Delivery Location (Section 5.7)
-                                </Label>
-                                <Input
-                                    value={structuredSpec.deliveryLocation}
-                                    onChange={(e) => setStructuredSpec({ ...structuredSpec, deliveryLocation: e.target.value })}
-                                    className="h-9 text-xs"
-                                />
+                            {/* Action buttons */}
+                            <div className="flex flex-col-reverse sm:flex-row sm:items-center justify-end gap-3 pt-4 border-t border-border/40">
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => setStructuredSpec(null)}
+                                    className="h-10 px-4 text-xs"
+                                >
+                                    Re-enter description
+                                </Button>
+                                <Button
+                                    size="sm"
+                                    onClick={handleBroadcast}
+                                    disabled={isSaving}
+                                    className="h-10 px-5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-medium text-xs sm:text-sm gap-2"
+                                >
+                                    {isSaving ? (
+                                        <>
+                                            <Loader2 className="size-4 animate-spin" />
+                                            <span>Saving & Broadcasting...</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <span>Broadcast to Suppliers</span>
+                                            <ArrowRight className="size-4" />
+                                        </>
+                                    )}
+                                </Button>
                             </div>
-                        </div>
+                        </CardContent>
+                    </Card>
 
-                        {/* Broadcast Callout */}
-                        <div className="rounded-xl border border-border/50 bg-muted/20 p-4 text-xs text-muted-foreground flex items-center justify-between gap-4">
-                            <div className="flex items-center gap-2.5">
-                                <Radio className="size-4 text-blue-500 animate-pulse shrink-0" />
-                                <span>
-                                    <strong>Broadcast Model (Section 6)</strong>: Upon submission, all active packaging suppliers on UNIFIÉE will receive this specification simultaneously.
-                                </span>
-                            </div>
-                        </div>
-
-                        {/* Action buttons */}
-                        <div className="flex flex-col-reverse sm:flex-row sm:items-center justify-end gap-3 pt-4 border-t border-border/40">
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => setStructuredSpec(null)}
-                                className="h-10 px-4 text-xs"
-                            >
-                                Re-enter description
-                            </Button>
-                            <Button
-                                size="sm"
-                                onClick={handleBroadcast}
-                                disabled={isSaving}
-                                className="h-10 px-5 bg-blue-600 hover:bg-blue-500 text-white font-medium text-xs sm:text-sm gap-2"
-                            >
-                                {isSaving ? (
-                                    <>
-                                        <Loader2 className="size-4 animate-spin" />
-                                        <span>Saving & Broadcasting...</span>
-                                    </>
-                                ) : (
-                                    <>
-                                        <span>Broadcast to Suppliers</span>
-                                        <ArrowRight className="size-4" />
-                                    </>
-                                )}
-                            </Button>
-                        </div>
-                    </CardContent>
-                </Card>
+                    {/* Matching Suppliers / Catalog Offerings Preview (RAG) */}
+                    {matchingVendors.length > 0 && (
+                        <Card className="border-border/60 bg-card">
+                            <CardHeader className="pb-3 border-b border-border/40">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                        <Store className="size-4 text-purple-600 dark:text-purple-400" />
+                                        <CardTitle className="text-sm font-semibold">
+                                            Matching Supplier Offerings Found ({matchingVendors.length})
+                                        </CardTitle>
+                                    </div>
+                                    <AiBadge variant="verified" label="Catalog Matches" />
+                                </div>
+                                <CardDescription className="text-xs">
+                                    Suppliers currently manufacturing packaging that matches your extracted specifications:
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent className="pt-4 space-y-2.5">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    {matchingVendors.map((vendor) => (
+                                        <div
+                                            key={vendor.id}
+                                            className="p-3 rounded-xl border border-border/70 bg-muted/20 hover:border-purple-500/40 hover:bg-muted/40 transition-all space-y-1.5"
+                                        >
+                                            <div className="flex items-start justify-between gap-2">
+                                                <h5 className="font-semibold text-xs text-foreground line-clamp-1">
+                                                    {vendor.title}
+                                                </h5>
+                                                <span className="text-[10px] font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded-full shrink-0">
+                                                    {Math.round(vendor.similarityScore * 100)}% match
+                                                </span>
+                                            </div>
+                                            <p className="text-[11px] text-muted-foreground line-clamp-2 leading-relaxed">
+                                                {vendor.snippet}
+                                            </p>
+                                        </div>
+                                    ))}
+                                </div>
+                            </CardContent>
+                        </Card>
+                    )}
+                </div>
             )}
         </div>
     )

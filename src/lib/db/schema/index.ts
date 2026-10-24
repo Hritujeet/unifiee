@@ -27,3 +27,6 @@ export * from "./vendor-review"
 // Deferred schemas (Invoices & Payout accounts existing in DB)
 export * from "./deferred/vendor-invoice"
 export * from "./deferred/vendor-payout"
+
+// AI & Vector Documents
+export * from "./ai-document"

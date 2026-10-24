@@ -16,6 +16,16 @@ import {
     vendorDetailsCheckSchema,
 } from "@/lib/ai/prompts/vendor-assist";
 import { logAiUsage } from "@/lib/ai/logger";
+import { z } from "zod";
+
+const vendorAssistSchema = z.object({
+    mode: z.enum(["improve_description", "suggest_title", "check_specs", "match_requirements"]),
+    title: z.string().max(300).optional().default(""),
+    description: z.string().max(4000).optional().default(""),
+    category: z.string().max(200).optional().default(""),
+    material: z.string().max(200).optional().default(""),
+    size: z.string().max(200).optional().default(""),
+});
 
 export async function POST(req: Request) {
     const startTime = Date.now();
@@ -49,14 +59,21 @@ export async function POST(req: Request) {
         }
 
         const vendorId = vendorRows[0].id;
-        const body = await req.json();
-        const mode = body.mode as "improve_description" | "suggest_title" | "check_specs" | "match_requirements";
+        const body = await req.json().catch(() => ({}));
+        const parseResult = vendorAssistSchema.safeParse(body);
+        if (!parseResult.success) {
+            return NextResponse.json(
+                { error: parseResult.error.issues[0]?.message || "Invalid request parameters." },
+                { status: 400 }
+            );
+        }
 
-        const title = stripPii(body.title || "");
-        const description = stripPii(body.description || "");
-        const category = stripPii(body.category || "");
-        const material = stripPii(body.material || "");
-        const size = stripPii(body.size || "");
+        const { mode } = parseResult.data;
+        const title = stripPii(parseResult.data.title);
+        const description = stripPii(parseResult.data.description);
+        const category = stripPii(parseResult.data.category);
+        const material = stripPii(parseResult.data.material);
+        const size = stripPii(parseResult.data.size);
 
         // 1. Match active buyer requirements in the marketplace
         if (mode === "match_requirements") {

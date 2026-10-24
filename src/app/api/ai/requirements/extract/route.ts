@@ -14,6 +14,15 @@ import {
     buildRequirementBuilderSystemPrompt,
 } from "@/lib/ai/prompts/requirement-builder";
 import { logAiUsage } from "@/lib/ai/logger";
+import { z } from "zod";
+
+const requirementExtractSchema = z.object({
+    prompt: z
+        .string()
+        .trim()
+        .min(5, "Please enter a descriptive packaging requirement (at least 5 characters).")
+        .max(4000, "Requirement description exceeds maximum limit of 4,000 characters."),
+});
 
 export async function POST(req: Request) {
     const startTime = Date.now();
@@ -49,15 +58,16 @@ export async function POST(req: Request) {
         }
 
         const businessId = businessRows[0].id;
-        const body = await req.json();
-        const rawPrompt: string = body.prompt || "";
-
-        if (!rawPrompt.trim() || rawPrompt.trim().length < 5) {
+        const body = await req.json().catch(() => ({}));
+        const parseResult = requirementExtractSchema.safeParse(body);
+        if (!parseResult.success) {
             return NextResponse.json(
-                { error: "Please enter a descriptive packaging requirement (at least 5 characters)." },
+                { error: parseResult.error.issues[0]?.message || "Invalid requirement prompt." },
                 { status: 400 }
             );
         }
+
+        const rawPrompt = parseResult.data.prompt;
 
         const cleanPrompt = stripPii(rawPrompt);
         const route = getModel("requirement_builder");

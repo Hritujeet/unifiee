@@ -21,6 +21,32 @@ import {
     deliveryHelperOutputSchema,
 } from "@/lib/ai/prompts/designer-assist";
 import { logAiUsage } from "@/lib/ai/logger";
+import { z } from "zod";
+
+const designerAssistSchema = z.object({
+    mode: z.enum([
+        "gig_creator",
+        "bio_writer",
+        "smart_reply",
+        "brief_checklist",
+        "delivery_helper",
+    ]),
+    rawNotes: z.string().max(2000).optional(),
+    category: z.string().max(200).optional(),
+    specialization: z.string().max(200).optional(),
+    specialties: z.array(z.string().max(100)).max(20).optional(),
+    tools: z.array(z.string().max(100)).max(20).optional(),
+    roughNotes: z.string().max(2000).optional(),
+    experienceYears: z.union([z.number(), z.string()]).optional(),
+    clientMessage: z.string().max(4000).optional(),
+    projectContext: z.string().max(4000).optional(),
+    briefText: z.string().max(4000).optional(),
+    serviceTitle: z.string().max(300).optional(),
+    clientName: z.string().max(200).optional(),
+    orderNumber: z.string().max(100).optional(),
+    deliveryNotes: z.string().max(4000).optional(),
+    isRevision: z.boolean().optional(),
+});
 
 export async function POST(req: Request) {
     const startTime = Date.now();
@@ -54,17 +80,16 @@ export async function POST(req: Request) {
         }
 
         const designer = designerRows[0];
-        const body = await req.json();
-        const mode = body.mode as
-            | "gig_creator"
-            | "bio_writer"
-            | "smart_reply"
-            | "brief_checklist"
-            | "delivery_helper";
-
-        if (!mode) {
-            return NextResponse.json({ error: "Mode parameter is required." }, { status: 400 });
+        const body = await req.json().catch(() => ({}));
+        const parseResult = designerAssistSchema.safeParse(body);
+        if (!parseResult.success) {
+            return NextResponse.json(
+                { error: parseResult.error.issues[0]?.message || "Invalid request parameters." },
+                { status: 400 }
+            );
         }
+
+        const { mode } = parseResult.data;
 
         // 1. Gig Creation Assistant
         if (mode === "gig_creator") {

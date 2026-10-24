@@ -13,6 +13,19 @@ import { stripPii } from "@/lib/ai/privacy";
 import { searchHybrid, type SessionContext } from "@/lib/ai/retrieval";
 import { buildAssistantSystemPrompt } from "@/lib/ai/prompts/assistant";
 import { logAiUsage } from "@/lib/ai/logger";
+import { z } from "zod";
+
+const assistantRequestSchema = z.object({
+    messages: z
+        .array(
+            z.object({
+                role: z.enum(["user", "assistant", "system"]),
+                content: z.string().trim().min(1, "Message content cannot be empty").max(4000, "Message content exceeds 4,000 characters limit"),
+            })
+        )
+        .min(1, "At least one message is required")
+        .max(20, "Maximum of 20 messages in conversation history allowed"),
+});
 
 export async function POST(req: Request) {
     const startTime = Date.now();
@@ -33,13 +46,16 @@ export async function POST(req: Request) {
             );
         }
 
-        const body = await req.json();
-        const incomingMessages: Array<{ role: "user" | "assistant" | "system"; content: string }> =
-            body.messages || [];
-
-        if (incomingMessages.length === 0) {
-            return NextResponse.json({ error: "No messages provided." }, { status: 400 });
+        const body = await req.json().catch(() => ({}));
+        const parseResult = assistantRequestSchema.safeParse(body);
+        if (!parseResult.success) {
+            return NextResponse.json(
+                { error: parseResult.error.issues[0]?.message || "Invalid request payload." },
+                { status: 400 }
+            );
         }
+
+        const incomingMessages = parseResult.data.messages;
 
         // Determine user role and ID
         const [biz, mfg, des] = await Promise.all([

@@ -38,5 +38,3 @@ export const business = pgTable("business", {
         .defaultNow()
         .$onUpdate(() => new Date()),
 });
-
-export const businessTable = business;

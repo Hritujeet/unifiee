@@ -8,6 +8,7 @@ import { eq } from "drizzle-orm";
 import RoleProvider from "@/components/providers/role-provider";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import BusinessAppSidebar from "@/components/business/app-sidebar";
+import { AssistantPanel } from "@/components/ai/assistant-panel";
 
 export default async function BusinessLayout({ children }: { children: React.ReactNode }) {
     // 1. Must be signed in
@@ -46,6 +47,7 @@ export default async function BusinessLayout({ children }: { children: React.Rea
                     <main className="flex flex-1 flex-col p-4 md:p-6 lg:p-8 min-w-0">
                         {children}
                     </main>
+                    <AssistantPanel role="business" userName={session.user.name || undefined} />
                 </SidebarInset>
             </SidebarProvider>
         </RoleProvider>
