@@ -61,7 +61,7 @@ async function backfill() {
                 ownerId: req.businessId,
                 title: req.title,
                 fullText,
-                visibilityScope: "public", // Public so vendors can search and quote
+                visibilityScope: "private",
                 metadata: {
                     status: req.status,
                     packagingUse: req.packagingUse,

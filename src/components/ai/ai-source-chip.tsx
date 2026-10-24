@@ -1,7 +1,9 @@
 "use client";
 
 import * as React from "react";
-import { BookOpen, FileText, ExternalLink, Sparkles } from "lucide-react";
+import { BookOpen, ExternalLink } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 
 export interface AiSourceChipProps {
     title: string;
@@ -14,7 +16,6 @@ export interface AiSourceChipProps {
 
 export function AiSourceChip({
     title,
-    entityType = "guide",
     url,
     similarityScore,
     snippet,
@@ -26,20 +27,22 @@ export function AiSourceChip({
 
     return (
         <div className={`inline-flex flex-col text-xs ${className}`}>
-            <button
+            <Button
+                variant="outline"
+                size="sm"
                 type="button"
                 onClick={() => setExpanded(!expanded)}
-                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-purple-500/25 bg-purple-500/5 hover:bg-purple-500/10 text-foreground transition-all duration-150 text-left"
+                className="justify-start text-left"
                 title={snippet ? "Click to view grounded excerpt" : undefined}
             >
                 <BookOpen className="size-3 text-purple-500 shrink-0" />
                 <span className="font-medium max-w-[180px] truncate">{title}</span>
                 {scorePct !== null && (
-                    <span className="text-[10px] text-purple-600 dark:text-purple-400 font-semibold px-1 py-0.2 rounded bg-purple-500/10">
+                    <Badge variant="secondary" className="h-4 px-1 text-[10px] text-primary">
                         {scorePct}%
-                    </span>
+                    </Badge>
                 )}
-            </button>
+            </Button>
 
             {expanded && snippet && (
                 <div className="mt-1.5 p-2 rounded-lg bg-muted/80 border border-border text-[11px] text-muted-foreground leading-relaxed animate-in fade-in-50 zoom-in-95">

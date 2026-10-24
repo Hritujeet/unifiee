@@ -8,7 +8,6 @@ import { generateText, Output } from "ai";
 import { getModel, MODEL_IDS } from "@/lib/ai/models";
 import { checkAiBudget } from "@/lib/ai/rate-limit";
 import { stripPii } from "@/lib/ai/privacy";
-import { searchHybrid, type SessionContext } from "@/lib/ai/retrieval";
 import {
     aiRequirementOutputSchema,
     buildRequirementBuilderSystemPrompt,
@@ -57,7 +56,6 @@ export async function POST(req: Request) {
             );
         }
 
-        const businessId = businessRows[0].id;
         const body = await req.json().catch(() => ({}));
         const parseResult = requirementExtractSchema.safeParse(body);
         if (!parseResult.success) {
@@ -84,49 +82,6 @@ export async function POST(req: Request) {
 
         const structured = result.output;
 
-        // Search for matching vendor offerings in parallel using hybrid RAG
-        let matchingVendors: Array<{
-            id: string;
-            title: string;
-            snippet: string;
-            similarityScore: number;
-            metadata: Record<string, unknown>;
-        }> = [];
-
-        try {
-            const searchQuery = [
-                structured.packagingType,
-                structured.packagingUse,
-                structured.material,
-                structured.size,
-            ]
-                .filter(Boolean)
-                .join(" ");
-
-            const sessionCtx: SessionContext = {
-                userId,
-                role: "business",
-                businessId,
-            };
-
-            const searchResults = await searchHybrid({
-                query: searchQuery || cleanPrompt,
-                session: sessionCtx,
-                filters: { entityType: "offer" },
-                limit: 4,
-            });
-
-            matchingVendors = searchResults.map((r) => ({
-                id: r.id,
-                title: (r.metadata?.title as string) || "Catalog Offering",
-                snippet: r.content.slice(0, 220),
-                similarityScore: r.similarityScore,
-                metadata: r.metadata,
-            }));
-        } catch (searchErr) {
-            console.warn("[MATCHING_VENDORS_SEARCH_ERROR]", searchErr);
-        }
-
         logAiUsage({
             task: "requirement_builder",
             provider: route.provider,
@@ -143,7 +98,6 @@ export async function POST(req: Request) {
 
         return NextResponse.json({
             structured,
-            matchingVendors,
             remainingDaily: budget.remainingDaily,
         });
     } catch (error: unknown) {

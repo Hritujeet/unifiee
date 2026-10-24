@@ -1,13 +1,11 @@
 import type { Metadata } from "next"
 import Link from "next/link"
-import { ArrowRight, Briefcase, FileCheck, Layers, Palette, ShieldCheck, Sparkles, Zap } from "lucide-react"
+import { Briefcase, FileCheck, Layers, Palette, ShieldCheck, Zap } from "lucide-react"
 import { DesignerMarketplace } from "@/components/business/designer-marketplace"
-import { RequirementSmartMatch } from "@/components/business/requirement-smart-match"
 import { Button } from "@/components/ui/button"
 import { auth } from "@/lib/auth"
 import { headers } from "next/headers"
 import { getTrackedDesignerServiceIds, getDesignerListings } from "@/lib/business/marketplace"
-import { getBusinessRequirementsAction } from "@/actions/business-requirements"
 
 export const metadata: Metadata = {
     title: "Explore Packaging Designers — UNIFIÉE Business",
@@ -17,12 +15,10 @@ export const metadata: Metadata = {
 
 export default async function BusinessDesignersPage() {
     const session = await auth.api.getSession({ headers: await headers() })
-    const [listings, trackedServiceIds, requirementsResult] = await Promise.all([
+    const [listings, trackedServiceIds] = await Promise.all([
         getDesignerListings(),
         session?.user ? getTrackedDesignerServiceIds(session.user.id) : Promise.resolve([]),
-        getBusinessRequirementsAction(),
     ])
-    const requirements = requirementsResult.data ?? []
 
     return (
         <div className="mx-auto w-full max-w-[1440px] space-y-8">
@@ -90,12 +86,6 @@ export default async function BusinessDesignersPage() {
             </section>
 
             {/* 3. AI Smart Match */}
-            {requirements.length > 0 && (
-                <RequirementSmartMatch
-                    requirements={requirements}
-                    trackedServiceIds={trackedServiceIds}
-                />
-            )}
 
             {/* 4. The Marketplace Directory */}
             <DesignerMarketplace listings={listings} trackedServiceIds={trackedServiceIds} />

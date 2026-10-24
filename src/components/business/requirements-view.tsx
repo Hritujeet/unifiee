@@ -32,6 +32,7 @@ import {
 } from "@/lib/business-workflow-store"
 import type { BusinessRequirement } from "@/lib/db/schema/business-requirement"
 import { deleteRequirementAction } from "@/actions/business-requirements"
+import { RequirementVendorSearch } from "@/components/business/requirement-vendor-search"
 import { toast } from "sonner"
 
 export interface RequirementsViewProps {
@@ -130,7 +131,7 @@ export default function RequirementsView({ initialDbRequirements = [] }: Require
                         Packaging Requirements
                     </h1>
                     <p className="text-sm text-muted-foreground max-w-2xl leading-relaxed">
-                        Submit requirements using plain language. Requirements are broadcast to vendors who submit offers with pricing and production schedules.
+                        Save private requirements, then search active vendor offerings when you choose.
                     </p>
                 </div>
 
@@ -176,7 +177,7 @@ export default function RequirementsView({ initialDbRequirements = [] }: Require
                                 Plain language in → 8 structured fields out
                             </h2>
                             <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed max-w-xl">
-                                No vendor matching logic or sales calls needed. The broadcast model notifies all certified vendors at once to submit direct quotes.
+                                Your saved requirements stay private. Use “Find matching vendors” on any requirement to search the catalog.
                             </p>
                         </div>
                     </div>
@@ -201,7 +202,7 @@ export default function RequirementsView({ initialDbRequirements = [] }: Require
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold">{requirements.length}</div>
-                        <p className="text-xs text-muted-foreground mt-1">Broadcast to verified vendors</p>
+                        <p className="text-xs text-muted-foreground mt-1">Saved privately</p>
                     </CardContent>
                 </Card>
 
@@ -293,7 +294,7 @@ export default function RequirementsView({ initialDbRequirements = [] }: Require
                             <Layers className="size-8 mx-auto text-muted-foreground/50" />
                             <h3 className="text-base font-semibold text-foreground">No requirements found</h3>
                             <p className="text-xs text-muted-foreground">
-                                No requirements match your active filter. Submit a new requirement to broadcast to suppliers.
+                                No requirements match your active filter. Save a requirement to search vendor offerings privately.
                             </p>
                             <Button asChild size="sm" className="mt-2 text-xs">
                                 <Link href="/business/requirements/new">Submit requirement</Link>
@@ -370,6 +371,7 @@ export default function RequirementsView({ initialDbRequirements = [] }: Require
                                                 Created {req.createdAt}
                                             </span>
                                         </div>
+                                        <RequirementVendorSearch requirementId={req.id} />
 
                                         <div className="flex items-center gap-2 self-end sm:self-auto">
                                             {(() => {
@@ -411,7 +413,7 @@ export default function RequirementsView({ initialDbRequirements = [] }: Require
                                                 return (
                                                     <span className="text-[11px] text-muted-foreground flex items-center gap-1">
                                                         <Radio className="size-3 text-blue-500 animate-pulse" />
-                                                        Broadcast live • Awaiting vendor offers
+                                                        Saved privately • Search vendors when ready
                                                     </span>
                                                 )
                                             })()}

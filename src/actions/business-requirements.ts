@@ -13,6 +13,7 @@ import { revalidatePath } from "next/cache"
 import { headers } from "next/headers"
 import { z } from "zod"
 import { triggerEntityEmbedding, buildRequirementTemplate } from "@/lib/ai/embeddings"
+import { aiDocumentsTable } from "@/lib/db/schema/ai-document"
 
 const packagingUseValues = [
     "coffee",
@@ -136,12 +137,12 @@ export async function createRequirementAction(
             status: "requirement_received",
         })
 
-        // Index requirement into vector database asynchronously for supplier matching
+        // Keep the requirement vector private; it is only used as this owner's query.
         triggerEntityEmbedding({
             entityType: "requirement",
             entityId: requirementId,
             ownerId: businessProfile.id,
-            visibilityScope: "public",
+            visibilityScope: "private",
             title: data.title,
             fullText: buildRequirementTemplate({
                 title: data.title,
@@ -225,6 +226,12 @@ export async function deleteRequirementAction(requirementId: string): Promise<Ac
         if (!deleted.length) {
             return { success: false, error: "Requirement not found or access denied." }
         }
+
+        await db.delete(aiDocumentsTable).where(and(
+            eq(aiDocumentsTable.entityType, "requirement"),
+            eq(aiDocumentsTable.entityId, parsedId.data),
+            eq(aiDocumentsTable.ownerId, businessProfile.id),
+        ))
 
         revalidatePath("/business")
         revalidatePath("/business/requirements")

@@ -8,7 +8,6 @@ import { generateText, Output } from "ai";
 import { executeWithFallback, MODEL_IDS } from "@/lib/ai/models";
 import { checkAiBudget } from "@/lib/ai/rate-limit";
 import { stripPii } from "@/lib/ai/privacy";
-import { searchHybrid, type SessionContext } from "@/lib/ai/retrieval";
 import {
     buildVendorAssistPrompt,
     buildVendorDetailsCheckPrompt,
@@ -19,7 +18,7 @@ import { logAiUsage } from "@/lib/ai/logger";
 import { z } from "zod";
 
 const vendorAssistSchema = z.object({
-    mode: z.enum(["improve_description", "suggest_title", "check_specs", "match_requirements"]),
+    mode: z.enum(["improve_description", "suggest_title", "check_specs"]),
     title: z.string().max(300).optional().default(""),
     description: z.string().max(4000).optional().default(""),
     category: z.string().max(200).optional().default(""),
@@ -58,7 +57,6 @@ export async function POST(req: Request) {
             );
         }
 
-        const vendorId = vendorRows[0].id;
         const body = await req.json().catch(() => ({}));
         const parseResult = vendorAssistSchema.safeParse(body);
         if (!parseResult.success) {
@@ -75,43 +73,7 @@ export async function POST(req: Request) {
         const material = stripPii(parseResult.data.material);
         const size = stripPii(parseResult.data.size);
 
-        // 1. Match active buyer requirements in the marketplace
-        if (mode === "match_requirements") {
-            const query = [category, title, material, size].filter(Boolean).join(" ");
-            const sessionCtx: SessionContext = {
-                userId,
-                role: "manufacturer",
-                manufacturerId: vendorId,
-            };
-
-            const searchResults = await searchHybrid({
-                query: query || "packaging requirement",
-                session: sessionCtx,
-                filters: { entityType: "requirement" },
-                limit: 4,
-            });
-
-            logAiUsage({
-                task: "field_suggestions",
-                provider: "mistral",
-                modelId: "hybrid-rag",
-                latencyMs: Date.now() - startTime,
-                status: "success",
-                userId,
-            });
-
-            return NextResponse.json({
-                matches: searchResults.map((r) => ({
-                    id: r.id,
-                    title: (r.metadata?.title as string) || "Buyer Requirement",
-                    snippet: r.content.slice(0, 240),
-                    similarityScore: r.similarityScore,
-                    metadata: r.metadata,
-                })),
-            });
-        }
-
-        // 2. Check missing technical specifications
+        // Check missing technical specifications
         if (mode === "check_specs") {
             const systemPrompt = buildVendorDetailsCheckPrompt({
                 title,

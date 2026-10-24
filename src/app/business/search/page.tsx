@@ -3,13 +3,11 @@ import Link from "next/link"
 import { ArrowRight, Search } from "lucide-react"
 import { PageHeading } from "@/components/designer/dashboard-components"
 import { DesignerMarketplace } from "@/components/business/designer-marketplace"
-import { RequirementSmartMatch } from "@/components/business/requirement-smart-match"
 import { Button } from "@/components/ui/button"
 import { getDesignerListings } from "@/lib/business/marketplace"
 import { getTrackedDesignerServiceIds } from "@/lib/business/marketplace"
 import { auth } from "@/lib/auth"
 import { headers } from "next/headers"
-import { getBusinessRequirementsAction } from "@/actions/business-requirements"
 
 export const metadata: Metadata = {
     title: "Search UNIFIÉE — Business",
@@ -19,12 +17,10 @@ export const metadata: Metadata = {
 
 export default async function SearchMarketplacePage() {
     const session = await auth.api.getSession({ headers: await headers() })
-    const [listings, trackedServiceIds, requirementsResult] = await Promise.all([
+    const [listings, trackedServiceIds] = await Promise.all([
         getDesignerListings(),
         session?.user ? getTrackedDesignerServiceIds(session.user.id) : Promise.resolve([]),
-        getBusinessRequirementsAction(),
     ])
-    const requirements = requirementsResult.data ?? []
 
     return (
         <div className="mx-auto w-full max-w-[1440px] space-y-7">
@@ -44,12 +40,6 @@ export default async function SearchMarketplacePage() {
                     Search results update as you type. Use a specialty filter to narrow the list.
                 </div>
             </div>
-            {requirements.length > 0 && (
-                <RequirementSmartMatch
-                    requirements={requirements}
-                    trackedServiceIds={trackedServiceIds}
-                />
-            )}
             <DesignerMarketplace listings={listings} trackedServiceIds={trackedServiceIds} />
         </div>
     )

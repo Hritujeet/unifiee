@@ -7,12 +7,7 @@ import {
     ArrowLeft,
     ArrowRight,
     Loader2,
-    Radio,
     Sparkles,
-    CheckCircle2,
-    Store,
-    ExternalLink,
-    HelpCircle,
     Info,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -48,14 +43,6 @@ interface MissingField {
     question: string
 }
 
-interface MatchingVendor {
-    id: string
-    title: string
-    snippet: string
-    similarityScore: number
-    metadata?: Record<string, unknown>
-}
-
 const PRESET_PROMPTS = [
     {
         label: "Pizza Boxes",
@@ -85,9 +72,8 @@ export default function NewRequirementPage() {
     const [structuredSpec, setStructuredSpec] = useState<ParsedRequirementForm | null>(null)
     const [confidenceScore, setConfidenceScore] = useState<number | null>(null)
     const [missingFields, setMissingFields] = useState<MissingField[]>([])
-    const [matchingVendors, setMatchingVendors] = useState<MatchingVendor[]>([])
 
-    // AI Parser: Real LLM Structured Extraction (Gemini Flash) with Hybrid RAG Supplier Matching
+    // AI Parser: Real LLM structured extraction (Gemini Flash).
     const handleParseWithAi = async () => {
         if (!rawPrompt.trim() || rawPrompt.trim().length < 5) {
             toast.error("Please enter a description of your packaging needs (at least 5 characters).")
@@ -147,9 +133,7 @@ export default function NewRequirementPage() {
 
             setConfidenceScore(parsed.confidenceScore ?? 0.9)
             setMissingFields(parsed.missingFields || [])
-            setMatchingVendors(data.matchingVendors || [])
-
-            toast.success("AI parsed specification and discovered matching supplier catalogs!")
+            toast.success("AI parsed your specification. Review it before saving.")
         } catch (err: unknown) {
             console.error("AI parse error:", err)
             const msg = err instanceof Error ? err.message : "Failed to extract specification."
@@ -164,7 +148,7 @@ export default function NewRequirementPage() {
         return missingFields.find((m) => m.field.toLowerCase() === fieldName.toLowerCase())
     }
 
-    const handleBroadcast = async () => {
+    const handleSave = async () => {
         if (!structuredSpec || isSaving) return
 
         setIsSaving(true)
@@ -188,7 +172,7 @@ export default function NewRequirementPage() {
                 return
             }
 
-            toast.success("Requirement broadcast and saved to database!")
+            toast.success("Requirement saved privately.")
             router.push("/business/requirements")
             router.refresh()
         } catch {
@@ -227,7 +211,7 @@ export default function NewRequirementPage() {
                 <div className="space-y-1">
                     <span className="font-semibold text-foreground">AI-Powered Specification Intake (Eureka MVP Section 5)</span>
                     <p className="leading-relaxed">
-                        Describe what you need in plain words. UNIFIÉE parses it into canonical structured fields, checks for missing specifications, finds matching suppliers, and broadcasts to verified manufacturers.
+                        Describe what you need in plain words. UNIFIÉE parses it into canonical structured fields for your private vendor search.
                     </p>
                 </div>
             </div>
@@ -540,12 +524,12 @@ export default function NewRequirementPage() {
                                 </div>
                             </div>
 
-                            {/* Broadcast Callout */}
+                            {/* Private storage callout */}
                             <div className="rounded-xl border border-border/50 bg-muted/20 p-4 text-xs text-muted-foreground flex items-center justify-between gap-4">
                                 <div className="flex items-center gap-2.5">
-                                    <Radio className="size-4 text-purple-600 animate-pulse shrink-0" />
+                                    <Info className="size-4 text-primary shrink-0" />
                                     <span>
-                                        <strong>Broadcast Model (Section 6)</strong>: Upon broadcast, this requirement will be instantly visible to all verified packaging suppliers on UNIFIÉE.
+                                        Your requirement is saved privately. Run a vendor search after saving when you are ready.
                                     </span>
                                 </div>
                             </div>
@@ -562,18 +546,18 @@ export default function NewRequirementPage() {
                                 </Button>
                                 <Button
                                     size="sm"
-                                    onClick={handleBroadcast}
+                                    onClick={handleSave}
                                     disabled={isSaving}
                                     className="h-10 px-5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-medium text-xs sm:text-sm gap-2"
                                 >
                                     {isSaving ? (
                                         <>
                                             <Loader2 className="size-4 animate-spin" />
-                                            <span>Saving & Broadcasting...</span>
+                                            <span>Saving...</span>
                                         </>
                                     ) : (
                                         <>
-                                            <span>Broadcast to Suppliers</span>
+                                            <span>Save Requirement</span>
                                             <ArrowRight className="size-4" />
                                         </>
                                     )}
@@ -582,47 +566,6 @@ export default function NewRequirementPage() {
                         </CardContent>
                     </Card>
 
-                    {/* Matching Suppliers / Catalog Offerings Preview (RAG) */}
-                    {matchingVendors.length > 0 && (
-                        <Card className="border-border/60 bg-card">
-                            <CardHeader className="pb-3 border-b border-border/40">
-                                <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-2">
-                                        <Store className="size-4 text-purple-600 dark:text-purple-400" />
-                                        <CardTitle className="text-sm font-semibold">
-                                            Matching Supplier Offerings Found ({matchingVendors.length})
-                                        </CardTitle>
-                                    </div>
-                                    <AiBadge variant="verified" label="Catalog Matches" />
-                                </div>
-                                <CardDescription className="text-xs">
-                                    Suppliers currently manufacturing packaging that matches your extracted specifications:
-                                </CardDescription>
-                            </CardHeader>
-                            <CardContent className="pt-4 space-y-2.5">
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                    {matchingVendors.map((vendor) => (
-                                        <div
-                                            key={vendor.id}
-                                            className="p-3 rounded-xl border border-border/70 bg-muted/20 hover:border-purple-500/40 hover:bg-muted/40 transition-all space-y-1.5"
-                                        >
-                                            <div className="flex items-start justify-between gap-2">
-                                                <h5 className="font-semibold text-xs text-foreground line-clamp-1">
-                                                    {vendor.title}
-                                                </h5>
-                                                <span className="text-[10px] font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded-full shrink-0">
-                                                    {Math.round(vendor.similarityScore * 100)}% match
-                                                </span>
-                                            </div>
-                                            <p className="text-[11px] text-muted-foreground line-clamp-2 leading-relaxed">
-                                                {vendor.snippet}
-                                            </p>
-                                        </div>
-                                    ))}
-                                </div>
-                            </CardContent>
-                        </Card>
-                    )}
                 </div>
             )}
         </div>

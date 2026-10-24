@@ -17,7 +17,7 @@ export function buildAssistantSystemPrompt(params: AssistantPromptParams): strin
         params.role === "business"
             ? "You are the Unifiée Business Procurement Assistant. Your role is to help food & beverage businesses specify custom packaging requirements, find verified suppliers, track production milestones, and discover packaging designers."
             : params.role === "manufacturer"
-            ? "You are the Unifiée Vendor Operations Assistant. Your role is to help packaging manufacturers and suppliers manage orders, publish catalog offerings, view matching packaging requirements, and update production milestones."
+            ? "You are the Unifiée Vendor Operations Assistant. Your role is to help packaging manufacturers and suppliers manage orders, publish catalog offerings, and update production milestones."
             : params.role === "designer"
             ? "You are the Unifiée Designer Studio Assistant. Your role is to help packaging and label designers optimize their gig services, craft compelling proposals, summarize project briefs, and communicate with clients."
             : "You are the Unifiée Platform Assistant. You help users navigate the B2B packaging marketplace.";

@@ -1,7 +1,10 @@
 "use client";
 
 import * as React from "react";
-import { Sparkles, Check, X, Edit3, ArrowRight } from "lucide-react";
+import { Sparkles, Check, X, Edit3 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Textarea } from "@/components/ui/textarea";
 
 export interface AiSuggestionCardProps {
     title?: string;
@@ -36,9 +39,7 @@ export function AiSuggestionCard({
     }
 
     return (
-        <div
-            className={`rounded-xl border border-purple-500/25 bg-gradient-to-b from-purple-500/[0.07] to-indigo-500/[0.03] p-3.5 shadow-xs transition-all duration-200 ${className}`}
-        >
+        <Card className={`p-3.5 shadow-xs ${className}`}>
             {/* Header */}
             <div className="flex items-center justify-between gap-2 pb-2.5 mb-2.5 border-b border-border/40">
                 <div className="flex items-center gap-2">
@@ -54,14 +55,16 @@ export function AiSuggestionCard({
                         )}
                     </span>
                 </div>
-                <button
+                <Button
+                    variant="ghost"
+                    size="icon-xs"
                     onClick={onDismiss}
                     type="button"
-                    className="rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                    className="text-muted-foreground hover:text-foreground"
                     title="Dismiss suggestion"
                 >
                     <X className="size-3.5" />
-                </button>
+                </Button>
             </div>
 
             {/* Content Comparison */}
@@ -84,11 +87,11 @@ export function AiSuggestionCard({
                     </div>
 
                     {isEditing ? (
-                        <textarea
+                        <Textarea
                             value={editedValue}
                             onChange={(e) => setEditedValue(e.target.value)}
                             rows={3}
-                            className="w-full rounded-md border border-input bg-transparent px-2.5 py-1.5 text-xs text-foreground focus:outline-hidden focus:ring-1 focus:ring-purple-500"
+                            className="min-h-0 text-xs"
                         />
                     ) : (
                         <div className="text-foreground font-medium whitespace-pre-wrap">
@@ -100,38 +103,43 @@ export function AiSuggestionCard({
 
             {/* Actions: Human in the loop */}
             <div className="flex items-center justify-end gap-2 pt-3 mt-1">
-                <button
+                <Button
+                    variant="ghost"
+                    size="sm"
                     type="button"
                     onClick={onDismiss}
-                    className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-muted-foreground hover:text-foreground rounded-lg hover:bg-muted/70 transition-colors"
+                    className="text-xs text-muted-foreground"
                 >
                     <X className="size-3" />
                     <span>Dismiss</span>
-                </button>
+                </Button>
 
                 {onEdit && !isEditing && (
-                    <button
+                    <Button
+                        variant="outline"
+                        size="sm"
                         type="button"
                         onClick={() => setIsEditing(true)}
-                        className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-foreground rounded-lg border border-border/80 hover:bg-muted/60 transition-colors"
+                        className="text-xs"
                     >
                         <Edit3 className="size-3 text-muted-foreground" />
                         <span>Edit</span>
-                    </button>
+                    </Button>
                 )}
 
-                <button
+                <Button
+                    size="sm"
                     type="button"
                     onClick={() => {
                         const finalVal = isEditing ? editedValue : suggestion;
                         onAccept(finalVal);
                     }}
-                    className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 rounded-lg shadow-xs transition-all active:scale-[0.98]"
+                    className="text-xs"
                 >
                     <Check className="size-3.5" />
                     <span>{isEditing ? "Apply Edits" : "Accept Suggestion"}</span>
-                </button>
+                </Button>
             </div>
-        </div>
+        </Card>
     );
 }

@@ -3,8 +3,8 @@ if (typeof window !== "undefined") {
 }
 
 import { db } from "@/lib/db";
-import { aiDocumentsTable, type AiDocument } from "@/lib/db/schema/ai-document";
-import { cosineDistance, sql, and, eq, or, SQL } from "drizzle-orm";
+import { aiDocumentsTable } from "@/lib/db/schema/ai-document";
+import { cosineDistance, sql, and, eq, SQL } from "drizzle-orm";
 import { embedSingleQuery } from "./embeddings";
 
 export interface SessionContext {
@@ -20,6 +20,12 @@ export interface RetrievalFilters {
     ownerId?: string;
     limit?: number;
     minSimilarity?: number; // e.g. 0.35 - 0.5
+}
+
+export function assertRequirementAccess(session: SessionContext, entityType?: RetrievalFilters["entityType"]): void {
+    if (entityType === "requirement" && session.role !== "business") {
+        throw new Error("Requirement retrieval is restricted to business owners.");
+    }
 }
 
 export interface SearchResultItem {
@@ -53,10 +59,17 @@ export function buildAuthWhereClause(session: SessionContext): SQL {
         ? sql`${aiDocumentsTable.ownerId} IN ${ownerIds}`
         : sql`FALSE`;
 
+    const requirementAccess = session.role === "business" && session.businessId
+        ? sql`(${aiDocumentsTable.entityType} != 'requirement' OR (${aiDocumentsTable.entityType} = 'requirement' AND ${aiDocumentsTable.ownerId} = ${session.businessId}))`
+        : sql`${aiDocumentsTable.entityType} != 'requirement'`;
+
     return sql`(
-        ${aiDocumentsTable.visibilityScope} = 'public'
-        OR (${aiDocumentsTable.visibilityScope} = 'private' AND ${ownerCondition})
-        OR (${aiDocumentsTable.visibilityScope} = 'role_restricted' AND (${aiDocumentsTable.metadata}->>'allowedRole' = ${session.role} OR ${ownerCondition}))
+        ${requirementAccess}
+        AND (
+            ${aiDocumentsTable.visibilityScope} = 'public'
+            OR (${aiDocumentsTable.visibilityScope} = 'private' AND ${ownerCondition})
+            OR (${aiDocumentsTable.visibilityScope} = 'role_restricted' AND (${aiDocumentsTable.metadata}->>'allowedRole' = ${session.role} OR ${ownerCondition}))
+        )
     )`;
 }
 
@@ -64,7 +77,7 @@ export function buildAuthWhereClause(session: SessionContext): SQL {
  * Reciprocal Rank Fusion (RRF) to merge vector and keyword search results.
  * Score = SUM(1 / (k + rank)) with k = 60.
  */
-function reciprocalRankFusion(
+export function reciprocalRankFusion(
     vectorResults: SearchResultItem[],
     textResults: SearchResultItem[],
     limit: number = 5
@@ -111,6 +124,7 @@ export async function searchVector({
     limit?: number;
 }): Promise<SearchResultItem[]> {
     const minSim = filters?.minSimilarity ?? 0.35;
+    assertRequirementAccess(session, filters?.entityType);
     const authClause = buildAuthWhereClause(session);
 
     const conditions: SQL[] = [
@@ -173,6 +187,7 @@ export async function searchFullText({
     limit?: number;
 }): Promise<SearchResultItem[]> {
     const authClause = buildAuthWhereClause(session);
+    assertRequirementAccess(session, filters?.entityType);
 
     const conditions: SQL[] = [
         authClause,
@@ -231,6 +246,7 @@ export async function searchHybrid({
 }): Promise<SearchResultItem[]> {
     const trimmed = query.trim();
     if (!trimmed) return [];
+    assertRequirementAccess(session, filters?.entityType);
 
     // Parallel execution: embed query for vector search, while preparing FTS
     const [queryVector, textResults] = await Promise.all([

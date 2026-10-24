@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { AlertCircle, RefreshCw, XCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export interface AiErrorStateProps {
     title?: string;
@@ -30,13 +31,15 @@ export function AiErrorState({
                     <div className="font-semibold text-destructive flex items-center justify-between">
                         <span>{title}</span>
                         {onDismiss && (
-                            <button
+                            <Button
+                                variant="ghost"
+                                size="icon-xs"
                                 type="button"
                                 onClick={onDismiss}
-                                className="text-muted-foreground hover:text-foreground p-0.5 rounded"
+                                className="text-muted-foreground hover:text-foreground"
                             >
                                 <XCircle className="size-3.5" />
-                            </button>
+                            </Button>
                         )}
                     </div>
                     <p className="text-muted-foreground leading-relaxed">{message}</p>
@@ -47,14 +50,16 @@ export function AiErrorState({
                     )}
                     {onRetry && (
                         <div className="pt-2">
-                            <button
+                            <Button
+                                variant="destructive"
+                                size="sm"
                                 type="button"
                                 onClick={onRetry}
-                                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-destructive/10 text-destructive hover:bg-destructive/20 font-medium transition-colors"
+                                className="text-xs"
                             >
                                 <RefreshCw className="size-3" />
                                 <span>Try Again</span>
-                            </button>
+                            </Button>
                         </div>
                     )}
                 </div>

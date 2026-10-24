@@ -33,11 +33,7 @@ import {
     Eye,
     MapPin,
     CheckCircle2,
-    Boxes,
     Clock,
-    FileText,
-    Search,
-    AlertCircle,
 } from "lucide-react"
 import { AiButton } from "@/components/ai/ai-button"
 import { AiBadge } from "@/components/ai/ai-badge"
@@ -57,14 +53,6 @@ interface SpecsAuditState {
     presentDetails: string[]
     missingBuyerQuestions: string[]
     suggestedAdditions: string
-}
-
-interface MatchingRequirement {
-    id: string
-    title: string
-    snippet: string
-    similarityScore: number
-    metadata?: Record<string, unknown>
 }
 
 export function PublishOfferingForm() {
@@ -89,17 +77,16 @@ export function PublishOfferingForm() {
     const [shippingTerms, setShippingTerms] = useState<"buyer_pays" | "vendor_pays" | "included">("buyer_pays")
 
     // AI Assist states
-    const [aiLoadingField, setAiLoadingField] = useState<"title" | "description" | "specs" | "matching" | null>(null)
+    const [aiLoadingField, setAiLoadingField] = useState<"title" | "description" | "specs" | null>(null)
     const [activeSuggestion, setActiveSuggestion] = useState<AiSuggestionState | null>(null)
     const [specsAudit, setSpecsAudit] = useState<SpecsAuditState | null>(null)
-    const [matchingRequirements, setMatchingRequirements] = useState<MatchingRequirement[]>([])
     const [aiError, setAiError] = useState<string | null>(null)
 
     const parsedPrice = parseFloat(unitPrice) || 0
     const parsedMoq = parseInt(minOrderQuantity) || 0
     const calculatedBatchTotal = parsedPrice * parsedMoq
 
-    const handleAiAssist = async (mode: "suggest_title" | "improve_description" | "check_specs" | "match_requirements") => {
+    const handleAiAssist = async (mode: "suggest_title" | "improve_description" | "check_specs") => {
         setAiError(null)
         const loadingKey =
             mode === "suggest_title"
@@ -108,7 +95,7 @@ export function PublishOfferingForm() {
                 ? "description"
                 : mode === "check_specs"
                 ? "specs"
-                : "matching"
+                : "specs"
 
         setAiLoadingField(loadingKey)
 
@@ -150,9 +137,6 @@ export function PublishOfferingForm() {
             } else if (mode === "check_specs") {
                 setSpecsAudit(data.audit)
                 toast.success("Packaging technical specifications audited!")
-            } else if (mode === "match_requirements") {
-                setMatchingRequirements(data.matches || [])
-                toast.success(`Discovered ${data.matches?.length || 0} matching buyer requirements!`)
             }
         } catch (err: unknown) {
             console.error("Vendor AI assist error:", err)
@@ -765,52 +749,6 @@ export function PublishOfferingForm() {
                                         <span>Escrow Protection: Payment released on buyer receipt</span>
                                     </div>
                                 </div>
-                            </CardContent>
-                        </Card>
-
-                        {/* Matching Buyer Requirements (Hybrid RAG) */}
-                        <Card className="border border-border/70 bg-card">
-                            <CardHeader className="p-4 pb-2 border-b border-border/40">
-                                <div className="flex items-center justify-between">
-                                    <CardTitle className="text-xs font-bold text-foreground flex items-center gap-1.5">
-                                        <Search className="size-3.5 text-purple-600 dark:text-purple-400" />
-                                        <span>Matching Buyer Requirements</span>
-                                    </CardTitle>
-                                    <AiButton
-                                        type="button"
-                                        size="sm"
-                                        variant="ghost"
-                                        loading={aiLoadingField === "matching"}
-                                        onClick={() => handleAiAssist("match_requirements")}
-                                    >
-                                        Find Buyers
-                                    </AiButton>
-                                </div>
-                                <CardDescription className="text-[11px]">
-                                    Active food brands looking for suppliers with your specifications.
-                                </CardDescription>
-                            </CardHeader>
-                            <CardContent className="p-4 pt-3 space-y-2">
-                                {matchingRequirements.length === 0 ? (
-                                    <div className="text-center py-4 text-xs text-muted-foreground space-y-1.5">
-                                        <p>Click &quot;Find Buyers&quot; to discover live requirements looking for {category.replace("_", " ")}.</p>
-                                    </div>
-                                ) : (
-                                    matchingRequirements.map((req) => (
-                                        <div
-                                            key={req.id}
-                                            className="p-2.5 rounded-lg border border-border/60 bg-muted/20 hover:border-purple-500/40 space-y-1 text-xs"
-                                        >
-                                            <div className="flex items-center justify-between gap-1">
-                                                <span className="font-semibold text-foreground line-clamp-1">{req.title}</span>
-                                                <span className="text-[10px] text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-1 py-0.5 rounded font-medium shrink-0">
-                                                    {Math.round(req.similarityScore * 100)}% match
-                                                </span>
-                                            </div>
-                                            <p className="text-[11px] text-muted-foreground line-clamp-2 leading-relaxed">{req.snippet}</p>
-                                        </div>
-                                    ))
-                                )}
                             </CardContent>
                         </Card>
 

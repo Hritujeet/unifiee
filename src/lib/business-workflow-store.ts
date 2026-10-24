@@ -254,32 +254,6 @@ export const useWorkflowStore = create<WorkflowState>()(
                     quotesCount: 0,
                 }
 
-                // Simulate broadcast quote received after a short delay for realistic demo
-                setTimeout(() => {
-                    const sampleQuote: Quotation = {
-                        id: `quo-${Date.now()}`,
-                        requirementId: newId,
-                        requirementTitle: newReq.title,
-                        packagingType: newReq.packagingType,
-                        vendorName: "Delta Eco Packs",
-                        vendorLocation: "Bhiwandi, Maharashtra",
-                        unitPrice: "₹16.80",
-                        totalPrice: "₹16,800",
-                        quantity: newReq.quantity,
-                        productionTime: "7–8 days",
-                        deliveryEstimate: "10–12 days",
-                        status: "pending",
-                        receivedAt: "Just now",
-                    }
-
-                    set((state) => ({
-                        requirements: state.requirements.map((r) =>
-                            r.id === newId ? { ...r, status: "Quoted", quotesCount: 1 } : r
-                        ),
-                        quotations: [sampleQuote, ...state.quotations],
-                    }))
-                }, 1500)
-
                 set((state) => ({
                     requirements: [newReq, ...state.requirements],
                 }))
@@ -394,4 +368,3 @@ export const useWorkflowStore = create<WorkflowState>()(
 )
 
 export default useWorkflowStore
-

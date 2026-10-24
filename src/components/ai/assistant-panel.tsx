@@ -8,13 +8,10 @@ import {
     Send,
     Loader2,
     RotateCcw,
-    ChevronDown,
-    ExternalLink,
     HelpCircle,
-    Package,
-    Compass,
-    Check,
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import { AiSourceChip } from "./ai-source-chip";
 import { AiErrorState } from "./ai-error-state";
 
@@ -75,7 +72,7 @@ export function AssistantPanel({ role = "business", userName }: AssistantPanelPr
         }
         if (role === "manufacturer") {
             return [
-                "Show matching packaging requirements for kraft pouches",
+                "How do I publish a packaging offering?",
                 "How do I optimize my offering title and specs?",
                 "What are best practices for setting competitive MOQs?",
                 "How do I update production milestones on orders?",
@@ -222,33 +219,31 @@ export function AssistantPanel({ role = "business", userName }: AssistantPanelPr
             {/* Floating Action Button (FAB) */}
             <div className="fixed bottom-5 right-5 z-40">
                 {!isOpen && (
-                    <button
+                    <Button
+                        variant="default"
+                        size="lg"
                         type="button"
                         onClick={() => setIsOpen(true)}
-                        className="group relative flex items-center gap-2.5 rounded-full bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-700 p-3.5 text-white shadow-xl hover:shadow-purple-500/30 transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer border border-purple-400/30"
+                        className="group relative h-10 rounded-full px-3.5 shadow-lg"
                         aria-label="Open AI Assistant"
                     >
                         <div className="relative">
                             <Sparkles className="size-5 transition-transform duration-300 group-hover:rotate-12" />
-                            <span className="absolute -top-1 -right-1 flex size-2">
-                                <span className="absolute inline-flex size-full animate-ping rounded-full bg-purple-300 opacity-75" />
-                                <span className="relative inline-flex size-2 rounded-full bg-white" />
-                            </span>
                         </div>
                         <span className="hidden sm:inline text-xs font-semibold tracking-wide pr-1">
                             AI Assistant
                         </span>
-                    </button>
+                    </Button>
                 )}
             </div>
 
             {/* Chat Modal / Slide-over Window */}
             {isOpen && (
-                <div className="fixed bottom-5 right-5 z-50 flex flex-col w-[94vw] sm:w-[420px] h-[580px] max-h-[85vh] rounded-2xl border border-border/80 bg-background/95 backdrop-blur-xl shadow-2xl overflow-hidden animate-in fade-in-50 slide-in-from-bottom-6 duration-200">
+                <div className="fixed bottom-5 right-5 z-50 flex flex-col w-[94vw] sm:w-[420px] h-[580px] max-h-[85vh] rounded-xl border border-border bg-background shadow-xl overflow-hidden animate-in fade-in-50 slide-in-from-bottom-6 duration-200">
                     {/* Header */}
-                    <div className="flex items-center justify-between border-b border-border/60 px-4 py-3 bg-gradient-to-r from-purple-500/10 via-indigo-500/5 to-transparent">
+                    <div className="flex items-center justify-between border-b border-border px-4 py-3">
                         <div className="flex items-center gap-2.5">
-                            <div className="flex size-8 items-center justify-center rounded-xl bg-gradient-to-tr from-purple-600 to-indigo-600 text-white shadow-xs">
+                            <div className="flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
                                 <Sparkles className="size-4" />
                             </div>
                             <div>
@@ -256,7 +251,7 @@ export function AssistantPanel({ role = "business", userName }: AssistantPanelPr
                                     <h3 className="text-sm font-semibold tracking-tight text-foreground">
                                         UNIFIÉE AI
                                     </h3>
-                                    <span className="rounded-full bg-purple-500/15 px-2 py-0.5 text-[10px] font-medium text-purple-700 dark:text-purple-300 border border-purple-500/20">
+                                    <span className="rounded-md border border-primary/25 bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">
                                         {roleBadgeLabel}
                                     </span>
                                 </div>
@@ -268,23 +263,27 @@ export function AssistantPanel({ role = "business", userName }: AssistantPanelPr
 
                         <div className="flex items-center gap-1">
                             {messages.length > 0 && (
-                                <button
+                                <Button
+                                    variant="ghost"
+                                    size="icon-xs"
                                     type="button"
                                     onClick={handleClear}
-                                    className="p-1.5 text-muted-foreground hover:text-foreground rounded-lg hover:bg-muted/60 transition-colors"
+                                    className="text-muted-foreground hover:text-foreground"
                                     title="Clear conversation"
                                 >
                                     <RotateCcw className="size-3.5" />
-                                </button>
+                                </Button>
                             )}
-                            <button
+                            <Button
+                                variant="ghost"
+                                size="icon-sm"
                                 type="button"
                                 onClick={() => setIsOpen(false)}
-                                className="p-1.5 text-muted-foreground hover:text-foreground rounded-lg hover:bg-muted/60 transition-colors"
+                                className="text-muted-foreground hover:text-foreground"
                                 title="Close assistant"
                             >
                                 <X className="size-4" />
-                            </button>
+                            </Button>
                         </div>
                     </div>
 
@@ -292,7 +291,7 @@ export function AssistantPanel({ role = "business", userName }: AssistantPanelPr
                     <div className="flex-1 overflow-y-auto p-4 space-y-3.5 text-xs">
                         {messages.length === 0 ? (
                             <div className="h-full flex flex-col justify-center items-center text-center px-4 space-y-4">
-                                <div className="size-12 rounded-2xl bg-purple-500/10 flex items-center justify-center text-purple-600 dark:text-purple-400 border border-purple-500/20">
+                                <div className="size-12 rounded-xl bg-muted flex items-center justify-center text-primary border border-border">
                                     <Bot className="size-6" />
                                 </div>
                                 <div className="space-y-1">
@@ -311,15 +310,16 @@ export function AssistantPanel({ role = "business", userName }: AssistantPanelPr
                                     </div>
                                     <div className="flex flex-col gap-1.5">
                                         {quickPrompts.map((q, idx) => (
-                                            <button
+                                            <Button
+                                                variant="outline"
                                                 key={idx}
                                                 type="button"
                                                 onClick={() => handleSend(q)}
-                                                className="w-full text-left rounded-xl border border-border/70 bg-card/60 hover:bg-accent/70 hover:border-purple-500/40 p-2.5 text-xs text-foreground transition-all duration-150 flex items-center justify-between group"
+                                                className="h-auto min-h-9 w-full justify-between whitespace-normal p-2.5 text-left text-xs"
                                             >
                                                 <span className="line-clamp-2">{q}</span>
                                                 <Sparkles className="size-3 text-muted-foreground group-hover:text-purple-500 transition-colors shrink-0 ml-2" />
-                                            </button>
+                                            </Button>
                                         ))}
                                     </div>
                                 </div>
@@ -335,7 +335,7 @@ export function AssistantPanel({ role = "business", userName }: AssistantPanelPr
                                     <div
                                         className={`max-w-[85%] rounded-2xl px-3.5 py-2.5 leading-relaxed ${
                                             m.role === "user"
-                                                ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-tr-xs shadow-xs"
+                                                ? "bg-primary text-primary-foreground rounded-tr-xs"
                                                 : "bg-muted/80 text-foreground rounded-tl-xs border border-border/50"
                                         }`}
                                     >
@@ -395,7 +395,7 @@ export function AssistantPanel({ role = "business", userName }: AssistantPanelPr
                             className="flex items-end gap-2"
                         >
                             <div className="relative flex-1">
-                                <textarea
+                                <Textarea
                                     value={input}
                                     onChange={(e) => setInput(e.target.value)}
                                     onKeyDown={(e) => {
@@ -406,28 +406,31 @@ export function AssistantPanel({ role = "business", userName }: AssistantPanelPr
                                     }}
                                     placeholder="Ask anything about packaging, suppliers, or orders..."
                                     rows={1}
-                                    className="w-full resize-none rounded-xl border border-input bg-card/60 px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:outline-hidden focus:ring-1 focus:ring-purple-500 max-h-24"
+                                    className="min-h-9 max-h-24 resize-none bg-card/60 text-xs"
                                 />
                             </div>
 
                             {isLoading ? (
-                                <button
+                                <Button
+                                    variant="destructive"
+                                    size="icon"
                                     type="button"
                                     onClick={handleStop}
-                                    className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors"
+                                    className="shrink-0"
                                     title="Stop generating"
                                 >
                                     <div className="size-2.5 bg-destructive rounded-xs" />
-                                </button>
+                                </Button>
                             ) : (
-                                <button
+                                <Button
+                                    size="icon"
                                     type="submit"
                                     disabled={!input.trim()}
-                                    className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-xs hover:from-purple-500 hover:to-indigo-500 disabled:opacity-40 disabled:pointer-events-none transition-all active:scale-95"
+                                    className="shrink-0"
                                     title="Send message (Enter)"
                                 >
                                     <Send className="size-3.5" />
-                                </button>
+                                </Button>
                             )}
                         </form>
 
