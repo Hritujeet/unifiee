@@ -49,12 +49,12 @@ export default function PrivacyPolicyPage() {
 
                 <h2>3. Information Sharing</h2>
                 <p>UNIFIÉE does not sell personal information.</p>
-                <p>Information may be shared with relevant service providers or third parties where reasonably necessary to operate, develop, secure, or provide UNIFIÉE's services.</p>
+                <p>Information may be shared with relevant service providers or third parties where reasonably necessary to operate, develop, secure, or provide UNIFIÉE&apos;s services.</p>
                 <p>Third parties receiving information may process it according to their own applicable privacy policies and terms.</p>
                 <ul>
                     <li>Website hosting and infrastructure providers</li>
                     <li>Form, communication, analytics, or other software services used by UNIFIÉE</li>
-                    <li>Packaging manufacturers, suppliers, or other business partners where sharing is necessary to respond to a user's request or facilitate a requested service</li>
+                    <li>Packaging manufacturers, suppliers, or other business partners where sharing is necessary to respond to a user&apos;s request or facilitate a requested service</li>
                     <li>Legal, regulatory, or governmental authorities where disclosure is required by applicable law</li>
                 </ul>
 
@@ -67,10 +67,10 @@ export default function PrivacyPolicyPage() {
                 <p>However, no internet-based service can guarantee absolute security.</p>
                 <p>UNIFIÉE is currently an early-stage product and its infrastructure and security practices may evolve as the platform develops.</p>
 
-                <h2>6. Children's Privacy</h2>
+                <h2>6. Children&apos;s Privacy</h2>
                 <p>UNIFIÉE is primarily intended as a B2B service for businesses and their representatives.</p>
                 <p>We do not knowingly seek personal information from children for purposes unrelated to the operation or development of our services.</p>
-                <p>Where applicable law requires parental or lawful-guardian consent for processing a child's personal data, UNIFIÉE will seek to comply with the applicable requirements.</p>
+                <p>Where applicable law requires parental or lawful-guardian consent for processing a child&apos;s personal data, UNIFIÉE will seek to comply with the applicable requirements.</p>
                 <p>If you believe that personal information relating to a child has been provided to UNIFIÉE in circumstances where it should not have been, please contact us so that we can review the matter.</p>
 
                 <h2>7. Third-Party Services and Hosting</h2>

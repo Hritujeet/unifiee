@@ -319,7 +319,7 @@ export function DesignerMarketplace({
                         {/* Sort By */}
                         <select
                             value={sortBy}
-                            onChange={(e) => setSortBy(e.target.value as any)}
+                            onChange={(e) => setSortBy(e.target.value as "featured" | "price_asc" | "price_desc" | "turnaround")}
                             aria-label="Sort listings"
                             className="h-10 rounded-lg border border-border/60 bg-background px-3 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-blue-500"
                         >

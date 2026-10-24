@@ -10,6 +10,7 @@ import { and, eq } from "drizzle-orm"
 import { revalidatePath } from "next/cache"
 import { headers } from "next/headers"
 import { z } from "zod"
+import { triggerEntityEmbedding, buildGigTemplate } from "@/lib/ai/embeddings"
 
 const serviceSchema = z.object({
     title: z.string().trim().min(3, "Add a service title.").max(160, "Keep the title under 160 characters."),
@@ -84,12 +85,37 @@ export async function createDesignerService(formData: FormData): Promise<CreateD
         return { success: false, error: parsed.error.issues[0]?.message ?? "Check the service details and try again." }
     }
 
+    const serviceId = crypto.randomUUID()
     try {
         await db.insert(designerServiceTable).values({
-            id: crypto.randomUUID(),
+            id: serviceId,
             designerId: designer.id,
             ...parsed.data,
             price: parsed.data.price.toFixed(2),
+        })
+
+        // Index gig in vector database for marketplace discovery
+        triggerEntityEmbedding({
+            entityType: "gig",
+            entityId: serviceId,
+            ownerId: designer.id,
+            visibilityScope: "public",
+            title: parsed.data.title,
+            fullText: buildGigTemplate({
+                title: parsed.data.title,
+                serviceType: parsed.data.serviceType,
+                description: parsed.data.description,
+                price: parsed.data.price,
+                pricingModel: parsed.data.pricingModel,
+                turnaroundDays: parsed.data.turnaroundDays,
+                deliverables: parsed.data.deliverables,
+            }),
+            metadata: {
+                title: parsed.data.title,
+                serviceType: parsed.data.serviceType,
+                price: parsed.data.price,
+                designerId: designer.id,
+            },
         })
     } catch (error) {
         console.error("Designer service creation error:", error)

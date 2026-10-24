@@ -134,10 +134,11 @@ export async function registerManufacturerAction(data: z.infer<typeof manufactur
         });
 
         return { success: true };
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("Manufacturer registration error:", error);
-        const dbError = error?.cause || error;
-        if (dbError?.code === "23505" || error?.code === "23505") {
+        const err = error as { cause?: { code?: string; detail?: string; constraint?: string; message?: string }; code?: string; detail?: string; constraint?: string; message?: string };
+        const dbError: { code?: string; detail?: string; constraint?: string; message?: string } = err?.cause || err;
+        if (dbError?.code === "23505" || err?.code === "23505") {
             const detail = String(dbError?.detail || dbError?.constraint || "").toLowerCase();
             if (detail.includes("phone") || detail.includes("mobile")) {
                 return {
@@ -163,7 +164,7 @@ export async function registerManufacturerAction(data: z.infer<typeof manufactur
             };
         }
 
-        const rawMessage = dbError?.message || error?.message || "Unknown database error";
+        const rawMessage = dbError?.message || err?.message || "Unknown database error";
         return {
             success: false,
             error: `Registration could not be completed: ${rawMessage}`

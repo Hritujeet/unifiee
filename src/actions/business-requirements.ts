@@ -12,6 +12,7 @@ import { and, desc, eq } from "drizzle-orm"
 import { revalidatePath } from "next/cache"
 import { headers } from "next/headers"
 import { z } from "zod"
+import { triggerEntityEmbedding, buildRequirementTemplate } from "@/lib/ai/embeddings"
 
 const packagingUseValues = [
     "coffee",
@@ -135,6 +136,33 @@ export async function createRequirementAction(
             status: "requirement_received",
         })
 
+        // Index requirement into vector database asynchronously for supplier matching
+        triggerEntityEmbedding({
+            entityType: "requirement",
+            entityId: requirementId,
+            ownerId: businessProfile.id,
+            visibilityScope: "public",
+            title: data.title,
+            fullText: buildRequirementTemplate({
+                title: data.title,
+                packagingUse: data.packagingUse,
+                packagingType: data.packagingType,
+                quantity: data.quantity,
+                size: data.size,
+                material: data.material,
+                brandingNeeded: data.brandingNeeded,
+                deliveryLocation: data.deliveryLocation,
+                requiredByDate: data.requiredByDate,
+                rawDescription: data.rawDescription,
+            }),
+            metadata: {
+                title: data.title,
+                packagingUse: data.packagingUse,
+                packagingType: data.packagingType,
+                businessId: businessProfile.id,
+            },
+        })
+
         revalidatePath("/business")
         revalidatePath("/business/requirements")
 
@@ -164,9 +192,10 @@ export async function getBusinessRequirementsAction(): Promise<ActionResult<Busi
             .orderBy(desc(businessRequirementsTable.createdAt))
 
         return { success: true, data: requirements }
-    } catch (error: any) {
-        if (error?.digest === "DYNAMIC_SERVER_USAGE" || error?.message?.includes("Dynamic server usage")) {
-            throw error
+    } catch (error: unknown) {
+        const err = error as { digest?: string; message?: string };
+        if (err?.digest === "DYNAMIC_SERVER_USAGE" || err?.message?.includes("Dynamic server usage")) {
+            throw error;
         }
         console.error("Error fetching business requirements:", error)
         return { success: false, error: "Could not load requirements." }

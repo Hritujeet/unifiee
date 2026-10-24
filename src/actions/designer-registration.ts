@@ -150,10 +150,11 @@ export async function registerDesignerAction(data: z.infer<typeof designerOnboar
         });
 
         return { success: true };
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("Designer registration error:", error);
-        const dbError = error?.cause || error;
-        if (dbError?.code === "23505" || error?.code === "23505") {
+        const err = error as { cause?: { code?: string; detail?: string; constraint?: string; message?: string }; code?: string; detail?: string; constraint?: string; message?: string };
+        const dbError = err?.cause || err;
+        if (dbError?.code === "23505" || err?.code === "23505") {
             const detail = String(dbError?.detail || dbError?.constraint || "").toLowerCase();
             if (detail.includes("phone")) {
                 return {
@@ -179,7 +180,7 @@ export async function registerDesignerAction(data: z.infer<typeof designerOnboar
             };
         }
 
-        const rawMessage = dbError?.message || error?.message || "Unknown database error";
+        const rawMessage = dbError?.message || err?.message || "Unknown database error";
         return {
             success: false,
             error: `Registration could not be completed: ${rawMessage}`

@@ -136,10 +136,11 @@ export async function registerBusinessAction(data: z.infer<typeof businessOnboar
         });
 
         return { success: true };
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("Business registration error:", error);
-        const dbError = error?.cause || error;
-        if (dbError?.code === "23505" || error?.code === "23505") {
+        const err = error as { cause?: { code?: string; detail?: string; constraint?: string; message?: string }; code?: string; detail?: string; constraint?: string; message?: string };
+        const dbError: { code?: string; detail?: string; constraint?: string; message?: string } = (err?.cause ?? err) as { code?: string; detail?: string; constraint?: string; message?: string };
+        if (dbError?.code === "23505" || err?.code === "23505") {
             const detail = String(dbError?.detail || dbError?.constraint || "").toLowerCase();
             if (detail.includes("phone")) {
                 return {
@@ -165,7 +166,7 @@ export async function registerBusinessAction(data: z.infer<typeof businessOnboar
             };
         }
 
-        const rawMessage = dbError?.message || error?.message || "Unknown database error";
+        const rawMessage = dbError?.message || err?.message || "Unknown database error";
         return {
             success: false,
             error: `Registration could not be completed: ${rawMessage}`

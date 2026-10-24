@@ -60,26 +60,14 @@ const PAYMENT_BADGES: Record<
 function RelativeTimestamp({
     label,
     value,
-    daysAgo = 0,
 }: {
     label?: string
     value: string
     daysAgo?: number
 }) {
-    // Generate an absolute date string for the hover tooltip (Item 20)
-    const baseDate = new Date(Date.now() - daysAgo * 86400000)
-    const fullDateString = baseDate.toLocaleString("en-IN", {
-        weekday: "short",
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-    })
-
     return (
         <span
-            title={`Full timestamp: ${fullDateString}`}
+            title={label ? `${label}: ${value}` : value}
             className="cursor-help hover:text-foreground transition-colors underline decoration-dotted decoration-muted-foreground/30 underline-offset-2"
         >
             {label ? `${label} ` : ""}{value}

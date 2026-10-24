@@ -1,0 +1,155 @@
+import { headers } from "next/headers";
+import { NextResponse } from "next/server";
+import { auth } from "@/lib/auth";
+import { db } from "@/lib/db";
+import { business } from "@/lib/db/schema/business";
+import { eq } from "drizzle-orm";
+import { generateText, Output } from "ai";
+import { getModel, MODEL_IDS } from "@/lib/ai/models";
+import { checkAiBudget } from "@/lib/ai/rate-limit";
+import { stripPii } from "@/lib/ai/privacy";
+import { searchHybrid, type SessionContext } from "@/lib/ai/retrieval";
+import {
+    aiRequirementOutputSchema,
+    buildRequirementBuilderSystemPrompt,
+} from "@/lib/ai/prompts/requirement-builder";
+import { logAiUsage } from "@/lib/ai/logger";
+
+export async function POST(req: Request) {
+    const startTime = Date.now();
+    try {
+        const session = await auth.api.getSession({ headers: await headers() });
+        if (!session?.user) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
+        const userId = session.user.id;
+
+        // Check user budget
+        const budget = checkAiBudget(userId);
+        if (!budget.allowed) {
+            return NextResponse.json(
+                { error: budget.reason || "Rate limit reached. Please wait a moment." },
+                { status: 429 }
+            );
+        }
+
+        // Check business authorization
+        const businessRows = await db
+            .select({ id: business.id })
+            .from(business)
+            .where(eq(business.userId, userId))
+            .limit(1);
+
+        if (businessRows.length === 0) {
+            return NextResponse.json(
+                { error: "Only business accounts can use the AI Requirement Builder." },
+                { status: 403 }
+            );
+        }
+
+        const businessId = businessRows[0].id;
+        const body = await req.json();
+        const rawPrompt: string = body.prompt || "";
+
+        if (!rawPrompt.trim() || rawPrompt.trim().length < 5) {
+            return NextResponse.json(
+                { error: "Please enter a descriptive packaging requirement (at least 5 characters)." },
+                { status: 400 }
+            );
+        }
+
+        const cleanPrompt = stripPii(rawPrompt);
+        const route = getModel("requirement_builder");
+
+        // Structured Extraction via Gemini Flash
+        const result = await generateText({
+            model: route.model,
+            system: buildRequirementBuilderSystemPrompt(),
+            prompt: `Analyze the following business packaging requirement and extract the structured specification:\n\n"${cleanPrompt}"`,
+            output: Output.object({ schema: aiRequirementOutputSchema }),
+            temperature: route.temperature,
+            maxOutputTokens: route.maxOutputTokens,
+        });
+
+        const structured = result.output;
+
+        // Search for matching vendor offerings in parallel using hybrid RAG
+        let matchingVendors: Array<{
+            id: string;
+            title: string;
+            snippet: string;
+            similarityScore: number;
+            metadata: Record<string, unknown>;
+        }> = [];
+
+        try {
+            const searchQuery = [
+                structured.packagingType,
+                structured.packagingUse,
+                structured.material,
+                structured.size,
+            ]
+                .filter(Boolean)
+                .join(" ");
+
+            const sessionCtx: SessionContext = {
+                userId,
+                role: "business",
+                businessId,
+            };
+
+            const searchResults = await searchHybrid({
+                query: searchQuery || cleanPrompt,
+                session: sessionCtx,
+                filters: { entityType: "offer" },
+                limit: 4,
+            });
+
+            matchingVendors = searchResults.map((r) => ({
+                id: r.id,
+                title: (r.metadata?.title as string) || "Catalog Offering",
+                snippet: r.content.slice(0, 220),
+                similarityScore: r.similarityScore,
+                metadata: r.metadata,
+            }));
+        } catch (searchErr) {
+            console.warn("[MATCHING_VENDORS_SEARCH_ERROR]", searchErr);
+        }
+
+        logAiUsage({
+            task: "requirement_builder",
+            provider: route.provider,
+            modelId: route.modelId,
+            latencyMs: Date.now() - startTime,
+            tokens: {
+                prompt: result.usage?.inputTokens,
+                completion: result.usage?.outputTokens,
+                total: result.usage?.totalTokens,
+            },
+            status: "success",
+            userId,
+        });
+
+        return NextResponse.json({
+            structured,
+            matchingVendors,
+            remainingDaily: budget.remainingDaily,
+        });
+    } catch (error: unknown) {
+        console.error("[REQUIREMENT_EXTRACT_ERROR]", error);
+        logAiUsage({
+            task: "requirement_builder",
+            provider: "google",
+            modelId: MODEL_IDS.GEMINI_FLASH,
+            latencyMs: Date.now() - startTime,
+            status: "error",
+            error: String(error),
+        });
+
+        return NextResponse.json(
+            { error: "Failed to extract packaging requirement. Please try rephrasing your request." },
+            { status: 500 }
+        );
+    }
+}

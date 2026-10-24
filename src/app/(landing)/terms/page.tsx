@@ -97,7 +97,7 @@ export default function TermsAndConditionsPage() {
 
                 <h2>12. Indemnity</h2>
                 <ul>
-                    <li>To the extent permitted by applicable law, you agree to be responsible for losses or claims arising from your unlawful use of the website, violation of these Terms, or infringement of another party's rights through information or material you submit.</li>
+                    <li>To the extent permitted by applicable law, you agree to be responsible for losses or claims arising from your unlawful use of the website, violation of these Terms, or infringement of another party&apos;s rights through information or material you submit.</li>
                 </ul>
 
                 <h2>13. Privacy</h2>

@@ -25,7 +25,7 @@ export function CtaDotField() {
 
     let w = 0;
     let h = 0;
-    let color = "#fff";
+    const color = "#fff";
     let maxAlpha = 0.5;
     let raf = 0;
     let running = false;

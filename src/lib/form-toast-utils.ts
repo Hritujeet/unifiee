@@ -18,7 +18,7 @@ function formatFieldLabel(fieldName: string): string {
 export function extractFormErrors<T extends FieldValues>(errors: FieldErrors<T>): { field: string; message: string }[] {
     const list: { field: string; message: string }[] = [];
 
-    const recurse = (errObj: any, currentPath = "") => {
+    const recurse = (errObj: Record<string, unknown> | null | undefined, currentPath = "") => {
         if (!errObj || typeof errObj !== "object") return;
 
         if (typeof errObj.message === "string" && errObj.message) {
@@ -39,7 +39,7 @@ export function extractFormErrors<T extends FieldValues>(errors: FieldErrors<T>)
         Object.keys(errObj).forEach((key) => {
             if (key === "ref" || key === "type") return;
             const nextPath = currentPath ? `${currentPath}.${key}` : key;
-            recurse(errObj[key], nextPath);
+            recurse(errObj[key] as Record<string, unknown> | null | undefined, nextPath);
         });
     };
 

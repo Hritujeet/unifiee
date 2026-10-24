@@ -100,7 +100,7 @@ export default function ManufacturerOnboardingForm() {
             // hard navigate so the server layout re-runs and sees the new manufacturer row
             window.location.href = "/manufacturer";
         },
-        onError: (error: any) => {
+        onError: (error: unknown) => {
             const message = error instanceof Error ? error.message : "Failed to register manufacturer profile";
             showRegistrationErrorToast("Manufacturer", message);
         }

@@ -1,5 +1,6 @@
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { userHasPassword } from "@/lib/auth/has-password";
 import { db } from "@/lib/db";
@@ -8,6 +9,8 @@ import { eq } from "drizzle-orm";
 import RoleProvider from "@/components/providers/role-provider";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import AppSidebar from "@/components/manufacturer/app-sidebar";
+import { AssistantPanel } from "@/components/ai/assistant-panel";
+
 export default async function ManufacturerLayout({ children }: { children: React.ReactNode }) {
     // 1. Must be signed in
     const session = await auth.api.getSession({ headers: await headers() });
@@ -56,18 +59,19 @@ export default async function ManufacturerLayout({ children }: { children: React
                                 <span>Catalog Live</span>
                             </div>
 
-                            <a
+                            <Link
                                 href="/manufacturer/publish-offering"
                                 className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground shadow-xs hover:bg-primary/90 transition-colors"
                             >
                                 <span className="text-sm leading-none">+</span>
                                 <span>Post Offering</span>
-                            </a>
+                            </Link>
                         </div>
                     </header>
                     <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-6 lg:p-8">
                         {children}
                     </main>
+                    <AssistantPanel role="manufacturer" userName={session.user.name || undefined} />
                 </SidebarInset>
             </SidebarProvider>
         </RoleProvider>

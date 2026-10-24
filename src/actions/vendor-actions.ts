@@ -15,6 +15,7 @@ import { business } from "@/lib/db/schema/business"
 import { eq, and, desc, isNull, inArray } from "drizzle-orm"
 import { revalidatePath } from "next/cache"
 import crypto from "crypto"
+import { triggerEntityEmbedding, buildOfferingTemplate } from "@/lib/ai/embeddings"
 
 export interface VendorAuthContext {
     userId: string
@@ -208,6 +209,35 @@ export async function createOfferingAction(input: CreateOfferingInput) {
             createdBy: vendor.userId,
             createdAt: now,
             updatedAt: now,
+        })
+
+        // Index offering in vector database for buyer discovery
+        triggerEntityEmbedding({
+            entityType: "offer",
+            entityId: offeringId,
+            ownerId: vendor.manufacturerId,
+            visibilityScope: "public",
+            title: input.title,
+            fullText: buildOfferingTemplate({
+                title: input.title,
+                offeringType: input.category,
+                description: input.description,
+                unitPrice: input.unitPrice,
+                unitOfMeasure: input.unitOfMeasure,
+                minOrderQuantity: input.minOrderQuantity,
+                fulfilmentMode: input.fulfilmentMode,
+                city: input.city,
+                state: input.state,
+                leadTimeDaysMin: input.leadTimeDaysMin,
+                leadTimeDaysMax: input.leadTimeDaysMax,
+            }),
+            metadata: {
+                title: input.title,
+                category: input.category,
+                unitPrice: input.unitPrice,
+                minOrderQuantity: input.minOrderQuantity,
+                vendorId: vendor.manufacturerId,
+            },
         })
 
         revalidatePath("/manufacturer")

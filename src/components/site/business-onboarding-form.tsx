@@ -113,7 +113,7 @@ export default function BusinessOnboardingForm() {
             // hard navigate so the server layout re-runs and sees the new business row
             window.location.href = "/business";
         },
-        onError: (error: any) => {
+        onError: (error: unknown) => {
             const message = error instanceof Error ? error.message : "Failed to register business profile";
             showRegistrationErrorToast("F&B Business", message);
         }
