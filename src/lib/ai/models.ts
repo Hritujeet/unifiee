@@ -54,22 +54,22 @@ const TASK_CONFIGS: Record<
     }
 > = {
     // Interactive & Assistant tasks (Gemini 2.5 Flash)
-    assistant_chat: { provider: "google", temperature: 0.3, maxOutputTokens: 1024 },
-    navigation_help: { provider: "google", temperature: 0.1, maxOutputTokens: 256 },
-    suggested_replies: { provider: "google", temperature: 0.5, maxOutputTokens: 256 },
-    short_rewrite: { provider: "google", temperature: 0.6, maxOutputTokens: 384 },
-    field_suggestions: { provider: "google", temperature: 0.4, maxOutputTokens: 384 },
-    intent_classification: { provider: "google", temperature: 0.0, maxOutputTokens: 128 },
-    query_rewriting: { provider: "google", temperature: 0.1, maxOutputTokens: 256 },
-    conversation_title: { provider: "google", temperature: 0.3, maxOutputTokens: 64 },
-    gig_creation_assist: { provider: "google", temperature: 0.5, maxOutputTokens: 1024 },
-    profile_bio_writer: { provider: "google", temperature: 0.7, maxOutputTokens: 512 },
-    delivery_message_helper: { provider: "google", temperature: 0.4, maxOutputTokens: 512 },
+    assistant_chat: { provider: "google", temperature: 0.3, maxOutputTokens: 2048 },
+    navigation_help: { provider: "google", temperature: 0.1, maxOutputTokens: 512 },
+    suggested_replies: { provider: "google", temperature: 0.5, maxOutputTokens: 1024 },
+    short_rewrite: { provider: "google", temperature: 0.6, maxOutputTokens: 1024 },
+    field_suggestions: { provider: "google", temperature: 0.4, maxOutputTokens: 1024 },
+    intent_classification: { provider: "google", temperature: 0.0, maxOutputTokens: 512 },
+    query_rewriting: { provider: "google", temperature: 0.1, maxOutputTokens: 512 },
+    conversation_title: { provider: "google", temperature: 0.3, maxOutputTokens: 256 },
+    gig_creation_assist: { provider: "google", temperature: 0.5, maxOutputTokens: 2048 },
+    profile_bio_writer: { provider: "google", temperature: 0.7, maxOutputTokens: 2048 },
+    delivery_message_helper: { provider: "google", temperature: 0.4, maxOutputTokens: 1536 },
 
     // Heavy reasoning & extraction tasks
     requirement_builder: { provider: "google", temperature: 0.1, maxOutputTokens: 2048 },
-    brief_summarization: { provider: "google", temperature: 0.2, maxOutputTokens: 1536 },
-    rag_synthesis: { provider: "google", temperature: 0.2, maxOutputTokens: 1536 },
+    brief_summarization: { provider: "google", temperature: 0.2, maxOutputTokens: 2048 },
+    rag_synthesis: { provider: "google", temperature: 0.2, maxOutputTokens: 2048 },
     multi_step_reasoning: { provider: "google", temperature: 0.1, maxOutputTokens: 2048 },
 };
 

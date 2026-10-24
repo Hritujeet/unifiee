@@ -128,10 +128,10 @@ export async function POST(req: Request) {
 
         // 2. Profile Bio Writer
         if (mode === "bio_writer") {
-            const specialties = (body.specialties as string[]) || ["Food Packaging", "Label Design"];
-            const tools = (body.tools as string[]) || ["Adobe Illustrator", "Photoshop"];
-            const roughNotes = stripPii(body.roughNotes || "");
-            const experienceYears = body.experienceYears ? Number(body.experienceYears) : undefined;
+            const specialties = parseResult.data.specialties || ["Food Packaging", "Label Design"];
+            const tools = parseResult.data.tools || ["Adobe Illustrator", "Photoshop"];
+            const roughNotes = stripPii(parseResult.data.roughNotes || "");
+            const experienceYears = parseResult.data.experienceYears ? Number(parseResult.data.experienceYears) : undefined;
 
             const systemPrompt = buildDesignerBioPrompt({
                 name: designer.displayName || session.user.name || "Designer",

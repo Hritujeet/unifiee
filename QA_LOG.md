@@ -15,6 +15,7 @@
 | BUG-11 | S2 | src/components/ai/assistant-panel.tsx:59 | Missing AbortController cleanup on unmount caused potential hanging streams | fixed |
 | BUG-12 | S2 | src/app/api/ai/*/route.ts | Missing Zod validation and unbounded payload/string lengths allowed DoS/token exhaustion | fixed |
 | BUG-13 | S3 | src/lib/ai/embeddings.ts:82 | Hardcoded model ID string instead of MODEL_IDS.MISTRAL_EMBED constant | fixed |
+| BUG-14 | S2 | src/lib/ai/models.ts:66 | `profile_bio_writer` token budget (512) caused Gemini 2.5 Flash thinking tokens to truncate JSON bio output | fixed |
 
 ## Next Step
 Stage 3: Database and RAG (Drizzle schema vs migrations dry run, vector dimensions, pgvector extension, backfill verification).
