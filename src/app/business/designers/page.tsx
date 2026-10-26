@@ -52,7 +52,7 @@ export default async function BusinessDesignersPage() {
             </div>
 
             {/* 2. Hero Banner: Packaging Design Standards */}
-            <section className="relative overflow-hidden rounded-2xl border border-border/60 bg-gradient-to-br from-blue-600/10 via-card to-card p-6 sm:p-7 shadow-sm">
+            <section className="relative overflow-hidden rounded-2xl border border-border/60 bg-card p-6 shadow-sm sm:p-7">
                 <div className="grid gap-6 md:grid-cols-[1fr_auto] md:items-center relative z-10">
                     <div className="space-y-2">
                         <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-blue-500 uppercase tracking-wider">
@@ -78,7 +78,7 @@ export default async function BusinessDesignersPage() {
                             <span className="font-medium text-foreground">100% Commercial Rights</span>
                         </div>
                         <div className="inline-flex items-center gap-2 rounded-xl border border-border/60 bg-background/80 px-3.5 py-2 backdrop-blur-sm shadow-xs">
-                            <Layers className="size-4 text-indigo-500" />
+                            <Layers className="size-4 text-primary" />
                             <span className="font-medium text-foreground">Direct RFQ Integration</span>
                         </div>
                     </div>

@@ -79,12 +79,8 @@ export default function VendorDashboardView({
     return (
         <div className="mx-auto w-full max-w-6xl space-y-8 text-foreground pb-12">
             {/* ── 1. Hero Welcome Banner ── */}
-            <div className="relative overflow-hidden rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/10 via-background to-primary/5 p-6 shadow-xs sm:p-8">
-                {/* Ambient glow accent */}
-                <div className="pointer-events-none absolute -right-12 -top-12 size-56 rounded-full bg-primary/10 blur-3xl" />
-                <div className="pointer-events-none absolute -left-12 -bottom-12 size-56 rounded-full bg-indigo-500/10 blur-3xl" />
-
-                <div className="relative z-10 flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+            <div className="rounded-2xl border bg-card p-5 shadow-xs sm:p-7">
+                <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
                     <div className="space-y-2">
                         <div className="flex items-center gap-2 flex-wrap">
                             <Badge
@@ -290,7 +286,7 @@ export default function VendorDashboardView({
                                                             : order.status === "shipped"
                                                             ? "bg-blue-500/10 text-blue-600 border-blue-500/30 text-[10px] uppercase font-semibold"
                                                             : order.status === "processing"
-                                                            ? "bg-indigo-500/10 text-indigo-600 border-indigo-500/30 text-[10px] uppercase font-semibold"
+                                                            ? "bg-primary/10 text-primary border-primary/30 text-[10px] uppercase font-semibold"
                                                             : "bg-amber-500/10 text-amber-600 border-amber-500/30 text-[10px] uppercase font-semibold"
                                                     }
                                                 >

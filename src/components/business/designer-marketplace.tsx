@@ -375,10 +375,10 @@ export function DesignerMarketplace({
                                 className="group relative flex flex-col rounded-2xl border border-border/60 bg-card text-card-foreground shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-blue-500/40 hover:shadow-md"
                             >
                                 {/* Top Banner / Preview Artwork */}
-                                <div className="relative h-44 overflow-hidden rounded-t-2xl bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 p-4 flex flex-col justify-between">
+                                <div className="relative flex h-44 flex-col justify-between overflow-hidden rounded-t-2xl bg-foreground p-4 text-background">
                                     {/* Geometric decorative elements */}
                                     <div className="absolute -right-8 -top-8 size-32 rounded-full border border-white/10 bg-blue-500/5 blur-sm" />
-                                    <div className="absolute -left-6 -bottom-6 size-28 rounded-full border border-white/5 bg-indigo-500/5" />
+                                    <div className="absolute -bottom-6 -left-6 size-28 rounded-full border border-background/10 bg-background/5" />
 
                                     {/* Top badges */}
                                     <div className="relative z-10 flex items-center justify-between gap-2">

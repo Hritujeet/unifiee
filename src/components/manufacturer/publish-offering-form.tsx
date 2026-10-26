@@ -412,9 +412,9 @@ export function PublishOfferingForm() {
 
                                 {/* Specs Audit Callout */}
                                 {specsAudit && (
-                                    <div className="rounded-xl border border-purple-500/25 bg-purple-500/5 p-3.5 space-y-2 text-xs">
+                                    <div className="rounded-xl border border-primary/20 bg-primary/5 p-3.5 space-y-2 text-xs">
                                         <div className="flex items-center justify-between font-semibold text-foreground">
-                                            <span className="flex items-center gap-1.5 text-purple-600 dark:text-purple-400">
+                                            <span className="flex items-center gap-1.5 text-primary">
                                                 <Sparkles className="size-3.5" />
                                                 <span>Technical Specifications Audit</span>
                                             </span>
@@ -680,7 +680,7 @@ export function PublishOfferingForm() {
 
                         {/* Interactive Preview Card */}
                         <Card className="border-2 border-primary/30 shadow-md bg-card overflow-hidden">
-                            <div className="bg-gradient-to-r from-primary/15 via-primary/5 to-transparent px-4 py-2.5 border-b border-primary/20 flex items-center justify-between">
+                            <div className="bg-primary/5 px-4 py-2.5 border-b border-primary/20 flex items-center justify-between">
                                 <span className="text-[11px] font-semibold text-primary flex items-center gap-1.5">
                                     <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
                                     How Buyers See Your Offering

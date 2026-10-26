@@ -44,7 +44,7 @@ export default async function BusinessLayout({ children }: { children: React.Rea
                             <span className="text-sm font-semibold tracking-tight">Unifiée Business</span>
                         </div>
                     </header>
-                    <main className="flex flex-1 flex-col p-4 md:p-6 lg:p-8 min-w-0">
+                    <main className="flex min-w-0 flex-1 flex-col p-3 sm:p-4 md:p-6 lg:p-8">
                         {children}
                     </main>
                     <AssistantPanel role="business" userName={session.user.name || undefined} />

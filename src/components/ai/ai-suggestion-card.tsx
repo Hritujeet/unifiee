@@ -43,7 +43,7 @@ export function AiSuggestionCard({
             {/* Header */}
             <div className="flex items-center justify-between gap-2 pb-2.5 mb-2.5 border-b border-border/40">
                 <div className="flex items-center gap-2">
-                    <span className="flex size-5 items-center justify-center rounded-md bg-purple-500/20 text-purple-600 dark:text-purple-400">
+                    <span className="flex size-5 items-center justify-center rounded-md bg-primary/10 text-primary">
                         <Sparkles className="size-3" />
                     </span>
                     <span className="text-xs font-semibold text-foreground">
@@ -80,8 +80,8 @@ export function AiSuggestionCard({
                     </div>
                 )}
 
-                <div className="rounded-lg bg-background p-2.5 border border-purple-500/30 ring-1 ring-purple-500/10">
-                    <div className="flex items-center justify-between text-[10px] font-medium uppercase tracking-wider text-purple-600 dark:text-purple-400 mb-1">
+                <div className="rounded-lg border border-primary/20 bg-background p-2.5 ring-1 ring-primary/10">
+                    <div className="mb-1 flex items-center justify-between text-[10px] font-medium uppercase tracking-wider text-primary">
                         <span>Suggested Value</span>
                         {rationale && <span className="normal-case italic text-muted-foreground">{rationale}</span>}
                     </div>

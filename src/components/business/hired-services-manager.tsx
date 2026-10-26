@@ -197,7 +197,7 @@ export function HiredServicesManager({ services }: { services: HiredDesignerServ
                 <div className="rounded-2xl border border-border/60 bg-card p-4 sm:p-5 shadow-xs">
                     <div className="flex items-center justify-between">
                         <span className="text-xs font-medium text-muted-foreground">Total Budget</span>
-                        <span className="flex size-8 items-center justify-center rounded-xl bg-indigo-500/10 text-indigo-500">
+                        <span className="flex size-8 items-center justify-center rounded-xl bg-primary/10 text-primary">
                             <DollarSign className="size-4" />
                         </span>
                     </div>

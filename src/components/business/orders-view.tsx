@@ -53,7 +53,7 @@ const PAYMENT_BADGES: Record<
     },
     "Refunded": {
         label: "Refunded",
-        className: "border-purple-500/30 bg-purple-500/10 text-purple-400",
+        className: "border-primary/30 bg-primary/10 text-primary",
     },
 }
 

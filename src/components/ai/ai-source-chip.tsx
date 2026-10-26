@@ -35,7 +35,7 @@ export function AiSourceChip({
                 className="justify-start text-left"
                 title={snippet ? "Click to view grounded excerpt" : undefined}
             >
-                <BookOpen className="size-3 text-purple-500 shrink-0" />
+                <BookOpen className="size-3 shrink-0 text-primary" />
                 <span className="font-medium max-w-[180px] truncate">{title}</span>
                 {scorePct !== null && (
                     <Badge variant="secondary" className="h-4 px-1 text-[10px] text-primary">
@@ -53,7 +53,7 @@ export function AiSourceChip({
                                 href={url}
                                 target="_blank"
                                 rel="noreferrer"
-                                className="inline-flex items-center gap-0.5 text-purple-600 dark:text-purple-400 hover:underline"
+                                className="inline-flex items-center gap-0.5 text-primary hover:underline"
                             >
                                 <span>Open</span>
                                 <ExternalLink className="size-2.5" />

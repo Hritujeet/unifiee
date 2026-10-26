@@ -158,7 +158,7 @@ export default function RequirementsView({ initialDbRequirements = [] }: Require
             </div>
 
             {/* 2. AI INTAKE BANNER */}
-            <div className="relative overflow-hidden rounded-2xl border border-blue-500/25 bg-linear-to-br from-blue-600/10 via-card to-card p-6 shadow-xs">
+            <div className="relative overflow-hidden rounded-2xl border bg-card p-6 shadow-xs">
                 <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
                     <div className="flex items-start gap-4">
                         <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-blue-500/15 text-blue-500 border border-blue-500/30 shadow-xs mt-0.5">

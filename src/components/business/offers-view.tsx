@@ -82,7 +82,7 @@ export default function OffersView() {
 
             {/* 2. ATTENTION BANNER */}
             {pendingQuotes.length > 0 && (
-                <div className="relative overflow-hidden rounded-2xl border border-amber-500/30 bg-linear-to-r from-amber-500/10 via-card to-card p-5 sm:p-6 shadow-xs">
+                <div className="relative overflow-hidden rounded-2xl border border-amber-500/30 bg-card p-5 shadow-xs sm:p-6">
                     <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                         <div className="flex items-start sm:items-center gap-3.5">
                             <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-amber-500/15 text-amber-500 border border-amber-500/30 shadow-xs">

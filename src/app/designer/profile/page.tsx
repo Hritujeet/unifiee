@@ -43,7 +43,7 @@ export default async function DesignerProfilePage() {
             />
 
             <section className="overflow-hidden rounded-xl border bg-card text-card-foreground">
-                <div className="h-28 bg-gradient-to-r from-muted via-accent to-secondary" />
+                <div className="h-28 bg-muted" />
                 <div className="px-5 pb-6 sm:px-8">
                     <div className="-mt-9 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
                         <div className="flex items-end gap-4">

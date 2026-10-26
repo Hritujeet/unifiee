@@ -206,8 +206,8 @@ export default function NewRequirementPage() {
             </div>
 
             {/* MVP Brief Section 5 Info Callout */}
-            <div className="rounded-xl border border-purple-500/25 bg-gradient-to-r from-purple-500/[0.08] via-indigo-500/[0.04] to-transparent p-4 text-xs text-muted-foreground flex items-start gap-3">
-                <Sparkles className="size-4 text-purple-600 dark:text-purple-400 shrink-0 mt-0.5" />
+            <div className="flex items-start gap-3 rounded-xl border border-primary/20 bg-primary/5 p-4 text-xs text-muted-foreground">
+                <Sparkles className="mt-0.5 size-4 shrink-0 text-primary" />
                 <div className="space-y-1">
                     <span className="font-semibold text-foreground">AI-Powered Specification Intake (Eureka MVP Section 5)</span>
                     <p className="leading-relaxed">
@@ -220,7 +220,7 @@ export default function NewRequirementPage() {
             <Card className="border-border/60 shadow-xs">
                 <CardHeader className="space-y-1 pb-4">
                     <CardTitle className="text-base font-semibold flex items-center gap-2">
-                        <span className="flex size-6 items-center justify-center rounded-full bg-purple-600/10 text-purple-600 text-xs font-bold">1</span>
+                        <span className="flex size-6 items-center justify-center rounded-full bg-primary/10 text-primary text-xs font-bold">1</span>
                         <span>Describe your packaging in plain language</span>
                     </CardTitle>
                     <CardDescription>
@@ -254,10 +254,10 @@ export default function NewRequirementPage() {
                                     key={idx}
                                     type="button"
                                     onClick={() => setRawPrompt(p.prompt)}
-                                    className="text-left text-xs p-3 rounded-lg border border-border/50 bg-card hover:border-purple-500/40 hover:bg-purple-500/5 transition-all cursor-pointer space-y-1"
+                                    className="text-left text-xs p-3 rounded-lg border border-border/50 bg-card hover:border-primary/40 hover:bg-primary/5 transition-all cursor-pointer space-y-1"
                                 >
                                     <div className="font-semibold text-foreground flex items-center gap-1.5">
-                                        <Sparkles className="size-3 text-purple-500" />
+                                        <Sparkles className="size-3 text-primary" />
                                         <span>{p.label}</span>
                                     </div>
                                     <p className="text-muted-foreground line-clamp-2 leading-relaxed">
@@ -284,7 +284,7 @@ export default function NewRequirementPage() {
             {/* Step 2: The Canonical Structured Fields */}
             {structuredSpec && (
                 <div className="space-y-6 animate-in fade-in-50 duration-300">
-                    <Card className="border-purple-500/30 bg-card shadow-sm">
+                    <Card className="border-primary/20 bg-card shadow-sm">
                         <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border/40 pb-4">
                             <div className="space-y-1">
                                 <CardTitle className="text-base font-semibold flex items-center gap-2">
@@ -297,7 +297,7 @@ export default function NewRequirementPage() {
                             </div>
                             <div className="flex items-center gap-2">
                                 {confidenceScore !== null && (
-                                    <Badge variant="outline" className="border-purple-500/30 text-purple-600 dark:text-purple-400 text-xs font-medium">
+                                    <Badge variant="outline" className="border-primary/30 text-primary text-xs font-medium">
                                         {Math.round(confidenceScore * 100)}% Confidence
                                     </Badge>
                                 )}
@@ -548,7 +548,7 @@ export default function NewRequirementPage() {
                                     size="sm"
                                     onClick={handleSave}
                                     disabled={isSaving}
-                                    className="h-10 px-5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-medium text-xs sm:text-sm gap-2"
+                                    className="h-10 px-5 bg-primary text-primary-foreground hover:bg-primary/90 font-medium text-xs sm:text-sm gap-2"
                                 >
                                     {isSaving ? (
                                         <>

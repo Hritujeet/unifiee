@@ -217,7 +217,7 @@ export function AssistantPanel({ role = "business", userName }: AssistantPanelPr
     return (
         <>
             {/* Floating Action Button (FAB) */}
-            <div className="fixed bottom-5 right-5 z-40">
+            <div className="fixed inset-x-4 bottom-4 z-40 flex justify-end sm:inset-x-auto sm:right-5">
                 {!isOpen && (
                     <Button
                         variant="default"
@@ -239,7 +239,7 @@ export function AssistantPanel({ role = "business", userName }: AssistantPanelPr
 
             {/* Chat Modal / Slide-over Window */}
             {isOpen && (
-                <div className="fixed bottom-5 right-5 z-50 flex flex-col w-[94vw] sm:w-[420px] h-[580px] max-h-[85vh] rounded-xl border border-border bg-background shadow-xl overflow-hidden animate-in fade-in-50 slide-in-from-bottom-6 duration-200">
+                <div className="fixed inset-x-0 bottom-0 z-50 flex h-[min(680px,calc(100dvh-1rem))] max-h-[calc(100dvh-1rem)] flex-col overflow-hidden rounded-t-2xl border border-border bg-background shadow-xl animate-in fade-in-50 slide-in-from-bottom-6 duration-200 sm:inset-x-auto sm:bottom-5 sm:right-5 sm:h-[min(580px,85vh)] sm:max-h-[85vh] sm:w-[min(420px,calc(100vw-2.5rem))] sm:rounded-xl">
                     {/* Header */}
                     <div className="flex items-center justify-between border-b border-border px-4 py-3">
                         <div className="flex items-center gap-2.5">
@@ -290,7 +290,7 @@ export function AssistantPanel({ role = "business", userName }: AssistantPanelPr
                     {/* Messages Body */}
                     <div className="flex-1 overflow-y-auto p-4 space-y-3.5 text-xs">
                         {messages.length === 0 ? (
-                            <div className="h-full flex flex-col justify-center items-center text-center px-4 space-y-4">
+                            <div className="flex min-h-full flex-col items-center justify-center space-y-4 px-2 py-4 text-center sm:px-4">
                                 <div className="size-12 rounded-xl bg-muted flex items-center justify-center text-primary border border-border">
                                     <Bot className="size-6" />
                                 </div>
@@ -318,7 +318,7 @@ export function AssistantPanel({ role = "business", userName }: AssistantPanelPr
                                                 className="h-auto min-h-9 w-full justify-between whitespace-normal p-2.5 text-left text-xs"
                                             >
                                                 <span className="line-clamp-2">{q}</span>
-                                                <Sparkles className="size-3 text-muted-foreground group-hover:text-purple-500 transition-colors shrink-0 ml-2" />
+                                                <Sparkles className="ml-2 size-3 shrink-0 text-muted-foreground transition-colors group-hover:text-primary" />
                                             </Button>
                                         ))}
                                     </div>
@@ -344,7 +344,7 @@ export function AssistantPanel({ role = "business", userName }: AssistantPanelPr
                                         {/* Streaming cursor pulse if empty */}
                                         {m.role === "assistant" && !m.content && (
                                             <div className="flex items-center gap-1.5 py-1 text-muted-foreground">
-                                                <Loader2 className="size-3 animate-spin text-purple-500" />
+                                                <Loader2 className="size-3 animate-spin text-primary" />
                                                 <span className="text-[11px]">Thinking & retrieving docs...</span>
                                             </div>
                                         )}
@@ -386,7 +386,7 @@ export function AssistantPanel({ role = "business", userName }: AssistantPanelPr
                     </div>
 
                     {/* Footer / Input */}
-                    <div className="border-t border-border/60 p-3 bg-background/50">
+                    <div className="border-t border-border/60 bg-background/50 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
                         <form
                             onSubmit={(e) => {
                                 e.preventDefault();
@@ -434,10 +434,10 @@ export function AssistantPanel({ role = "business", userName }: AssistantPanelPr
                             )}
                         </form>
 
-                        <div className="flex items-center justify-between text-[10px] text-muted-foreground/80 px-1 pt-2">
-                            <span>Press Enter to send, Shift+Enter for new line</span>
+                        <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 px-1 pt-2 text-[10px] text-muted-foreground/80">
+                            <span>Enter to send · Shift+Enter for new line</span>
                             {remainingDaily !== null && (
-                                <span className="font-medium text-purple-600 dark:text-purple-400">
+                                <span className="font-medium text-primary">
                                     {remainingDaily} free requests left today
                                 </span>
                             )}

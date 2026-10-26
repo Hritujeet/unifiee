@@ -45,7 +45,7 @@ export default async function ExploreOffersPage() {
                 }
             />
 
-            <section className="rounded-2xl border bg-gradient-to-br from-primary/5 via-card to-secondary/40 p-6 sm:p-8">
+            <section className="rounded-2xl border bg-card p-6 sm:p-8">
                 <div className="grid gap-6 md:grid-cols-[1fr_auto] md:items-center">
                     <div className="max-w-2xl">
                         <div className="flex size-11 items-center justify-center rounded-xl bg-primary/10 text-primary"><PackageSearch className="size-5" /></div>

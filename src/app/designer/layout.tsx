@@ -45,7 +45,7 @@ export default async function DesignerLayout({ children }: { children: React.Rea
                             </Link>
                         </div>
                     </header>
-                    <main className="flex flex-1 flex-col gap-4 bg-background p-4 md:gap-8 md:p-7 lg:p-8">
+                    <main className="flex min-w-0 flex-1 flex-col gap-5 bg-background p-3 sm:p-4 md:gap-7 md:p-6 lg:p-8">
                         {children}
                     </main>
                     <AssistantPanel role="designer" userName={session.user.name || undefined} />

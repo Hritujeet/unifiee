@@ -57,7 +57,7 @@ export default function ManufacturerAppSidebar() {
                     <SidebarMenuItem>
                         <SidebarMenuButton size="lg" asChild className="hover:bg-transparent px-1">
                             <Link href="/manufacturer" className="flex items-center gap-3">
-                                <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary via-primary/90 to-indigo-600 text-primary-foreground font-black text-sm shadow-sm ring-1 ring-white/20">
+                                <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground font-black text-sm shadow-sm ring-1 ring-white/20">
                                     U
                                 </div>
                                 <div className="flex flex-col leading-tight">

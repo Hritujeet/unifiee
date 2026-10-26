@@ -234,7 +234,7 @@ export function OrderManagementView({ initialOrders }: OrderManagementViewProps)
                                                             : order.status === "shipped"
                                                             ? "bg-blue-500/10 text-blue-600 border-blue-500/30 text-[10px] font-bold uppercase"
                                                             : order.status === "processing"
-                                                            ? "bg-indigo-500/10 text-indigo-600 border-indigo-500/30 text-[10px] font-bold uppercase"
+                                                            ? "bg-primary/10 text-primary border-primary/30 text-[10px] font-bold uppercase"
                                                             : order.status === "confirmed"
                                                             ? "bg-teal-500/10 text-teal-600 border-teal-500/30 text-[10px] font-bold uppercase"
                                                             : "bg-amber-500/10 text-amber-600 border-amber-500/30 text-[10px] font-bold uppercase"

@@ -175,10 +175,10 @@ function AddServiceDialog() {
 
                 {/* AI Concept Prompt Mini Drawer */}
                 {showAiModal && (
-                    <div className="rounded-xl border border-purple-500/30 bg-purple-500/5 p-4 space-y-3 animate-in fade-in-50">
+                    <div className="rounded-xl border border-primary/20 bg-primary/5 p-4 space-y-3 animate-in fade-in-50">
                         <div className="flex items-center justify-between">
                             <span className="text-xs font-semibold text-foreground flex items-center gap-1.5">
-                                <Sparkles className="size-3.5 text-purple-600 dark:text-purple-400" />
+                                <Sparkles className="size-3.5 text-primary" />
                                 <span>AI Gig Creator (Fiverr-Style Copywriting)</span>
                             </span>
                             <button
