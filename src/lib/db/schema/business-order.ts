@@ -66,6 +66,9 @@ export const businessOrdersTable = pgTable("business_orders", {
     updatedAt: timestamp("updated_at").notNull().defaultNow().$onUpdate(() => new Date()),
     submittedAt: timestamp("submitted_at").notNull().defaultNow(),
     deliveredAt: timestamp("delivered_at"),
+    cancelledAt: timestamp("cancelled_at"),
+    cancellationRole: varchar("cancellation_role", { length: 32 }),
+    cancellationReason: text("cancellation_reason"),
 }, (table) => [
     uniqueIndex("business_orders_order_number_unique").on(table.orderNumber),
     index("business_orders_business_created_idx").on(table.businessId, table.createdAt),

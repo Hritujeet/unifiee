@@ -1,5 +1,6 @@
 import type { Metadata } from "next"
-import OrdersView from "@/components/business/orders-view"
+import DbOrdersView from "@/components/business/db-orders-view"
+import { getBusinessOrdersAction } from "@/actions/order-actions"
 
 export const metadata: Metadata = {
     title: "Orders — UNIFIÉE Business",
@@ -7,7 +8,9 @@ export const metadata: Metadata = {
     robots: { index: false },
 }
 
-export default function BusinessOrdersPage() {
-    return <OrdersView />
-}
+export const dynamic = "force-dynamic"
 
+export default async function BusinessOrdersPage() {
+    const result = await getBusinessOrdersAction()
+    return <DbOrdersView orders={result.data ?? []} />
+}

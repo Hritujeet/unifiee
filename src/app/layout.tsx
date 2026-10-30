@@ -1,5 +1,7 @@
 import { cn } from "@/lib/utils";
 import type { Metadata } from "next";
+import { JsonLd, organizationSchema } from "@/components/seo/json-ld";
+import { siteConfig, siteUrl } from "@/lib/seo/site-config";
 import { DM_Sans, Geist_Mono, Geist } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
@@ -19,9 +21,33 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "UNIFIÉE — B2B Packaging Infrastructure for F&B Brands",
-  description:
-    "UNIFIÉE is an intelligent B2B operating layer that connects the fragmented decisions, suppliers, and workflows behind food and beverage packaging operations.",
+  metadataBase: new URL(siteUrl),
+  title: {
+    default: siteConfig.title,
+    template: siteConfig.titleTemplate,
+  },
+  description: siteConfig.description,
+  alternates: { canonical: siteUrl },
+  openGraph: {
+    type: "website",
+    locale: "en_IN",
+    siteName: siteConfig.name,
+    title: siteConfig.title,
+    description: siteConfig.description,
+    url: siteUrl,
+    images: [{ url: siteConfig.ogImage, alt: siteConfig.title }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    site: siteConfig.twitterHandle,
+    title: siteConfig.title,
+    description: siteConfig.description,
+    images: [siteConfig.ogImage],
+  },
+  verification: {
+    google: "GOOGLE_SEARCH_CONSOLE_VERIFICATION",
+    other: { "msvalidate.01": "BING_WEBMASTER_VERIFICATION" },
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
@@ -36,6 +62,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         , "font-sans", geist.variable, dmSansHeading.variable)}
     >
       <body>
+        <JsonLd schema={organizationSchema()} />
         {/* Inline theme hydration script — prevents flash of wrong theme on navigation/redirects */}
         <script
           dangerouslySetInnerHTML={{

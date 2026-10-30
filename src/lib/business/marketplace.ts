@@ -39,7 +39,8 @@ export type HiredDesignerService = {
     pricingModel: string
     turnaroundDays: number
     sampleImage: string | null
-    status: "active" | "completed"
+    notes: string | null
+    status: "active" | "in_review" | "completed"
     hiredAt: Date
     completedAt: Date | null
 }
@@ -115,6 +116,7 @@ export async function getBusinessHiredServices(userId: string): Promise<HiredDes
             pricingModel: businessHiredServiceTable.pricingModel,
             turnaroundDays: businessHiredServiceTable.turnaroundDays,
             sampleImage: businessHiredServiceTable.sampleImage,
+            notes: businessHiredServiceTable.notes,
             status: businessHiredServiceTable.status,
             hiredAt: businessHiredServiceTable.hiredAt,
             completedAt: businessHiredServiceTable.completedAt,

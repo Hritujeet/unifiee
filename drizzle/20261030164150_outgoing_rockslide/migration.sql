@@ -1,0 +1,1 @@
+ALTER TABLE "business_hired_services" ADD COLUMN "notes" text;

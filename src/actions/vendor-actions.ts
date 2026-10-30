@@ -11,6 +11,7 @@ import {
     businessOrdersTable,
     businessOrderItemsTable,
 } from "@/lib/db/schema/business-order"
+import { orderFulfillmentMilestonesTable } from "@/lib/db/schema/vendor-fulfillment"
 import { business } from "@/lib/db/schema/business"
 import { eq, and, desc, isNull, inArray } from "drizzle-orm"
 import { revalidatePath } from "next/cache"
@@ -312,6 +313,31 @@ export async function updateOrderStatusAction(
         const vendor = await getAuthenticatedVendor()
         if (!vendor) return { success: false, error: "Unauthorized" }
 
+        const [order] = await db
+            .select({
+                id: businessOrdersTable.id,
+                status: businessOrdersTable.status,
+                vendorId: businessOrdersTable.vendorId,
+            })
+            .from(businessOrdersTable)
+            .where(and(
+                eq(businessOrdersTable.id, orderId),
+                eq(businessOrdersTable.vendorId, vendor.manufacturerId),
+            ))
+            .limit(1)
+
+        if (!order) return { success: false, error: "Order not found." }
+
+        const transitions: Record<string, string[]> = {
+            submitted: ["confirmed", "cancelled"],
+            confirmed: ["processing", "cancelled"],
+            processing: ["shipped"],
+            shipped: ["delivered"],
+        }
+        if (!transitions[order.status]?.includes(newStatus)) {
+            return { success: false, error: `Order cannot move from ${order.status} to ${newStatus}.` }
+        }
+
         const updates: Record<string, unknown> = {
             status: newStatus,
             updatedAt: new Date(),
@@ -320,18 +346,52 @@ export async function updateOrderStatusAction(
             updates.deliveredAt = new Date()
         }
 
-        await db
-            .update(businessOrdersTable)
-            .set(updates)
-            .where(
-                and(
-                    eq(businessOrdersTable.id, orderId),
-                    eq(businessOrdersTable.vendorId, vendor.manufacturerId)
-                )
-            )
+        const milestoneByStatus = {
+            confirmed: {
+                stage: "order_confirmed" as const,
+                title: "Order confirmed",
+                description: "The manufacturer accepted the buyer order.",
+            },
+            processing: {
+                stage: "in_production" as const,
+                title: "In production",
+                description: "Production has started for this order.",
+            },
+            shipped: {
+                stage: "dispatched" as const,
+                title: "Dispatched",
+                description: "The order has been packed and dispatched.",
+            },
+            delivered: {
+                stage: "delivered" as const,
+                title: "Delivered",
+                description: "The buyer delivery was completed.",
+            },
+        } as const
+
+        await db.transaction(async (tx) => {
+            await tx.update(businessOrdersTable)
+                .set(updates)
+                .where(eq(businessOrdersTable.id, orderId))
+
+            const milestone = milestoneByStatus[newStatus as keyof typeof milestoneByStatus]
+            if (milestone) {
+                await tx.insert(orderFulfillmentMilestonesTable).values({
+                    id: crypto.randomUUID(),
+                    orderId,
+                    vendorId: vendor.manufacturerId,
+                    ...milestone,
+                })
+            }
+
+            await tx.update(businessOrderItemsTable)
+                .set({ status: newStatus === "confirmed" ? "confirmed" : newStatus })
+                .where(eq(businessOrderItemsTable.orderId, orderId))
+        })
 
         revalidatePath("/manufacturer")
         revalidatePath("/manufacturer/order-dashboard")
+        revalidatePath("/business/orders")
         return { success: true }
     } catch (err: unknown) {
         console.error("Error updating order:", err)

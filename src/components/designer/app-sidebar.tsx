@@ -11,7 +11,7 @@ import {
     SidebarGroup,
     SidebarGroupContent,
 } from "@/components/ui/sidebar"
-import { BriefcaseBusiness, CircleDollarSign, LayoutDashboard, LogOut, Loader2, UserRound } from "lucide-react"
+import { BriefcaseBusiness, CircleDollarSign, LayoutDashboard, LogOut, Loader2, UserRound, ClipboardList } from "lucide-react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { authClient } from "@/lib/auth-client"
@@ -21,6 +21,7 @@ import { toast } from "sonner"
 const navRoutes = [
     { title: "Overview", url: "/designer", icon: LayoutDashboard },
     { title: "My services", url: "/designer/services", icon: BriefcaseBusiness },
+    { title: "Client orders", url: "/designer/orders", icon: ClipboardList },
     { title: "Earnings", url: "/designer/earnings", icon: CircleDollarSign },
 ]
 

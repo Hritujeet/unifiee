@@ -11,8 +11,108 @@ import { business } from "@/lib/db/schema/business"
 import { designerServiceTable } from "@/lib/db/schema/designer-service"
 import { packagingDesignerTable } from "@/lib/db/schema/packaging-designer"
 import { checkRateLimit, getClientIpFromHeaders } from "@/lib/server/rate-limit"
+import { getCurrentDesigner } from "@/lib/designer/get-current-designer"
 
 type HireActionResult = { success: boolean; error?: string }
+
+export type DesignerIncomingProject = {
+    id: string
+    serviceId: string | null
+    serviceTitle: string
+    businessName: string
+    businessEmail: string
+    businessPhone: string
+    price: string
+    pricingModel: string
+    turnaroundDays: number
+    deliverables: string[]
+    status: "active" | "in_review" | "completed"
+    notes: string | null
+    hiredAt: Date
+    completedAt: Date | null
+}
+
+export async function getDesignerIncomingProjectsAction(): Promise<{
+    success: boolean
+    error?: string
+    data?: DesignerIncomingProject[]
+}> {
+    try {
+        const designer = await getCurrentDesigner()
+        if (!designer) return { success: false, error: "Designer profile not found." }
+
+        const projects = await db
+            .select({
+                id: businessHiredServiceTable.id,
+                serviceId: businessHiredServiceTable.serviceId,
+                serviceTitle: businessHiredServiceTable.serviceTitle,
+                businessName: business.businessName,
+                businessEmail: business.email,
+                businessPhone: business.phone,
+                price: businessHiredServiceTable.price,
+                pricingModel: businessHiredServiceTable.pricingModel,
+                turnaroundDays: businessHiredServiceTable.turnaroundDays,
+                deliverables: designerServiceTable.deliverables,
+                status: businessHiredServiceTable.status,
+                notes: businessHiredServiceTable.notes,
+                hiredAt: businessHiredServiceTable.hiredAt,
+                completedAt: businessHiredServiceTable.completedAt,
+            })
+            .from(businessHiredServiceTable)
+            .innerJoin(business, eq(businessHiredServiceTable.businessId, business.id))
+            .leftJoin(designerServiceTable, eq(businessHiredServiceTable.serviceId, designerServiceTable.id))
+            .where(eq(businessHiredServiceTable.designerId, designer.id))
+            .orderBy(businessHiredServiceTable.hiredAt)
+
+        return {
+            success: true,
+            data: projects.map((project) => ({
+                ...project,
+                deliverables: project.deliverables ?? [],
+            })),
+        }
+    } catch (error) {
+        console.error("Could not load designer incoming projects:", error)
+        return { success: false, error: "Could not load incoming projects." }
+    }
+}
+
+export async function updateDesignerServiceStatusAction(input: {
+    serviceId: string
+    status: "active" | "in_review" | "completed"
+    notes?: string
+}): Promise<HireActionResult> {
+    try {
+        const parsed = z.object({
+            serviceId: z.string().uuid(),
+            status: z.enum(["active", "in_review", "completed"]),
+            notes: z.string().trim().max(2000).optional(),
+        }).safeParse(input)
+        if (!parsed.success) return { success: false, error: "Invalid project update." }
+
+        const designer = await getCurrentDesigner()
+        if (!designer) return { success: false, error: "Designer profile not found." }
+
+        const updated = await db.update(businessHiredServiceTable).set({
+            status: parsed.data.status,
+            notes: parsed.data.notes ?? null,
+            completedAt: parsed.data.status === "completed" ? new Date() : null,
+            updatedAt: new Date(),
+        }).where(and(
+            eq(businessHiredServiceTable.id, parsed.data.serviceId),
+            eq(businessHiredServiceTable.designerId, designer.id),
+        )).returning({ id: businessHiredServiceTable.id })
+
+        if (!updated.length) return { success: false, error: "Project not found." }
+        revalidatePath("/designer/orders")
+        revalidatePath("/designer")
+        revalidatePath("/business/hired-services")
+        return { success: true }
+    } catch (error) {
+        console.error("Could not update designer project:", error)
+        return { success: false, error: "Could not update this project." }
+    }
+}
 
 async function getCurrentBusiness() {
     const reqHeaders = await headers()

@@ -6,6 +6,7 @@ import { packagingDesignerTable, pricingModelEnum } from "./packaging-designer"
 
 export const hiredServiceStatusEnum = pgEnum("hired_service_status", [
     "active",
+    "in_review",
     "completed",
 ])
 
@@ -21,6 +22,7 @@ export const businessHiredServiceTable = pgTable("business_hired_services", {
     pricingModel: pricingModelEnum("pricing_model").notNull(),
     turnaroundDays: integer("turnaround_days").notNull(),
     sampleImage: text("sample_image"),
+    notes: text("notes"),
     status: hiredServiceStatusEnum("status").notNull().default("active"),
     hiredAt: timestamp("hired_at").defaultNow().notNull(),
     completedAt: timestamp("completed_at"),
