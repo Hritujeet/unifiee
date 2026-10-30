@@ -38,13 +38,13 @@ export default async function BusinessLayout({ children }: { children: React.Rea
             <SidebarProvider defaultOpen={true}>
                 <BusinessAppSidebar />
                 <SidebarInset className="min-w-0 bg-background text-foreground">
-                    {/* Mobile header with sidebar trigger */}
-                    <header className="flex h-14 shrink-0 items-center justify-between border-b border-border/40 px-4 md:hidden">
-                        <div className="flex w-full items-center justify-between gap-2">
-                            <div className="flex items-center gap-2">
-                                <SidebarTrigger className="-ml-1" />
-                                <span className="text-sm font-semibold tracking-tight">Unifiée Business</span>
-                            </div>
+                    {/* Header with sidebar trigger and controls */}
+                    <header className="flex h-14 shrink-0 items-center justify-between border-b border-border/40 bg-background px-4 lg:h-16 lg:px-7">
+                        <div className="flex items-center gap-2">
+                            <SidebarTrigger className="-ml-1" />
+                            <span className="text-sm font-semibold tracking-tight sm:inline">Unifiée Business</span>
+                        </div>
+                        <div className="flex items-center gap-2">
                             <ThemeToggle />
                         </div>
                     </header>

@@ -15,7 +15,7 @@ export function Footer() {
             </Link>
             <p className="text-sm text-muted-foreground max-w-xs leading-relaxed">
               An intelligent procurement platform connecting buyers with vendor
-              networks. Unified workflows. One System — From Requirement to Delivery.
+              networks. Unified workflows. One System | From Requirement to Delivery.
             </p>
           </div>
 

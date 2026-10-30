@@ -21,7 +21,7 @@ export function HeroSection() {
           B2B packaging infrastructure
         </p>
         <h1 className="text-[2.4rem] leading-[1.08] font-semibold tracking-tight text-foreground sm:text-5xl lg:text-[3.5rem]">
-          One System — From Requirement to Delivery
+          One System | From Requirement to Delivery
         </h1>
         <p className="mx-auto mt-5 max-w-lg text-base leading-relaxed font-light text-muted-foreground">
           UNIFIÉE is the operating layer for F&amp;B packaging — decisions, vendors, design, and orders in one place.

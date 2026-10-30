@@ -8,7 +8,7 @@ import { ChaosStatementSection, ProblemSection } from "@/components/site/landing
 import { EarlyFeedbackSection, WhyUnifieeSection } from "@/components/site/landing/why-section";
 
 export const metadata: Metadata = {
-  title: "UNIFIÉE — One System, From Requirement to Delivery",
+  title: "UNIFIÉE — One System | From Requirement to Delivery",
   description:
     "UNIFIÉE is an intelligent B2B operating layer that connects the fragmented decisions, suppliers, and workflows behind food and beverage packaging operations.",
 };
