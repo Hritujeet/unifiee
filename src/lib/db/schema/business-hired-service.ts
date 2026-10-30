@@ -30,6 +30,6 @@ export const businessHiredServiceTable = pgTable("business_hired_services", {
 }, (table) => [
     uniqueIndex("business_hired_services_business_service_active_unique")
         .on(table.businessId, table.serviceId)
-        .where(sql`${table.status} = 'active'`),
+        .where(sql`${table.status} = 'active'::hired_service_status`),
     index("business_hired_services_business_status_idx").on(table.businessId, table.status),
 ])

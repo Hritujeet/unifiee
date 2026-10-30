@@ -1,3 +1,0 @@
-ALTER TABLE "offerings" DROP CONSTRAINT "offerings_offering_type_offering_types_key_fkey";--> statement-breakpoint
-ALTER TABLE "offerings" ADD CONSTRAINT "offerings_type_vendor_fk" FOREIGN KEY ("vendor_type","offering_type") REFERENCES "offering_types"("vendor_type","key") ON DELETE RESTRICT;--> statement-breakpoint
-ALTER TABLE "offerings" ADD CONSTRAINT "offerings_vendor_type_supported_check" CHECK ("vendor_type" = 'manufacturer');

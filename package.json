@@ -6,6 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "db:reset": "tsx scripts/reset-db.ts",
     "lint": "eslint",
     "test:hardening": "tsx --test tests/idempotency.test.ts",
     "ai:eval": "tsx --env-file=.env.local scripts/run-evals.ts",

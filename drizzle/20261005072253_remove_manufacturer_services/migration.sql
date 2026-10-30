@@ -1,1 +1,0 @@
-ALTER TABLE "manufacturer" DROP COLUMN "services";
