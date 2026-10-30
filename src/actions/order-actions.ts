@@ -19,6 +19,7 @@ import { and, desc, eq, inArray } from "drizzle-orm"
 import { headers } from "next/headers"
 import { revalidatePath } from "next/cache"
 import { z } from "zod"
+import { beginIdempotency, completeIdempotency, idempotencyResponse } from "@/lib/server/idempotency"
 
 export type OrderActionResult<T = unknown> = {
     success: boolean
@@ -49,6 +50,7 @@ const createOrderSchema = z.object({
     totalAmount: z.coerce.number().nonnegative(),
     items: z.array(itemSchema).min(1),
     shippingAddress: addressSchema,
+    idempotencyKey: z.string().uuid().optional(),
 })
 
 async function getBusinessForSession() {
@@ -67,6 +69,7 @@ async function getBusinessForSession() {
 export async function createOrderFromQuoteAction(
     input: z.input<typeof createOrderSchema>
 ): Promise<OrderActionResult<{ orderId: string; orderNumber: string; status: "confirmed" }>> {
+    let idempotencyId: string | null = null
     try {
         const parsed = createOrderSchema.safeParse(input)
         if (!parsed.success) {
@@ -77,6 +80,20 @@ export async function createOrderFromQuoteAction(
         if (!profile || profile.id !== parsed.data.businessId) {
             return { success: false, error: "You are not authorized to create this order." }
         }
+        const session = await auth.api.getSession({ headers: await headers() })
+        if (!session?.user) return { success: false, error: "You must be signed in." }
+        const idempotencyKey = parsed.data.idempotencyKey ?? crypto.randomUUID()
+        const requestPayload = { ...parsed.data, totalAmount: undefined }
+        const idempotency = idempotencyResponse(await beginIdempotency(
+            "create-order-from-quote",
+            idempotencyKey,
+            session.user.id,
+            requestPayload,
+        ))
+        if (idempotency.handled) {
+            return idempotency.response as OrderActionResult<{ orderId: string; orderNumber: string; status: "confirmed" }>
+        }
+        idempotencyId = idempotency.id
 
         const [quote] = await db
             .select({
@@ -107,9 +124,15 @@ export async function createOrderFromQuoteAction(
             ))
             .limit(1)
 
-        if (!quote) return { success: false, error: "This offer is no longer available." }
+        if (!quote) {
+            const response = { success: false, error: "This offer is no longer available." }
+            await completeIdempotency(idempotency.id, response)
+            return response
+        }
         if (parsed.data.vendorId && parsed.data.vendorId !== quote.vendorId) {
-            return { success: false, error: "The selected vendor does not match this offer." }
+            const response = { success: false, error: "The selected vendor does not match this offer." }
+            await completeIdempotency(idempotency.id, response)
+            return response
         }
 
         const selectedOfferingId = parsed.data.items[0]?.offeringId
@@ -123,7 +146,7 @@ export async function createOrderFromQuoteAction(
 
         const orderId = crypto.randomUUID()
         const orderNumber = `UNF-${Date.now().toString(36).toUpperCase()}`
-        const total = parsed.data.totalAmount.toFixed(2)
+        const total = Number(quote.totalPrice).toFixed(2)
         const firstItem = parsed.data.items[0]
         const itemQuantity = firstItem?.quantity ?? quote.quantity
         const itemTitle = firstItem?.title || quote.requirementTitle
@@ -186,9 +209,14 @@ export async function createOrderFromQuoteAction(
         revalidatePath("/business/orders")
         revalidatePath("/business/offers")
         revalidatePath("/manufacturer/order-dashboard")
-        return { success: true, data: { orderId, orderNumber, status: "confirmed" } }
+        const response = { success: true as const, data: { orderId, orderNumber, status: "confirmed" as const } }
+        await completeIdempotency(idempotency.id, response)
+        return response
     } catch (error) {
         console.error("Error creating order from quote:", error)
+        if (idempotencyId) {
+            await completeIdempotency(idempotencyId, { success: false, error: "Could not create the order. Please try again." })
+        }
         return { success: false, error: "Could not create the order. Please try again." }
     }
 }
@@ -197,17 +225,30 @@ export async function cancelOrderAction(input: {
     orderId: string
     role: "business" | "manufacturer"
     reason: string
+    idempotencyKey?: string
 }): Promise<OrderActionResult<{ orderId: string }>> {
+    let idempotencyId: string | null = null
     try {
         const parsed = z.object({
             orderId: z.string().uuid(),
             role: z.enum(["business", "manufacturer"]),
             reason: z.string().trim().min(3).max(1000),
+            idempotencyKey: z.string().uuid().optional(),
         }).safeParse(input)
         if (!parsed.success) return { success: false, error: "A valid cancellation reason is required." }
 
         const session = await auth.api.getSession({ headers: await headers() })
         if (!session?.user) return { success: false, error: "You must be signed in." }
+        const idempotency = idempotencyResponse(await beginIdempotency(
+            "cancel-order",
+            parsed.data.idempotencyKey ?? crypto.randomUUID(),
+            session.user.id,
+            parsed.data,
+        ))
+        if (idempotency.handled) {
+            return idempotency.response as OrderActionResult<{ orderId: string }>
+        }
+        idempotencyId = idempotency.id
 
         const [buyer] = await db.select({ id: business.id }).from(business)
             .where(eq(business.userId, session.user.id)).limit(1)
@@ -230,13 +271,22 @@ export async function cancelOrderAction(input: {
             inArray(businessOrdersTable.status, ["draft", "submitted", "confirmed"]),
         )).returning({ id: businessOrdersTable.id })
 
-        if (!updated.length) return { success: false, error: "This order cannot be cancelled." }
+        if (!updated.length) {
+            const response = { success: false, error: "This order cannot be cancelled." }
+            await completeIdempotency(idempotencyId, response)
+            return response
+        }
 
         revalidatePath("/business/orders")
         revalidatePath("/manufacturer/order-dashboard")
-        return { success: true, data: { orderId: updated[0].id } }
+        const response = { success: true as const, data: { orderId: updated[0].id } }
+        await completeIdempotency(idempotencyId, response)
+        return response
     } catch (error) {
         console.error("Error cancelling order:", error)
+        if (idempotencyId) {
+            await completeIdempotency(idempotencyId, { success: false, error: "Could not cancel the order. Please try again." })
+        }
         return { success: false, error: "Could not cancel the order. Please try again." }
     }
 }

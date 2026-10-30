@@ -12,6 +12,7 @@ import { designerServiceTable } from "@/lib/db/schema/designer-service"
 import { packagingDesignerTable } from "@/lib/db/schema/packaging-designer"
 import { checkRateLimit, getClientIpFromHeaders } from "@/lib/server/rate-limit"
 import { getCurrentDesigner } from "@/lib/designer/get-current-designer"
+import { beginIdempotency, completeIdempotency, idempotencyResponse } from "@/lib/server/idempotency"
 
 type HireActionResult = { success: boolean; error?: string }
 
@@ -128,7 +129,7 @@ async function getCurrentBusiness() {
     return { session, businessProfile: businessProfile ?? null, reqHeaders }
 }
 
-export async function trackHiredDesignerService(serviceId: string): Promise<HireActionResult> {
+export async function trackHiredDesignerService(serviceId: string, idempotencyKey?: string): Promise<HireActionResult> {
     const parsedId = z.string().uuid("Invalid service ID format.").safeParse(serviceId)
     if (!parsedId.success) return { success: false, error: "Invalid designer service." }
 
@@ -136,6 +137,13 @@ export async function trackHiredDesignerService(serviceId: string): Promise<Hire
     if (!session?.user || !businessProfile) {
         return { success: false, error: "Sign in with a business account to track hired services." }
     }
+    const idempotency = idempotencyResponse(await beginIdempotency(
+        "track-designer-service",
+        idempotencyKey ?? crypto.randomUUID(),
+        session.user.id,
+        { serviceId: parsedId.data },
+    ))
+    if (idempotency.handled) return idempotency.response as HireActionResult
 
     const clientIp = getClientIpFromHeaders(reqHeaders)
     const rateCheck = await checkRateLimit(
@@ -148,6 +156,7 @@ export async function trackHiredDesignerService(serviceId: string): Promise<Hire
     )
 
     if (!rateCheck.success) {
+        await completeIdempotency(idempotency.id, { success: false, error: "Too many requests. Please wait a moment." })
         return { success: false, error: "Too many requests. Please wait a moment." }
     }
 
@@ -173,7 +182,11 @@ export async function trackHiredDesignerService(serviceId: string): Promise<Hire
         ))
         .limit(1)
 
-    if (!listing) return { success: false, error: "This designer service is no longer available." }
+    if (!listing) {
+        const response = { success: false, error: "This designer service is no longer available." }
+        await completeIdempotency(idempotency.id, response)
+        return response
+    }
 
     try {
         await db.insert(businessHiredServiceTable).values({
@@ -191,12 +204,16 @@ export async function trackHiredDesignerService(serviceId: string): Promise<Hire
         })
     } catch (error) {
         if (typeof error === "object" && error !== null && "code" in error && error.code === "23505") {
-            return { success: false, error: "This service is already in your hired-services list." }
+            const response = { success: false, error: "This service is already in your hired-services list." }
+            await completeIdempotency(idempotency.id, response)
+            return response
         }
         console.error("Could not track hired designer service:", error)
+        await completeIdempotency(idempotency.id, { success: false, error: "Could not track this service. Please try again." })
         return { success: false, error: "Could not track this service. Please try again." }
     }
 
+    await completeIdempotency(idempotency.id, { success: true })
     revalidatePath("/business")
     revalidatePath("/business/designers")
     revalidatePath("/business/hired-services")
@@ -266,7 +283,7 @@ export async function trackCustomProject(data: {
     return { success: true }
 }
 
-export async function completeHiredDesignerService(hiredServiceId: string): Promise<HireActionResult> {
+export async function completeHiredDesignerService(hiredServiceId: string, idempotencyKey?: string): Promise<HireActionResult> {
     const parsedId = z.string().uuid("Invalid hired service ID.").safeParse(hiredServiceId)
     if (!parsedId.success) return { success: false, error: "Invalid hired service." }
 
@@ -274,6 +291,13 @@ export async function completeHiredDesignerService(hiredServiceId: string): Prom
     if (!session?.user || !businessProfile) {
         return { success: false, error: "Sign in with a business account to manage hired services." }
     }
+    const idempotency = idempotencyResponse(await beginIdempotency(
+        "complete-designer-service",
+        idempotencyKey ?? crypto.randomUUID(),
+        session.user.id,
+        { hiredServiceId: parsedId.data },
+    ))
+    if (idempotency.handled) return idempotency.response as HireActionResult
 
     try {
         const updated = await db
@@ -286,13 +310,19 @@ export async function completeHiredDesignerService(hiredServiceId: string): Prom
             ))
             .returning({ id: businessHiredServiceTable.id })
 
-        if (!updated.length) return { success: false, error: "This active service could not be found." }
+        if (!updated.length) {
+            const response = { success: false, error: "This active service could not be found." }
+            await completeIdempotency(idempotency.id, response)
+            return response
+        }
     } catch (error) {
         console.error("Could not complete hired designer service:", error)
+        await completeIdempotency(idempotency.id, { success: false, error: "Could not update this service. Please try again." })
         return { success: false, error: "Could not update this service. Please try again." }
     }
 
     revalidatePath("/business/hired-services")
     revalidatePath("/business")
+    await completeIdempotency(idempotency.id, { success: true })
     return { success: true }
 }

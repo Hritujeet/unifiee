@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useRef, useState } from "react"
 import Link from "next/link"
 import { updateOrderStatusAction } from "@/actions/vendor-actions"
 import {
@@ -118,6 +118,7 @@ export function OrderManagementView({ initialOrders }: OrderManagementViewProps)
     const [searchQuery, setSearchQuery] = useState("")
     const [statusFilter, setStatusFilter] = useState("all")
     const [updatingId, setUpdatingId] = useState<string | null>(null)
+    const inFlightRef = useRef(false)
 
     const filtered = orders.filter((item) => {
         const matchesStatus = statusFilter === "all" ? true : item.order.status === statusFilter
@@ -134,9 +135,11 @@ export function OrderManagementView({ initialOrders }: OrderManagementViewProps)
         orderId: string,
         newStatus: "confirmed" | "processing" | "shipped" | "delivered"
     ) => {
+        if (inFlightRef.current) return
+        inFlightRef.current = true
         setUpdatingId(orderId)
         try {
-            const res = await updateOrderStatusAction(orderId, newStatus)
+            const res = await updateOrderStatusAction(orderId, newStatus, crypto.randomUUID())
             if (res.success) {
                 setOrders((prev) =>
                     prev.map((o) =>
@@ -149,6 +152,7 @@ export function OrderManagementView({ initialOrders }: OrderManagementViewProps)
                 toast.error(res.error || "Failed to update order status")
             }
         } finally {
+            inFlightRef.current = false
             setUpdatingId(null)
         }
     }
@@ -368,6 +372,8 @@ export function OrderManagementView({ initialOrders }: OrderManagementViewProps)
                                                 <Button
                                                     size="sm"
                                                     disabled={isUpdating}
+                                                    aria-busy={isUpdating}
+                                                    aria-disabled={isUpdating}
                                                     onClick={() => handleUpdateStatus(order.id, "confirmed")}
                                                     className="h-8 text-xs gap-1.5 font-semibold shadow-xs"
                                                 >
@@ -380,6 +386,8 @@ export function OrderManagementView({ initialOrders }: OrderManagementViewProps)
                                                 <Button
                                                     size="sm"
                                                     disabled={isUpdating}
+                                                    aria-busy={isUpdating}
+                                                    aria-disabled={isUpdating}
                                                     onClick={() => handleUpdateStatus(order.id, "processing")}
                                                     className="h-8 text-xs gap-1.5 font-semibold shadow-xs"
                                                 >
@@ -392,6 +400,8 @@ export function OrderManagementView({ initialOrders }: OrderManagementViewProps)
                                                 <Button
                                                     size="sm"
                                                     disabled={isUpdating}
+                                                    aria-busy={isUpdating}
+                                                    aria-disabled={isUpdating}
                                                     variant="secondary"
                                                     onClick={() => handleUpdateStatus(order.id, "shipped")}
                                                     className="h-8 text-xs gap-1.5 font-semibold border shadow-xs"
@@ -405,6 +415,8 @@ export function OrderManagementView({ initialOrders }: OrderManagementViewProps)
                                                 <Button
                                                     size="sm"
                                                     disabled={isUpdating}
+                                                    aria-busy={isUpdating}
+                                                    aria-disabled={isUpdating}
                                                     onClick={() => handleUpdateStatus(order.id, "delivered")}
                                                     className="h-8 text-xs gap-1.5 font-semibold bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs"
                                                 >

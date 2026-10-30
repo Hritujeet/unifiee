@@ -17,6 +17,7 @@ import { eq, and, desc, isNull, inArray } from "drizzle-orm"
 import { revalidatePath } from "next/cache"
 import crypto from "crypto"
 import { triggerEntityEmbedding, buildOfferingTemplate } from "@/lib/ai/embeddings"
+import { beginIdempotency, completeIdempotency, idempotencyResponse } from "@/lib/server/idempotency"
 
 export interface VendorAuthContext {
     userId: string
@@ -307,11 +308,21 @@ export async function deleteOfferingAction(offeringId: string) {
 // ── 5. Update Order Status in Real DB ────────────────────────────────────────
 export async function updateOrderStatusAction(
     orderId: string,
-    newStatus: "confirmed" | "processing" | "shipped" | "delivered" | "cancelled"
+    newStatus: "confirmed" | "processing" | "shipped" | "delivered" | "cancelled",
+    idempotencyKey?: string,
 ) {
+    let idempotencyId: string | null = null
     try {
         const vendor = await getAuthenticatedVendor()
         if (!vendor) return { success: false, error: "Unauthorized" }
+        const idempotency = idempotencyResponse(await beginIdempotency(
+            "update-order-status",
+            idempotencyKey ?? crypto.randomUUID(),
+            vendor.userId,
+            { orderId, newStatus },
+        ))
+        if (idempotency.handled) return idempotency.response
+        idempotencyId = idempotency.id
 
         const [order] = await db
             .select({
@@ -326,7 +337,11 @@ export async function updateOrderStatusAction(
             ))
             .limit(1)
 
-        if (!order) return { success: false, error: "Order not found." }
+        if (!order) {
+            const response = { success: false, error: "Order not found." }
+            await completeIdempotency(idempotencyId, response)
+            return response
+        }
 
         const transitions: Record<string, string[]> = {
             submitted: ["confirmed", "cancelled"],
@@ -335,7 +350,9 @@ export async function updateOrderStatusAction(
             shipped: ["delivered"],
         }
         if (!transitions[order.status]?.includes(newStatus)) {
-            return { success: false, error: `Order cannot move from ${order.status} to ${newStatus}.` }
+            const response = { success: false, error: `Order cannot move from ${order.status} to ${newStatus}.` }
+            await completeIdempotency(idempotencyId, response)
+            return response
         }
 
         const updates: Record<string, unknown> = {
@@ -370,9 +387,15 @@ export async function updateOrderStatusAction(
         } as const
 
         await db.transaction(async (tx) => {
-            await tx.update(businessOrdersTable)
+            const updated = await tx.update(businessOrdersTable)
                 .set(updates)
-                .where(eq(businessOrdersTable.id, orderId))
+                .where(and(
+                    eq(businessOrdersTable.id, orderId),
+                    eq(businessOrdersTable.vendorId, vendor.manufacturerId),
+                    eq(businessOrdersTable.status, order.status),
+                ))
+                .returning({ id: businessOrdersTable.id })
+            if (!updated.length) throw new Error("ORDER_STATE_CHANGED")
 
             const milestone = milestoneByStatus[newStatus as keyof typeof milestoneByStatus]
             if (milestone) {
@@ -381,6 +404,11 @@ export async function updateOrderStatusAction(
                     orderId,
                     vendorId: vendor.manufacturerId,
                     ...milestone,
+                }).onConflictDoNothing({
+                    target: [
+                        orderFulfillmentMilestonesTable.orderId,
+                        orderFulfillmentMilestonesTable.stage,
+                    ],
                 })
             }
 
@@ -392,9 +420,17 @@ export async function updateOrderStatusAction(
         revalidatePath("/manufacturer")
         revalidatePath("/manufacturer/order-dashboard")
         revalidatePath("/business/orders")
-        return { success: true }
+        const response = { success: true as const }
+        await completeIdempotency(idempotencyId, response)
+        return response
     } catch (err: unknown) {
         console.error("Error updating order:", err)
+        if (idempotencyId) {
+            const error = err instanceof Error && err.message === "ORDER_STATE_CHANGED"
+                ? "The order was updated by another request. Refresh and try again."
+                : "Failed to update order status."
+            await completeIdempotency(idempotencyId, { success: false, error })
+        }
         return { success: false, error: "Failed to update order status." }
     }
 }

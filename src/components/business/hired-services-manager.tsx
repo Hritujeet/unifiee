@@ -3,7 +3,7 @@
 import Image from "next/image"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { useMemo, useState, useTransition } from "react"
+import { useMemo, useRef, useState, useTransition } from "react"
 import {
     ArrowRight,
     ArrowUpRight,
@@ -53,6 +53,7 @@ export function HiredServicesManager({ services }: { services: HiredDesignerServ
     const [statusFilter, setStatusFilter] = useState<"all" | "active" | "completed">("all")
     const [pendingId, setPendingId] = useState<string | null>(null)
     const [isPending, startTransition] = useTransition()
+    const inFlightRef = useRef(false)
 
     // Add Custom Project Dialog State
     const [isAddOpen, setIsAddOpen] = useState(false)
@@ -93,10 +94,12 @@ export function HiredServicesManager({ services }: { services: HiredDesignerServ
     }, [services, statusFilter, search])
 
     function completeService(serviceId: string) {
+        if (inFlightRef.current) return
+        inFlightRef.current = true
         setPendingId(serviceId)
         startTransition(async () => {
             try {
-                const result = await completeHiredDesignerService(serviceId)
+                const result = await completeHiredDesignerService(serviceId, crypto.randomUUID())
                 if (!result.success) {
                     toast.error(result.error ?? "Could not update this service.")
                     return
@@ -106,6 +109,7 @@ export function HiredServicesManager({ services }: { services: HiredDesignerServ
             } catch {
                 toast.error("Could not update this service. Please try again.")
             } finally {
+                inFlightRef.current = false
                 setPendingId(null)
             }
         })
@@ -113,11 +117,13 @@ export function HiredServicesManager({ services }: { services: HiredDesignerServ
 
     async function handleAddCustomProject(e: React.FormEvent) {
         e.preventDefault()
+        if (inFlightRef.current) return
         if (!customForm.serviceTitle.trim() || !customForm.designerName.trim() || !customForm.designerEmail.trim()) {
             toast.error("Please fill in the project title, designer name, and email.")
             return
         }
 
+        inFlightRef.current = true
         setIsAdding(true)
         try {
             const result = await trackCustomProject({
@@ -148,6 +154,7 @@ export function HiredServicesManager({ services }: { services: HiredDesignerServ
         } catch {
             toast.error("Failed to add project. Please try again.")
         } finally {
+            inFlightRef.current = false
             setIsAdding(false)
         }
     }

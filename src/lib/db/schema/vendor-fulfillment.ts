@@ -9,6 +9,7 @@ import {
     text,
     timestamp,
     uuid,
+    uniqueIndex,
     varchar,
 } from "drizzle-orm/pg-core"
 import { sql } from "drizzle-orm"
@@ -58,6 +59,7 @@ export const orderFulfillmentMilestonesTable = pgTable("order_fulfillment_milest
     index("order_milestones_order_idx").on(table.orderId),
     index("order_milestones_vendor_idx").on(table.vendorId),
     index("order_milestones_stage_idx").on(table.orderId, table.stage),
+    uniqueIndex("order_milestones_order_stage_unique").on(table.orderId, table.stage),
 ])
 
 export const orderShipmentsTable = pgTable("order_shipments", {

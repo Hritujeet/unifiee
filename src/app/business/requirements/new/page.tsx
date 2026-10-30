@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useRef, useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import {
@@ -64,6 +64,7 @@ const PRESET_PROMPTS = [
 
 export default function NewRequirementPage() {
     const router = useRouter()
+    const saveInFlightRef = useRef(false)
 
     const [rawPrompt, setRawPrompt] = useState("")
     const [isParsing, setIsParsing] = useState(false)
@@ -149,8 +150,9 @@ export default function NewRequirementPage() {
     }
 
     const handleSave = async () => {
-        if (!structuredSpec || isSaving) return
+        if (!structuredSpec || isSaving || saveInFlightRef.current) return
 
+        saveInFlightRef.current = true
         setIsSaving(true)
         try {
             const result = await createRequirementAction({
@@ -164,6 +166,7 @@ export default function NewRequirementPage() {
                 deliveryLocation: structuredSpec.deliveryLocation || "Delivery address",
                 requiredByDate: structuredSpec.requiredByDate || "Flexible timeframe",
                 rawDescription: rawPrompt,
+                idempotencyKey: crypto.randomUUID(),
             })
 
             if (!result.success) {
@@ -178,6 +181,8 @@ export default function NewRequirementPage() {
         } catch {
             toast.error("An unexpected error occurred while saving your requirement.")
             setIsSaving(false)
+        } finally {
+            saveInFlightRef.current = false
         }
     }
 

@@ -14,6 +14,7 @@ import { headers } from "next/headers"
 import { z } from "zod"
 import { triggerEntityEmbedding, buildRequirementTemplate } from "@/lib/ai/embeddings"
 import { aiDocumentsTable } from "@/lib/db/schema/ai-document"
+import { beginIdempotency, completeIdempotency, idempotencyResponse } from "@/lib/server/idempotency"
 
 const packagingUseValues = [
     "coffee",
@@ -48,6 +49,7 @@ const createRequirementSchema = z.object({
     deliveryLocation: z.string().trim().min(2, "Delivery city/address is required.").max(1000),
     requiredByDate: z.string().trim().min(1, "Required delivery timeframe is required.").max(120),
     rawDescription: z.string().trim().max(4000).optional().nullable(),
+    idempotencyKey: z.string().uuid().optional(),
 })
 
 export type CreateRequirementInput = z.infer<typeof createRequirementSchema>
@@ -77,7 +79,12 @@ async function getAuthenticatedBusiness() {
 export async function createRequirementAction(
     input: CreateRequirementInput
 ): Promise<ActionResult<{ id: string }>> {
+    let idempotencyId: string | null = null
     try {
+        const parsed = createRequirementSchema.safeParse(input)
+        if (!parsed.success) {
+            return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid requirement data." }
+        }
         const { session, businessProfile, reqHeaders } = await getAuthenticatedBusiness()
 
         if (!session?.user) {
@@ -93,6 +100,14 @@ export async function createRequirementAction(
                 error: "Only registered F&B business accounts can submit packaging requirements.",
             }
         }
+        const idempotency = idempotencyResponse(await beginIdempotency(
+            "create-business-requirement",
+            parsed.data.idempotencyKey ?? crypto.randomUUID(),
+            session.user.id,
+            parsed.data,
+        ))
+        if (idempotency.handled) return idempotency.response as ActionResult<{ id: string }>
+        idempotencyId = idempotency.id
 
         // Rate limit: max 10 requirement submissions per 5 minutes
         const clientIp = getClientIpFromHeaders(reqHeaders)
@@ -106,16 +121,11 @@ export async function createRequirementAction(
         )
 
         if (!rateCheck.success) {
+            await completeIdempotency(idempotency.id, { success: false, error: "Too many requirements created recently. Please wait before submitting again." })
             return {
                 success: false,
                 error: `Too many requirements created recently. Please wait ${rateCheck.resetInSeconds} seconds before submitting again.`,
             }
-        }
-
-        const parsed = createRequirementSchema.safeParse(input)
-        if (!parsed.success) {
-            const firstError = parsed.error.issues[0]?.message ?? "Invalid requirement data."
-            return { success: false, error: firstError }
         }
 
         const data = parsed.data
@@ -167,13 +177,16 @@ export async function createRequirementAction(
         revalidatePath("/business")
         revalidatePath("/business/requirements")
 
-        return {
+        const response = {
             success: true,
             data: { id: requirementId },
         }
+        await completeIdempotency(idempotency.id, response)
+        return response
     } catch (error) {
         console.error("Error creating business requirement:", error)
         const message = error instanceof Error ? error.message : "Database error while saving requirement."
+        if (idempotencyId) await completeIdempotency(idempotencyId, { success: false, error: message })
         return { success: false, error: message }
     }
 }

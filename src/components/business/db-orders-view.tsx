@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import { cancelOrderAction, type BusinessOrderSummary } from "@/actions/order-actions"
 import { Button } from "@/components/ui/button"
@@ -20,14 +20,17 @@ const statusLabels: Record<string, string> = {
 export default function DbOrdersView({ orders }: { orders: BusinessOrderSummary[] }) {
     const router = useRouter()
     const [pendingId, setPendingId] = useState<string | null>(null)
+    const inFlightRef = useRef(false)
 
     async function cancelOrder(orderId: string) {
         const reason = window.prompt("Why are you cancelling this order?")
         if (!reason?.trim()) return
 
+        if (inFlightRef.current) return
+        inFlightRef.current = true
         setPendingId(orderId)
         try {
-            const result = await cancelOrderAction({ orderId, role: "business", reason })
+            const result = await cancelOrderAction({ orderId, role: "business", reason, idempotencyKey: crypto.randomUUID() })
             if (!result.success) {
                 toast.error(result.error ?? "Could not cancel the order.")
                 return
@@ -37,6 +40,7 @@ export default function DbOrdersView({ orders }: { orders: BusinessOrderSummary[
         } catch {
             toast.error("Could not cancel the order. Please try again.")
         } finally {
+            inFlightRef.current = false
             setPendingId(null)
         }
     }
@@ -82,6 +86,8 @@ export default function DbOrdersView({ orders }: { orders: BusinessOrderSummary[
                                             variant="outline"
                                             size="sm"
                                             disabled={pendingId !== null}
+                                            aria-busy={pendingId === order.id}
+                                            aria-disabled={pendingId === order.id}
                                             onClick={() => cancelOrder(order.id)}
                                         >
                                             {pendingId === order.id ? "Cancelling..." : "Cancel order"}

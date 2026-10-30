@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import { createOrderFromQuoteAction, type BusinessQuoteSummary } from "@/actions/order-actions"
 import { Button } from "@/components/ui/button"
@@ -17,13 +17,17 @@ export default function DbOffersView({
 }) {
     const router = useRouter()
     const [pendingId, setPendingId] = useState<string | null>(null)
+    const inFlightRef = useRef(false)
 
     async function acceptQuote(quote: BusinessQuoteSummary) {
+        if (inFlightRef.current) return
+        inFlightRef.current = true
         setPendingId(quote.id)
         try {
             const result = await createOrderFromQuoteAction({
                 quoteId: quote.id,
                 businessId,
+                idempotencyKey: crypto.randomUUID(),
                 vendorId: quote.vendorId,
                 totalAmount: Number(quote.totalPrice),
                 items: [{
@@ -50,6 +54,7 @@ export default function DbOffersView({
         } catch {
             toast.error("Could not create the order. Please try again.")
         } finally {
+            inFlightRef.current = false
             setPendingId(null)
         }
     }
@@ -86,6 +91,8 @@ export default function DbOffersView({
                                 </div>
                                 <Button
                                     disabled={quote.status !== "pending" || pendingId !== null}
+                                    aria-busy={pendingId === quote.id}
+                                    aria-disabled={pendingId === quote.id}
                                     onClick={() => acceptQuote(quote)}
                                 >
                                     {pendingId === quote.id ? "Creating order..." : quote.status === "pending" ? "Accept & create order" : "Offer processed"}

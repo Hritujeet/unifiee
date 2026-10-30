@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { useTransition } from "react"
+import { useRef, useTransition } from "react"
 import { ArrowRight, LoaderCircle, UserRoundPlus } from "lucide-react"
 import { toast } from "sonner"
 import { trackHiredDesignerService } from "@/actions/business-hired-services"
@@ -11,11 +11,14 @@ import { Button } from "@/components/ui/button"
 export function TrackServiceButton({ serviceId, tracked }: { serviceId: string; tracked: boolean }) {
     const router = useRouter()
     const [isPending, startTransition] = useTransition()
+    const inFlightRef = useRef(false)
 
     function trackService() {
+        if (inFlightRef.current) return
+        inFlightRef.current = true
         startTransition(async () => {
             try {
-                const result = await trackHiredDesignerService(serviceId)
+                const result = await trackHiredDesignerService(serviceId, crypto.randomUUID())
                 if (!result.success) {
                     toast.error(result.error ?? "Could not track this service.")
                     return
@@ -24,6 +27,8 @@ export function TrackServiceButton({ serviceId, tracked }: { serviceId: string; 
                 router.refresh()
             } catch {
                 toast.error("Could not track this service. Please try again.")
+            } finally {
+                inFlightRef.current = false
             }
         })
     }
@@ -37,7 +42,7 @@ export function TrackServiceButton({ serviceId, tracked }: { serviceId: string; 
     }
 
     return (
-        <Button type="button" className="flex-1" onClick={trackService} disabled={isPending}>
+        <Button type="button" className="flex-1" onClick={trackService} disabled={isPending} aria-busy={isPending} aria-disabled={isPending}>
             {isPending ? <LoaderCircle className="size-4 animate-spin" /> : <UserRoundPlus className="size-4" />}
             Track as hired
         </Button>
