@@ -1,13 +1,16 @@
 import type { Metadata } from "next"
-import { eq } from "drizzle-orm"
+import Link from "next/link"
+import { eq, and } from "drizzle-orm"
 import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
 import { business } from "@/lib/db/schema/business"
+import { businessHiredServiceTable } from "@/lib/db/schema/business-hired-service"
 import { headers } from "next/headers"
 import BusinessDashboardView from "@/components/business/dashboard-view"
 import { getBusinessRequirementsAction } from "@/actions/business-requirements"
 import { getBusinessOrdersAction, getBusinessQuotesAction } from "@/actions/order-actions"
 import type { Requirement, Quotation, Order } from "@/lib/business/types"
+import { ArrowRight, FileCheck2, Sparkles } from "lucide-react"
 
 export const metadata: Metadata = {
     title: "Dashboard — UNIFIÉE Business",
@@ -23,7 +26,7 @@ export default async function BusinessDashboardPage() {
 
     const businessProfile = userId
         ? await db
-              .select({ businessName: business.businessName, fullName: business.fullName })
+              .select({ id: business.id, businessName: business.businessName, fullName: business.fullName })
               .from(business)
               .where(eq(business.userId, userId))
               .limit(1)
@@ -32,10 +35,23 @@ export default async function BusinessDashboardPage() {
     const profile = businessProfile[0]
     const displayName = profile?.businessName || profile?.fullName || "Unifiée"
 
-    const [requirementsResult, quotesResult, ordersResult] = await Promise.all([
+    const [requirementsResult, quotesResult, ordersResult, pendingDeliveries] = await Promise.all([
         getBusinessRequirementsAction(),
         getBusinessQuotesAction(),
         getBusinessOrdersAction(),
+        profile?.id
+            ? db
+                  .select({
+                      id: businessHiredServiceTable.id,
+                      serviceTitle: businessHiredServiceTable.serviceTitle,
+                      designerName: businessHiredServiceTable.designerName,
+                  })
+                  .from(businessHiredServiceTable)
+                  .where(and(
+                      eq(businessHiredServiceTable.businessId, profile.id),
+                      eq(businessHiredServiceTable.status, "delivered")
+                  ))
+            : Promise.resolve([]),
     ])
 
     const quotes = quotesResult.success ? quotesResult.data ?? [] : []
@@ -108,7 +124,38 @@ export default async function BusinessDashboardPage() {
     }))
 
     return (
-        <div className="w-full">
+        <div className="w-full space-y-6">
+            {pendingDeliveries.length > 0 && (
+                <div className="rounded-2xl border border-purple-500/30 bg-purple-500/10 p-4 shadow-xs">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="flex items-center gap-3">
+                            <div className="flex size-9 items-center justify-center rounded-xl bg-purple-500/20 text-purple-600 dark:text-purple-400 shrink-0">
+                                <FileCheck2 className="size-5" />
+                            </div>
+                            <div>
+                                <h3 className="text-xs sm:text-sm font-semibold text-foreground flex items-center gap-2">
+                                    <span>Needs Your Action:</span>
+                                    <span className="font-normal text-muted-foreground">
+                                        {pendingDeliveries.length} packaging design {pendingDeliveries.length === 1 ? "delivery awaits" : "deliveries await"} your review
+                                    </span>
+                                </h3>
+                                <p className="text-[11px] text-muted-foreground mt-0.5">
+                                    Latest from {pendingDeliveries[0].designerName}: &ldquo;{pendingDeliveries[0].serviceTitle}&rdquo;
+                                </p>
+                            </div>
+                        </div>
+
+                        <Link
+                            href={`/business/hired-services/${pendingDeliveries[0].id}`}
+                            className="inline-flex items-center gap-1.5 rounded-lg bg-purple-600 hover:bg-purple-700 px-3 py-1.5 text-xs font-semibold text-white shadow-xs transition-colors shrink-0"
+                        >
+                            <span>Review Delivery</span>
+                            <ArrowRight className="size-3.5" />
+                        </Link>
+                    </div>
+                </div>
+            )}
+
             <BusinessDashboardView
                 businessName={displayName}
                 initialRequirements={requirements}

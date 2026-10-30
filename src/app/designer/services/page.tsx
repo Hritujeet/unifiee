@@ -1,82 +1,87 @@
 import type { Metadata } from "next"
 import Link from "next/link"
 import { PageHeading } from "@/components/designer/dashboard-components"
-import { DesignerServicesManager } from "@/components/designer/designer-services-manager"
-import { designerServiceTable } from "@/lib/db/schema/designer-service"
+import { DesignerServicesManager, type ServiceWithRelations } from "@/components/designer/designer-services-manager"
+import {
+    designerServiceTable,
+    designerServicePackagesTable,
+    designerServiceExtrasTable,
+} from "@/lib/db/schema/designer-service"
 import { getCurrentDesigner } from "@/lib/designer/get-current-designer"
 import { db } from "@/lib/db"
-import { desc, eq } from "drizzle-orm"
+import { desc, eq, inArray, isNull } from "drizzle-orm"
 
 export const metadata: Metadata = {
-    title: "My Services — UNIFIÉE Designer",
-    description: "Review the packaging design specialties and service details on your UNIFIÉE profile.",
+    title: "My Gigs & Services — UNIFIÉE Designer",
+    description: "Publish and manage your packaging design gigs, tiered pricing packages, and work samples.",
     robots: { index: false },
 }
 
-const specializationLabels: Record<string, string> = {
-    "food-boxes": "Food boxes",
-    "paper-cups": "Paper cups",
-    "paper-bags": "Paper bags",
-    "labels-stickers": "Labels & stickers",
-    "corrugated-packaging": "Corrugated packaging",
-    "takeaway-packaging": "Takeaway packaging",
-    "flexible-packaging": "Flexible packaging",
-    other: "Other packaging",
-}
+export const dynamic = "force-dynamic"
 
 export default async function DesignerServicesPage() {
     const designer = await getCurrentDesigner()
     const specializations = designer?.packagingDesignSpecializations ?? []
-    const services = designer
-        ? await db
+    const hasBio = Boolean(designer?.bio && designer.bio.trim().length >= 10)
+    const hasSpecialization = Boolean(
+        (designer?.packagingDesignSpecializations && designer.packagingDesignSpecializations.length > 0) ||
+        (designer?.specializations && designer.specializations.length > 0)
+    )
+
+    let servicesWithRelations: ServiceWithRelations[] = []
+
+    if (designer) {
+        const rawServices = await db
             .select()
             .from(designerServiceTable)
             .where(eq(designerServiceTable.designerId, designer.id))
             .orderBy(desc(designerServiceTable.createdAt))
-        : []
+
+        if (rawServices.length > 0) {
+            const serviceIds = rawServices.map((s) => s.id)
+            const packages = await db
+                .select()
+                .from(designerServicePackagesTable)
+                .where(inArray(designerServicePackagesTable.serviceId, serviceIds))
+
+            const extras = await db
+                .select()
+                .from(designerServiceExtrasTable)
+                .where(inArray(designerServiceExtrasTable.serviceId, serviceIds))
+
+            servicesWithRelations = rawServices.map((service) => ({
+                ...service,
+                packages: packages.filter((p) => p.serviceId === service.id),
+                extras: extras.filter((e) => e.serviceId === service.id),
+            }))
+        }
+    }
 
     return (
         <div className="mx-auto w-full max-w-[1440px] space-y-7">
             <PageHeading
-                eyebrow="Your work, your way"
-                title="Services & expertise"
-                description="Create individual service offerings with their own pricing, deliverables, and work samples."
+                eyebrow="Your marketplace studio"
+                title="Gigs & service packages"
+                description="Publish Fiverr-style packaging gigs with Basic, Standard, and Premium packages, dielines, and 3D renders."
             />
 
-            <section className="space-y-4 border-b pb-7">
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                    <div>
-                        <h2 className="font-heading text-lg font-semibold text-foreground">Profile specialties</h2>
-                        <p className="mt-1 text-sm text-muted-foreground">Broad packaging categories listed on your profile.</p>
-                    </div>
-                    <Link href="/designer/profile" className="text-sm font-medium text-primary hover:underline">Edit profile</Link>
+            {/* Profile readiness alert if bio or specialization is missing */}
+            {(!hasBio || !hasSpecialization) && (
+                <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 text-xs text-amber-700 dark:text-amber-400 flex items-center justify-between gap-3">
+                    <p>
+                        <strong>Profile incomplete:</strong> You need to add a bio and at least one specialization to your profile before publishing gigs.
+                    </p>
+                    <Link href="/designer/profile" className="font-semibold text-primary hover:underline shrink-0">
+                        Edit Profile
+                    </Link>
                 </div>
-                {specializations.length ? (
-                    <div className="flex flex-wrap gap-2">
-                        {specializations.map((specialization) => (
-                            <span key={specialization} className="rounded-md bg-muted px-3 py-1.5 text-sm font-medium text-foreground">
-                                {specializationLabels[specialization] ?? specialization}
-                            </span>
-                        ))}
-                    </div>
-                ) : (
-                    <div className="rounded-xl border border-dashed bg-card p-6 text-sm text-muted-foreground">
-                        No specialties added yet. <Link href="/designer/profile" className="font-semibold text-primary hover:underline">Add packaging specialties</Link> to help brands find you.
-                    </div>
-                )}
-            </section>
+            )}
 
-            <section className="space-y-4">
-                <div>
-                    <h2 className="font-heading text-lg font-semibold text-foreground">Your service offerings</h2>
-                    <p className="mt-1 text-sm text-muted-foreground">Each service can have its own scope, pricing, and sample images.</p>
-                </div>
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <span className="rounded-md bg-muted px-2.5 py-1.5 font-medium text-foreground">{services.length}</span>
-                    {services.length === 1 ? "service listed" : "services listed"}
-                </div>
-                <DesignerServicesManager services={services} />
-            </section>
+            <DesignerServicesManager
+                services={servicesWithRelations}
+                hasBio={hasBio}
+                hasSpecialization={hasSpecialization}
+            />
         </div>
     )
 }

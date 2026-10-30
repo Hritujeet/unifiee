@@ -331,3 +331,34 @@ export function triggerEntityEmbedding(params: SyncEntityParams): void {
         );
     }
 }
+
+/**
+ * Removes entity embeddings from ai_documents when unpublished, paused or deleted.
+ */
+export async function removeEntityEmbeddings(entityType: SyncEntityParams["entityType"], entityId: string): Promise<void> {
+    try {
+        await db
+            .delete(aiDocumentsTable)
+            .where(
+                and(
+                    eq(aiDocumentsTable.entityType, entityType),
+                    eq(aiDocumentsTable.entityId, entityId)
+                )
+            );
+    } catch (err) {
+        console.error("[REMOVE_EMBED_ERROR]", err);
+    }
+}
+
+export function triggerRemoveEntityEmbedding(entityType: SyncEntityParams["entityType"], entityId: string): void {
+    try {
+        after(async () => {
+            await removeEntityEmbeddings(entityType, entityId);
+        });
+    } catch {
+        removeEntityEmbeddings(entityType, entityId).catch((err) =>
+            console.error("[BACKGROUND_REMOVE_EMBED_ERROR]", err)
+        );
+    }
+}
+

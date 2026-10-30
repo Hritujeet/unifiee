@@ -9,7 +9,7 @@ All seeded email addresses use `@seed.unifiee.test`. The deterministic accounts
 include:
 
 - 6 businesses: `seed-business-anjali`, `rahul`, `neha`, `vikram`, `sana`, and `empty`
-- 4 designers: `seed-designer-meera`, `kabir`, `riya`, and `empty`
+- 4 designers: `seed-designer-meera`, `kabir`, `riya`, and `dev`
 - 5 manufacturers: `seed-manufacturer-packcraft`, `ecowrap`, `printnest`, `boxsmith`, and `empty`
 - `seed-none-onboarding@seed.unifiee.test`: account without a profile
 - `seed-none-google@seed.unifiee.test`: Google-provider account without a password

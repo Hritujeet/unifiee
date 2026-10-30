@@ -1,14 +1,18 @@
 "use server"
 
-import { and, eq } from "drizzle-orm"
+import { and, desc, eq } from "drizzle-orm"
 import { revalidatePath } from "next/cache"
 import { headers } from "next/headers"
 import { z } from "zod"
 import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
-import { businessHiredServiceTable } from "@/lib/db/schema/business-hired-service"
+import {
+    businessHiredServiceTable,
+    hiredServiceEventsTable,
+    type HiredServiceStatus,
+} from "@/lib/db/schema/business-hired-service"
 import { business } from "@/lib/db/schema/business"
-import { designerServiceTable } from "@/lib/db/schema/designer-service"
+import { designerServiceTable, designerServicePackagesTable } from "@/lib/db/schema/designer-service"
 import { packagingDesignerTable } from "@/lib/db/schema/packaging-designer"
 import { checkRateLimit, getClientIpFromHeaders } from "@/lib/server/rate-limit"
 import { getCurrentDesigner } from "@/lib/designer/get-current-designer"
@@ -27,10 +31,15 @@ export type DesignerIncomingProject = {
     pricingModel: string
     turnaroundDays: number
     deliverables: string[]
-    status: "active" | "in_review" | "completed"
+    status: HiredServiceStatus
     notes: string | null
     hiredAt: Date
     completedAt: Date | null
+    dueAt: Date | null
+    packageTier: string | null
+    packageName: string | null
+    revisionsIncluded: number
+    revisionsUsed: number
 }
 
 export async function getDesignerIncomingProjectsAction(): Promise<{
@@ -52,18 +61,23 @@ export async function getDesignerIncomingProjectsAction(): Promise<{
                 businessPhone: business.phone,
                 price: businessHiredServiceTable.price,
                 pricingModel: businessHiredServiceTable.pricingModel,
-                turnaroundDays: businessHiredServiceTable.turnaroundDays,
+                turnaroundDays: businessHiredServiceTable.deliveryDays,
                 deliverables: designerServiceTable.deliverables,
                 status: businessHiredServiceTable.status,
                 notes: businessHiredServiceTable.notes,
                 hiredAt: businessHiredServiceTable.hiredAt,
                 completedAt: businessHiredServiceTable.completedAt,
+                dueAt: businessHiredServiceTable.dueAt,
+                packageTier: businessHiredServiceTable.packageTier,
+                packageName: businessHiredServiceTable.packageName,
+                revisionsIncluded: businessHiredServiceTable.revisionsIncluded,
+                revisionsUsed: businessHiredServiceTable.revisionsUsed,
             })
             .from(businessHiredServiceTable)
             .innerJoin(business, eq(businessHiredServiceTable.businessId, business.id))
             .leftJoin(designerServiceTable, eq(businessHiredServiceTable.serviceId, designerServiceTable.id))
             .where(eq(businessHiredServiceTable.designerId, designer.id))
-            .orderBy(businessHiredServiceTable.hiredAt)
+            .orderBy(desc(businessHiredServiceTable.hiredAt))
 
         return {
             success: true,
@@ -80,13 +94,13 @@ export async function getDesignerIncomingProjectsAction(): Promise<{
 
 export async function updateDesignerServiceStatusAction(input: {
     serviceId: string
-    status: "active" | "in_review" | "completed"
+    status: "active" | "delivered" | "completed" | "in_review"
     notes?: string
 }): Promise<HireActionResult> {
     try {
         const parsed = z.object({
             serviceId: z.string().uuid(),
-            status: z.enum(["active", "in_review", "completed"]),
+            status: z.enum(["active", "delivered", "completed", "in_review"]),
             notes: z.string().trim().max(2000).optional(),
         }).safeParse(input)
         if (!parsed.success) return { success: false, error: "Invalid project update." }
@@ -94,10 +108,12 @@ export async function updateDesignerServiceStatusAction(input: {
         const designer = await getCurrentDesigner()
         if (!designer) return { success: false, error: "Designer profile not found." }
 
+        const targetStatus = parsed.data.status === "in_review" ? "delivered" : parsed.data.status
+
         const updated = await db.update(businessHiredServiceTable).set({
-            status: parsed.data.status,
+            status: targetStatus,
             notes: parsed.data.notes ?? null,
-            completedAt: parsed.data.status === "completed" ? new Date() : null,
+            completedAt: targetStatus === "completed" ? new Date() : null,
             updatedAt: new Date(),
         }).where(and(
             eq(businessHiredServiceTable.id, parsed.data.serviceId),
@@ -105,6 +121,7 @@ export async function updateDesignerServiceStatusAction(input: {
         )).returning({ id: businessHiredServiceTable.id })
 
         if (!updated.length) return { success: false, error: "Project not found." }
+
         revalidatePath("/designer/orders")
         revalidatePath("/designer")
         revalidatePath("/business/hired-services")
@@ -137,6 +154,7 @@ export async function trackHiredDesignerService(serviceId: string, idempotencyKe
     if (!session?.user || !businessProfile) {
         return { success: false, error: "Sign in with a business account to track hired services." }
     }
+
     const idempotency = idempotencyResponse(await beginIdempotency(
         "track-designer-service",
         idempotencyKey ?? crypto.randomUUID(),
@@ -147,14 +165,9 @@ export async function trackHiredDesignerService(serviceId: string, idempotencyKe
 
     const clientIp = getClientIpFromHeaders(reqHeaders)
     const rateCheck = await checkRateLimit(
-        {
-            keyPrefix: "track-hired",
-            limit: 20,
-            windowSeconds: 300,
-        },
+        { keyPrefix: "track-hired", limit: 20, windowSeconds: 300 },
         `${businessProfile.id}:${clientIp}`
     )
-
     if (!rateCheck.success) {
         await completeIdempotency(idempotency.id, { success: false, error: "Too many requests. Please wait a moment." })
         return { success: false, error: "Too many requests. Please wait a moment." }
@@ -177,7 +190,7 @@ export async function trackHiredDesignerService(serviceId: string, idempotencyKe
         .innerJoin(packagingDesignerTable, eq(designerServiceTable.designerId, packagingDesignerTable.id))
         .where(and(
             eq(designerServiceTable.id, parsedId.data),
-            eq(designerServiceTable.status, "active"),
+            eq(designerServiceTable.status, "published"),
             eq(packagingDesignerTable.isActive, true),
         ))
         .limit(1)
@@ -189,8 +202,9 @@ export async function trackHiredDesignerService(serviceId: string, idempotencyKe
     }
 
     try {
+        const orderId = crypto.randomUUID()
         await db.insert(businessHiredServiceTable).values({
-            id: crypto.randomUUID(),
+            id: orderId,
             businessId: businessProfile.id,
             serviceId: listing.serviceId,
             designerId: listing.designerId,
@@ -200,14 +214,21 @@ export async function trackHiredDesignerService(serviceId: string, idempotencyKe
             price: listing.price,
             pricingModel: listing.pricingModel,
             turnaroundDays: listing.turnaroundDays,
+            deliveryDays: listing.turnaroundDays,
+            revisionsIncluded: 2,
             sampleImage: listing.sampleImage?.[0] ?? null,
+            status: "requested",
+        })
+
+        await db.insert(hiredServiceEventsTable).values({
+            id: crypto.randomUUID(),
+            orderId,
+            status: "requested",
+            actorUserId: session.user.id,
+            actorRole: "business",
+            note: "Design service tracked in workspace.",
         })
     } catch (error) {
-        if (typeof error === "object" && error !== null && "code" in error && error.code === "23505") {
-            const response = { success: false, error: "This service is already in your hired-services list." }
-            await completeIdempotency(idempotency.id, response)
-            return response
-        }
         console.error("Could not track hired designer service:", error)
         await completeIdempotency(idempotency.id, { success: false, error: "Could not track this service. Please try again." })
         return { success: false, error: "Could not track this service. Please try again." }
@@ -249,21 +270,17 @@ export async function trackCustomProject(data: {
 
     const clientIp = getClientIpFromHeaders(reqHeaders)
     const rateCheck = await checkRateLimit(
-        {
-            keyPrefix: "track-custom",
-            limit: 15,
-            windowSeconds: 300,
-        },
+        { keyPrefix: "track-custom", limit: 15, windowSeconds: 300 },
         `${businessProfile.id}:${clientIp}`
     )
-
     if (!rateCheck.success) {
         return { success: false, error: "Too many project submissions. Please wait a moment." }
     }
 
     try {
+        const orderId = crypto.randomUUID()
         await db.insert(businessHiredServiceTable).values({
-            id: crypto.randomUUID(),
+            id: orderId,
             businessId: businessProfile.id,
             serviceTitle: parsed.data.serviceTitle,
             designerName: parsed.data.designerName,
@@ -271,7 +288,17 @@ export async function trackCustomProject(data: {
             price: parsed.data.price.toFixed(2),
             pricingModel: parsed.data.pricingModel,
             turnaroundDays: parsed.data.turnaroundDays,
+            deliveryDays: parsed.data.turnaroundDays,
             status: "active",
+        })
+
+        await db.insert(hiredServiceEventsTable).values({
+            id: crypto.randomUUID(),
+            orderId,
+            status: "active",
+            actorUserId: session.user.id,
+            actorRole: "business",
+            note: "External custom project recorded.",
         })
     } catch (error) {
         console.error("Could not add custom hired project:", error)
@@ -291,6 +318,7 @@ export async function completeHiredDesignerService(hiredServiceId: string, idemp
     if (!session?.user || !businessProfile) {
         return { success: false, error: "Sign in with a business account to manage hired services." }
     }
+
     const idempotency = idempotencyResponse(await beginIdempotency(
         "complete-designer-service",
         idempotencyKey ?? crypto.randomUUID(),
@@ -306,15 +334,23 @@ export async function completeHiredDesignerService(hiredServiceId: string, idemp
             .where(and(
                 eq(businessHiredServiceTable.id, parsedId.data),
                 eq(businessHiredServiceTable.businessId, businessProfile.id),
-                eq(businessHiredServiceTable.status, "active"),
             ))
             .returning({ id: businessHiredServiceTable.id })
 
         if (!updated.length) {
-            const response = { success: false, error: "This active service could not be found." }
+            const response = { success: false, error: "This service could not be found." }
             await completeIdempotency(idempotency.id, response)
             return response
         }
+
+        await db.insert(hiredServiceEventsTable).values({
+            id: crypto.randomUUID(),
+            orderId: parsedId.data,
+            status: "completed",
+            actorUserId: session.user.id,
+            actorRole: "business",
+            note: "Project marked as complete by client.",
+        })
     } catch (error) {
         console.error("Could not complete hired designer service:", error)
         await completeIdempotency(idempotency.id, { success: false, error: "Could not update this service. Please try again." })

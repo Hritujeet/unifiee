@@ -74,7 +74,7 @@ export default async function PublicDesignerProfilePage({ params }: PublicDesign
         .from(designerServiceTable)
         .where(and(
             eq(designerServiceTable.designerId, designer.id),
-            eq(designerServiceTable.status, "active"),
+            eq(designerServiceTable.status, "published"),
         ))
         .orderBy(asc(designerServiceTable.createdAt))
 
