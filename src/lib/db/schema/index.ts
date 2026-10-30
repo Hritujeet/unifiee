@@ -15,6 +15,7 @@ export * from "./offering"
 // Business Requirements & Orders
 export * from "./business-requirement"
 export * from "./business-order"
+export * from "./order-lifecycle"
 export * from "./business-hired-service"
 
 // Vendor Facilities, Fulfillment & Reviews

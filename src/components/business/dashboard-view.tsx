@@ -28,40 +28,49 @@ import {
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog"
-import { useWorkflowStore, selectPendingOffersCount } from "@/lib/business-workflow-store"
-import { CLIENT_STAGES, mapBackendToClientStage, getClientStageIndex } from "@/lib/constants/stages"
+import {
+    type Order,
+    type Quotation,
+    type Requirement,
+} from "@/lib/business/types"
+import { CLIENT_STAGES, getClientStageIndex } from "@/lib/constants/stages"
 import { toast } from "sonner"
 
 export interface BusinessDashboardProps {
     businessName: string
+    initialRequirements: Requirement[]
+    initialQuotations: Quotation[]
+    initialOrders: Order[]
 }
 
-export default function BusinessDashboardView({ businessName }: BusinessDashboardProps) {
-    const requirements = useWorkflowStore((s) => s.requirements)
-    const quotations = useWorkflowStore((s) => s.quotations)
-    const orders = useWorkflowStore((s) => s.orders)
-    const acceptQuote = useWorkflowStore((s) => s.acceptQuote)
-    const updateOrderStatus = useWorkflowStore((s) => s.updateOrderStatus)
+export default function BusinessDashboardView({
+    businessName,
+    initialRequirements,
+    initialQuotations,
+    initialOrders,
+}: BusinessDashboardProps) {
+    const requirements = initialRequirements
+    const quotations = initialQuotations
+    const orders = initialOrders
 
     const [isOffersModalOpen, setIsOffersModalOpen] = useState(false)
     const [isProofModalOpen, setIsProofModalOpen] = useState(false)
-    const [proofApproved, setProofApproved] = useState(false)
     const [isRequestingRevision, setIsRequestingRevision] = useState(false)
     const [revisionComment, setRevisionComment] = useState("")
 
     const pendingOffers = quotations.filter((q) => q.status === "pending")
-    const pendingOffersCount = selectPendingOffersCount(quotations)
+    const pendingOffersCount = pendingOffers.length
     const activeOrders = orders.filter((o) => o.status !== "Delivered")
     const openRequirements = requirements.filter(
         (r) => r.status === "Requirement Received" || r.status === "Quoted"
     )
 
     // Order awaiting artwork proof approval (Item 2 & 3: Single source of truth from order record)
-    const proofOrder = orders.find((o) => o.requirementTitle.toLowerCase().includes("paper cup")) || orders[0]
+    const proofOrder = orders.length > 0 ? orders[0] : undefined
 
     // Calculate dynamic review queue items per Component 3 of Dashboard memo
     const hasPendingOffers = pendingOffersCount > 0
-    const hasPendingProof = !proofApproved && Boolean(proofOrder)
+    const hasPendingProof = false
     const reviewItemsCount = (hasPendingOffers ? 1 : 0) + (hasPendingProof ? 1 : 0)
 
     // Metric: "Ordered this month" (Phase 1 Item 5)
@@ -143,7 +152,7 @@ export default function BusinessDashboardView({ businessName }: BusinessDashboar
                                 <div className="flex items-center gap-2.5 min-w-0">
                                     <Tag className="size-3.5 sm:size-4 text-amber-500 shrink-0" />
                                     <span className="truncate text-foreground font-medium">
-                                        {pendingOffers.length} offer{pendingOffers.length > 1 ? "s" : ""} received for {pendingOffers[0]?.requirementTitle || "Packaging box"}
+                                        {pendingOffers.length} offer{pendingOffers.length > 1 ? "s" : ""} received for {pendingOffers[0]?.requirementTitle}
                                     </span>
                                 </div>
                                 <Button
@@ -163,7 +172,7 @@ export default function BusinessDashboardView({ businessName }: BusinessDashboar
                                 <div className="flex items-center gap-2.5 min-w-0">
                                     <Palette className="size-3.5 sm:size-4 text-amber-500 shrink-0" />
                                     <span className="truncate text-foreground font-medium">
-                                        Artwork proof ready for {proofOrder?.requirementTitle || "Paper cups 8 oz"} • {proofOrder?.vendorName || "GreenCup Solutions"}
+                                        Artwork proof ready for {proofOrder?.requirementTitle} • {proofOrder?.vendorName}
                                     </span>
                                 </div>
                                 <Button
@@ -264,7 +273,7 @@ export default function BusinessDashboardView({ businessName }: BusinessDashboar
                             <div className="divide-y divide-border/40">
                                 {orders.slice(0, 5).map((order) => {
                                     // Item 3: if proof is pending on this order, do not show In Production
-                                    const effectiveStatus = (order.id === proofOrder?.id && !proofApproved && order.status === "In Production")
+                                    const effectiveStatus = (order.id === proofOrder?.id && order.status === "In Production")
                                         ? "Order Confirmed"
                                         : order.status
                                     const stageIndex = getClientStageIndex(effectiveStatus)
@@ -411,25 +420,24 @@ export default function BusinessDashboardView({ businessName }: BusinessDashboar
                         </CardHeader>
                         <CardContent className="px-4 sm:px-5 pb-4 text-xs text-muted-foreground space-y-2">
                             <div className="flex items-center justify-between">
-                                <span>Offer received</span>
-                                <span className="text-[11px] text-muted-foreground/70">2h ago</span>
+                                <span>Offers received</span>
+                                <span className="text-[11px] text-muted-foreground/70">{pendingOffers.length}</span>
                             </div>
                             <div className="flex items-center justify-between">
-                                <span>Requirement submitted</span>
-                                <span className="text-[11px] text-muted-foreground/70">1d ago</span>
+                                <span>Requirements submitted</span>
+                                <span className="text-[11px] text-muted-foreground/70">{requirements.length}</span>
                             </div>
                             <div className="flex items-center justify-between">
-                                <span>Profile completed</span>
-                                <span className="text-[11px] text-muted-foreground/70">2d ago</span>
+                                <span>Orders placed</span>
+                                <span className="text-[11px] text-muted-foreground/70">{orders.length}</span>
                             </div>
                         </CardContent>
                     </Card>
                 </div>
             </div>
 
-            {/* Bottom sample data note per mockup */}
             <div className="text-[11px] text-muted-foreground/70 border-t border-border/40 pt-4">
-                Sample data. Dashboard shows only your own work; full vendor and designer browsing lives in the sidebar.
+                Data shown is from your account.
             </div>
 
             {/* MODAL 1: QUICK OFFERS REVIEW DIALOG */}
@@ -464,14 +472,10 @@ export default function BusinessDashboardView({ businessName }: BusinessDashboar
                                 <Button
                                     variant="outline"
                                     size="sm"
-                                    onClick={() => {
-                                        acceptQuote(q.id)
-                                        setIsOffersModalOpen(false)
-                                        toast.success(`Offer from ${q.vendorName} accepted! Created order for ${q.requirementTitle}.`)
-                                    }}
+                                    onClick={() => setIsOffersModalOpen(false)}
                                     className="w-full h-8 text-xs font-medium hover:bg-muted"
                                 >
-                                    Accept offer
+                                    <Link href="/business/offers">Review offer</Link>
                                 </Button>
                             </Card>
                         ))}
@@ -508,7 +512,7 @@ export default function BusinessDashboardView({ businessName }: BusinessDashboar
                             Artwork Proof Review
                         </DialogTitle>
                         <DialogDescription className="text-xs text-muted-foreground">
-                            {proofOrder?.requirementTitle || "Paper cups 8 oz"} • {proofOrder?.vendorName || "GreenCup Solutions"}
+                            {proofOrder?.requirementTitle} • {proofOrder?.vendorName}
                         </DialogDescription>
                     </DialogHeader>
 
@@ -640,18 +644,11 @@ export default function BusinessDashboardView({ businessName }: BusinessDashboar
                                 <Button
                                     variant="outline"
                                     size="sm"
-                                    onClick={() => {
-                                        if (proofOrder) {
-                                            updateOrderStatus(proofOrder.id, "In Production")
-                                        }
-                                        setProofApproved(true)
-                                        setIsProofModalOpen(false)
-                                        toast.success("Artwork proof approved! Sent to production.")
-                                    }}
+                                    onClick={() => setIsProofModalOpen(false)}
                                     className="border-emerald-500/30 text-emerald-500 hover:bg-emerald-500/10 hover:text-emerald-400"
                                 >
                                     <CheckCircle2 className="size-3.5 mr-1 text-emerald-500" />
-                                    <span>Approve proof</span>
+                                    <span>Review order</span>
                                 </Button>
                             </>
                         )}

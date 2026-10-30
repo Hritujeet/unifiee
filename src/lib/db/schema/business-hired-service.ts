@@ -1,4 +1,4 @@
-import { index, integer, numeric, pgEnum, pgTable, text, timestamp, uniqueIndex, uuid, varchar } from "drizzle-orm/pg-core"
+import { check, index, integer, numeric, pgEnum, pgTable, text, timestamp, uniqueIndex, uuid, varchar } from "drizzle-orm/pg-core"
 import { sql } from "drizzle-orm"
 import { business } from "./business"
 import { designerServiceTable } from "./designer-service"
@@ -32,4 +32,10 @@ export const businessHiredServiceTable = pgTable("business_hired_services", {
         .on(table.businessId, table.serviceId)
         .where(sql`${table.status} = 'active'::hired_service_status`),
     index("business_hired_services_business_status_idx").on(table.businessId, table.status),
+    index("business_hired_services_service_idx").on(table.serviceId),
+    index("business_hired_services_designer_idx").on(table.designerId),
+    check("business_hired_services_completion_check", sql`
+        ("status" = 'completed'::hired_service_status AND "completed_at" IS NOT NULL)
+        OR ("status" <> 'completed'::hired_service_status AND "completed_at" IS NULL)
+    `),
 ])

@@ -19,7 +19,7 @@ import { Textarea } from "@/components/ui/textarea"
 import {
     PackagingType,
     PackagingUse,
-} from "@/lib/business-workflow-store"
+} from "@/lib/business/types"
 import { createRequirementAction } from "@/actions/business-requirements"
 import { AiBadge } from "@/components/ai/ai-badge"
 import { AiButton } from "@/components/ai/ai-button"

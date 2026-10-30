@@ -35,7 +35,6 @@ export function mapBackendToClientStage(status: string): ClientStage | Exception
         s === "requirement received" ||
         s === "matching" ||
         s === "draft" ||
-        s === "submitted" ||
         s === "requirement"
     ) {
         return "Requirement"
@@ -56,7 +55,6 @@ export function mapBackendToClientStage(status: string): ClientStage | Exception
     // Order Confirmed stage
     if (
         s === "order confirmed" ||
-        s === "confirmed" ||
         s === "awaiting proof" ||
         s === "proof pending"
     ) {
@@ -69,14 +67,14 @@ export function mapBackendToClientStage(status: string): ClientStage | Exception
         s === "production" ||
         s === "quality check" ||
         s === "qc" ||
-        s === "processing"
+        s === "proof approved"
     ) {
         return "In Production"
     }
 
     // Shipped stage
     if (
-        s === "shipped" ||
+        s === "dispatched" ||
         s === "ready to ship" ||
         s === "out for delivery" ||
         s === "in transit"

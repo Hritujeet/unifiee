@@ -11,6 +11,7 @@ import { redirect } from "next/navigation"
 import Link from "next/link"
 import { UserRound } from "lucide-react"
 import { AssistantPanel } from "@/components/ai/assistant-panel"
+import { ThemeToggle } from "@/components/site/theme-toggle"
 
 export default async function DesignerLayout({ children }: { children: React.ReactNode }) {
     const session = await auth.api.getSession({ headers: await headers() })
@@ -40,6 +41,7 @@ export default async function DesignerLayout({ children }: { children: React.Rea
                             <span className="hidden text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground sm:inline">Designer studio</span>
                         </div>
                         <div className="flex items-center gap-2">
+                            <ThemeToggle />
                             <Link href="/designer/profile" className="inline-flex h-9 items-center gap-2 rounded-lg border px-3 text-xs font-semibold text-foreground transition-colors hover:bg-accent hover:text-accent-foreground">
                                 <UserRound className="size-4" /><span className="hidden sm:inline">My profile</span>
                             </Link>

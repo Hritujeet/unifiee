@@ -9,12 +9,13 @@ import {
     text,
     timestamp,
     uuid,
-    uniqueIndex,
     varchar,
 } from "drizzle-orm/pg-core"
 import { sql } from "drizzle-orm"
 import { manufacturerTable } from "./manufacturer"
 import { businessOrdersTable } from "./business-order"
+import { user } from "./auth-schema"
+import { orderActorRoleEnum } from "./order-lifecycle"
 
 export const orderFulfillmentStageEnum = pgEnum("order_fulfillment_stage", [
     "order_confirmed",
@@ -46,6 +47,10 @@ export const orderFulfillmentMilestonesTable = pgTable("order_fulfillment_milest
         .notNull()
         .references(() => manufacturerTable.id, { onDelete: "cascade" }),
     stage: orderFulfillmentStageEnum("stage").notNull(),
+    status: text("status").notNull(),
+    actorUserId: text("actor_user_id").references(() => user.id, { onDelete: "set null" }),
+    actorRole: orderActorRoleEnum("actor_role").notNull().default("system"),
+    note: text("note"),
     title: varchar("title", { length: 160 }).notNull(),
     description: text("description"),
     proofImages: jsonb("proof_images").$type<Array<{
@@ -59,7 +64,6 @@ export const orderFulfillmentMilestonesTable = pgTable("order_fulfillment_milest
     index("order_milestones_order_idx").on(table.orderId),
     index("order_milestones_vendor_idx").on(table.vendorId),
     index("order_milestones_stage_idx").on(table.orderId, table.stage),
-    uniqueIndex("order_milestones_order_stage_unique").on(table.orderId, table.stage),
 ])
 
 export const orderShipmentsTable = pgTable("order_shipments", {
@@ -78,6 +82,7 @@ export const orderShipmentsTable = pgTable("order_shipments", {
     status: shipmentStatusEnum("status").notNull().default("label_created"),
     dispatchedAt: timestamp("dispatched_at").notNull().defaultNow(),
     estimatedDeliveryDate: timestamp("estimated_delivery_date"),
+    eta: timestamp("eta"),
     deliveredAt: timestamp("delivered_at"),
     deliveryProofUrl: text("delivery_proof_url"),
     notes: text("notes"),

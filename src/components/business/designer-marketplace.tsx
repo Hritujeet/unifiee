@@ -4,15 +4,11 @@ import Image from "next/image"
 import Link from "next/link"
 import { useMemo, useState } from "react"
 import {
-    ArrowRight,
     ArrowUpRight,
     Boxes,
     Check,
-    CheckCircle2,
     Clock3,
     Copy,
-    Filter,
-    Layers,
     Mail,
     MapPin,
     Package,
@@ -55,98 +51,6 @@ function formatPrice(value: string) {
     return Number.isFinite(amount) ? `₹${amount.toLocaleString("en-IN")}` : "Contact for pricing"
 }
 
-// Fallback showcase listings if the database has no published services
-const SHOWCASE_LISTINGS: DesignerListing[] = [
-    {
-        designerId: "showcase-1",
-        designerName: "Studio Kanso Packaging",
-        email: "kanso.design@unifiee-creative.com",
-        headline: "Award-winning folding carton & structural dieline specialist",
-        city: "Bengaluru",
-        state: "Karnataka",
-        profilePhotoUrl: null,
-        availabilityStatus: "available",
-        isVerified: true,
-        specializations: ["packaging_design", "Folding Cartons", "Rigid Boxes"],
-        serviceId: "showcase-service-1",
-        serviceTitle: "Custom Folding Carton & Dieline Engineering",
-        description: "Full structural packaging architecture for consumer goods, cosmetics, and electronics. Delivers production-ready vector dielines with bleed, fold score lines, and glue flaps compatible with offset presses.",
-        serviceType: "packaging_design",
-        pricingModel: "per_project",
-        price: "6500",
-        turnaroundDays: 4,
-        revisionsIncluded: 3,
-        deliverables: ["Print-Ready Dieline (PDF/AI)", "3D Photorealistic Mockups", "CMYK & Spot UV Layer", "Assembly Fold Guide"],
-        sampleImages: [],
-    },
-    {
-        designerId: "showcase-2",
-        designerName: "Aura Creative Studio",
-        email: "aura.labels@unifiee-creative.com",
-        headline: "Luxury cosmetics, botanicals & beverage label identity",
-        city: "Mumbai",
-        state: "Maharashtra",
-        profilePhotoUrl: null,
-        availabilityStatus: "available",
-        isVerified: true,
-        specializations: ["label_design", "Luxury Labels", "Hot Foil Stamping"],
-        serviceId: "showcase-service-2",
-        serviceTitle: "Luxury Bottle & Jar Label Design System",
-        description: "Bespoke label graphics and typography for skincare, spirits, and luxury items. Includes hot foil stamping masks, transparent background options, and waterproof label substrate specifications.",
-        serviceType: "label_design",
-        pricingModel: "per_design",
-        price: "4800",
-        turnaroundDays: 3,
-        revisionsIncluded: 4,
-        deliverables: ["300 DPI Vector Artwork", "Hot Foil & Emboss Masks", "Front & Back Label Layout", "Flexo Color Separations"],
-        sampleImages: [],
-    },
-    {
-        designerId: "showcase-3",
-        designerName: "Verve Brand Labs",
-        email: "verve.packaging@unifiee-creative.com",
-        headline: "FMCG, food & beverage pouch packaging specialists",
-        city: "New Delhi",
-        state: "Delhi",
-        profilePhotoUrl: null,
-        availabilityStatus: "available",
-        isVerified: true,
-        specializations: ["packaging_design", "Stand-Up Pouches", "FMCG"],
-        serviceId: "showcase-service-3",
-        serviceTitle: "Stand-Up Pouch & Flexible Packaging Art",
-        description: "High-impact stand-up pouch artwork tailored for coffee, snacks, dry fruits, and supplements. Engineered around FSSAI/FDA nutritional panel guidelines and barrier laminates.",
-        serviceType: "packaging_design",
-        pricingModel: "per_project",
-        price: "7200",
-        turnaroundDays: 5,
-        revisionsIncluded: 3,
-        deliverables: ["Full Pouch Layout (Front/Back/Gusset)", "Nutritional Facts Grid", "Barcode & QR Code Specs", "High-Res 3D Render"],
-        sampleImages: [],
-    },
-    {
-        designerId: "showcase-4",
-        designerName: "PixelCraft 3D Visuals",
-        email: "pixelcraft3d@unifiee-creative.com",
-        headline: "Photorealistic 3D packaging visualization & Amazon assets",
-        city: "Pune",
-        state: "Maharashtra",
-        profilePhotoUrl: null,
-        availabilityStatus: "available",
-        isVerified: true,
-        specializations: ["3d_rendering", "E-Commerce", "Mockups"],
-        serviceId: "showcase-service-4",
-        serviceTitle: "Photorealistic 3D Packaging Renders for E-Commerce",
-        description: "Studio-grade 3D lighting, texturing, and angle renders for Amazon, Shopify, and pitch decks. Eliminates the need for expensive physical studio photography.",
-        serviceType: "3d_rendering",
-        pricingModel: "per_design",
-        price: "3500",
-        turnaroundDays: 2,
-        revisionsIncluded: 2,
-        deliverables: ["5x 4K Ultra-HD Renders", "Isolated Transparent PNGs", "Studio White & Lifestyle Background", "Source 3D Model File"],
-        sampleImages: [],
-    },
-]
-
 export function DesignerMarketplace({
     listings,
     trackedServiceIds = [],
@@ -156,9 +60,7 @@ export function DesignerMarketplace({
     trackedServiceIds?: string[]
     limit?: number
 }) {
-    // If listings is empty, fallback to showcase listings so page is never blank
-    const allListings = listings.length > 0 ? listings : SHOWCASE_LISTINGS
-    const isUsingShowcase = listings.length === 0
+    const allListings = listings
 
     const [search, setSearch] = useState("")
     const [selectedCategory, setSelectedCategory] = useState("all")
@@ -352,20 +254,10 @@ export function DesignerMarketplace({
                 )}
             </div>
 
-            {/* Showcase Notice (if fallback is used) */}
-            {isUsingShowcase && (
-                <div className="flex items-center gap-2 rounded-lg border border-blue-500/20 bg-blue-500/5 px-4 py-2.5 text-xs text-muted-foreground">
-                    <Sparkles className="size-4 shrink-0 text-blue-500" />
-                    <span>
-                        Displaying featured packaging design studios available for business collaboration. Connect directly or track project milestones below.
-                    </span>
-                </div>
-            )}
-
             {/* 3. Listings Grid */}
             {visibleListings.length > 0 ? (
                 <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-                    {visibleListings.map((listing, idx) => {
+                    {visibleListings.map((listing) => {
                         const isTracked = trackedServiceIds.includes(listing.serviceId)
                         const place = [listing.city, listing.state].filter(Boolean).join(", ")
 

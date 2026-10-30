@@ -2,21 +2,45 @@
 
 import { useRef, useState } from "react"
 import { useRouter } from "next/navigation"
-import { createOrderFromQuoteAction, type BusinessQuoteSummary } from "@/actions/order-actions"
+import { createOrderFromOfferingAction, createOrderFromQuoteAction, type BusinessQuoteSummary } from "@/actions/order-actions"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { toast } from "sonner"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+
+type BusinessOffering = {
+    id: string
+    title: string
+    description: string
+    offeringType: string
+    unitPrice: string
+    unitOfMeasure: string
+    minOrderQuantity: number
+    quantityStep: number
+    leadTimeDaysMin: number
+    leadTimeDaysMax: number
+    city: string
+    state: string
+    vendorName: string | null
+}
 
 export default function DbOffersView({
     quotes,
+    offerings,
     businessId,
 }: {
     quotes: BusinessQuoteSummary[]
+    offerings: BusinessOffering[]
     businessId: string
 }) {
     const router = useRouter()
     const [pendingId, setPendingId] = useState<string | null>(null)
+    const [selectedOffering, setSelectedOffering] = useState<BusinessOffering | null>(null)
+    const [quantity, setQuantity] = useState("")
+    const [address, setAddress] = useState({ line1: "", city: "", state: "", pincode: "" })
     const inFlightRef = useRef(false)
 
     async function acceptQuote(quote: BusinessQuoteSummary) {
@@ -59,6 +83,37 @@ export default function DbOffersView({
         }
     }
 
+    async function placeOfferingOrder() {
+        if (!selectedOffering) return
+        const parsedQuantity = Number(quantity)
+        if (!Number.isInteger(parsedQuantity) || parsedQuantity <= 0 || !address.line1 || !address.city || !address.state || !address.pincode) {
+            toast.error("Enter a valid quantity and complete shipping address.")
+            return
+        }
+        setPendingId(selectedOffering.id)
+        try {
+            const result = await createOrderFromOfferingAction({
+                offeringId: selectedOffering.id,
+                businessId,
+                quantity: parsedQuantity,
+                shippingAddress: { ...address, country: "India" },
+                idempotencyKey: crypto.randomUUID(),
+            })
+            if (!result.success) {
+                toast.error(result.error ?? "Could not place the order.")
+                return
+            }
+            toast.success(`Order ${result.data?.orderNumber} created.`)
+            setSelectedOffering(null)
+            router.push("/business/orders")
+            router.refresh()
+        } catch {
+            toast.error("Could not place the order. Please try again.")
+        } finally {
+            setPendingId(null)
+        }
+    }
+
     return (
         <div className="mx-auto w-full max-w-5xl space-y-6">
             <div>
@@ -67,9 +122,7 @@ export default function DbOffersView({
                     Review vendor offers and convert an accepted offer into a database-backed order.
                 </p>
             </div>
-            {quotes.length === 0 ? (
-                <Card><CardContent className="py-12 text-center text-sm text-muted-foreground">No vendor offers are available yet.</CardContent></Card>
-            ) : (
+            {quotes.length > 0 && (
                 <div className="grid gap-4">
                     {quotes.map((quote) => (
                         <Card key={quote.id}>
@@ -102,6 +155,80 @@ export default function DbOffersView({
                     ))}
                 </div>
             )}
+            {offerings.length > 0 && (
+                <section className="space-y-4">
+                    <div>
+                        <h2 className="text-xl font-semibold">Available vendor offerings</h2>
+                        <p className="mt-1 text-sm text-muted-foreground">Active catalog offerings currently available from manufacturers.</p>
+                    </div>
+                    <div className="grid gap-4">
+                        {offerings.map((offering) => (
+                            <Card key={offering.id}>
+                                <CardHeader>
+                                    <CardTitle className="text-base">{offering.title}</CardTitle>
+                                    <p className="text-xs text-muted-foreground">
+                                        {offering.vendorName ?? "Manufacturer"} · {offering.city}, {offering.state}
+                                    </p>
+                                </CardHeader>
+                                <CardContent className="space-y-3 text-sm">
+                                    <p className="text-muted-foreground">{offering.description}</p>
+                                    <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                                        <span>₹{Number(offering.unitPrice).toLocaleString("en-IN")} / {offering.unitOfMeasure}</span>
+                                        <span>MOQ: {offering.minOrderQuantity.toLocaleString("en-IN")}</span>
+                                        <span>Lead time: {offering.leadTimeDaysMin}–{offering.leadTimeDaysMax} days</span>
+                                    </div>
+                                    <Button
+                                        onClick={() => {
+                                            setSelectedOffering(offering)
+                                            setQuantity(String(offering.minOrderQuantity))
+                                        }}
+                                    >
+                                        View details & place order
+                                    </Button>
+                                </CardContent>
+                            </Card>
+                        ))}
+                    </div>
+                </section>
+            )}
+            {quotes.length === 0 && offerings.length === 0 && (
+                <Card><CardContent className="py-12 text-center text-sm text-muted-foreground">No active vendor offerings or quotes are available yet.</CardContent></Card>
+            )}
+            <Dialog open={selectedOffering !== null} onOpenChange={(open) => !open && setSelectedOffering(null)}>
+                <DialogContent className="max-w-lg">
+                    <DialogHeader>
+                        <DialogTitle>{selectedOffering?.title}</DialogTitle>
+                        <DialogDescription>
+                            {selectedOffering?.vendorName ?? "Manufacturer"} · {selectedOffering?.city}, {selectedOffering?.state}
+                        </DialogDescription>
+                    </DialogHeader>
+                    {selectedOffering && (
+                        <div className="space-y-4">
+                            <p className="text-sm text-muted-foreground">{selectedOffering.description}</p>
+                            <div className="grid gap-2">
+                                <Label htmlFor="offering-quantity">Quantity ({selectedOffering.unitOfMeasure})</Label>
+                                <Input id="offering-quantity" type="number" min={selectedOffering.minOrderQuantity} step={selectedOffering.quantityStep} value={quantity} onChange={(event) => setQuantity(event.target.value)} />
+                            </div>
+                            <div className="grid gap-3 sm:grid-cols-2">
+                                <div className="grid gap-2 sm:col-span-2">
+                                    <Label htmlFor="shipping-line1">Address</Label>
+                                    <Input id="shipping-line1" value={address.line1} onChange={(event) => setAddress({ ...address, line1: event.target.value })} placeholder="Address line" />
+                                </div>
+                                <Input value={address.city} onChange={(event) => setAddress({ ...address, city: event.target.value })} placeholder="City" />
+                                <Input value={address.state} onChange={(event) => setAddress({ ...address, state: event.target.value })} placeholder="State" />
+                                <Input value={address.pincode} onChange={(event) => setAddress({ ...address, pincode: event.target.value })} placeholder="PIN code" />
+                            </div>
+                            <p className="text-sm font-semibold">Estimated total: ₹{(Number(selectedOffering.unitPrice) * (Number(quantity) || 0)).toLocaleString("en-IN")}</p>
+                        </div>
+                    )}
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setSelectedOffering(null)}>Cancel</Button>
+                        <Button disabled={pendingId === selectedOffering?.id} onClick={placeOfferingOrder}>
+                            {pendingId === selectedOffering?.id ? "Placing order..." : "Place order"}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     )
 }

@@ -23,20 +23,19 @@ import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import {
-    useWorkflowStore,
-    selectPendingOffersCount,
-    selectPendingOffersForRequirement,
-    selectAcceptedOfferForRequirement,
     Requirement,
     OrderWorkflowStatus,
-} from "@/lib/business-workflow-store"
+} from "@/lib/business/types"
 import type { BusinessRequirement } from "@/lib/db/schema/business-requirement"
+import type { BusinessQuoteSummary, BusinessOrderSummary } from "@/actions/order-actions"
 import { deleteRequirementAction } from "@/actions/business-requirements"
 import { RequirementVendorSearch } from "@/components/business/requirement-vendor-search"
 import { toast } from "sonner"
 
 export interface RequirementsViewProps {
     initialDbRequirements?: BusinessRequirement[]
+    initialQuotes?: BusinessQuoteSummary[]
+    initialOrders?: BusinessOrderSummary[]
 }
 
 const statusMap: Record<string, OrderWorkflowStatus> = {
@@ -48,12 +47,12 @@ const statusMap: Record<string, OrderWorkflowStatus> = {
     delivered: "Delivered",
 }
 
-export default function RequirementsView({ initialDbRequirements = [] }: RequirementsViewProps) {
+export default function RequirementsView({
+    initialDbRequirements = [],
+    initialQuotes = [],
+    initialOrders = [],
+}: RequirementsViewProps) {
     const router = useRouter()
-    const storeRequirements = useWorkflowStore((s) => s.requirements)
-    const quotations = useWorkflowStore((s) => s.quotations)
-    const orders = useWorkflowStore((s) => s.orders)
-
     const [deletingId, setDeletingId] = useState<string | null>(null)
     const [searchQuery, setSearchQuery] = useState("")
     const [statusFilter, setStatusFilter] = useState<string>("all")
@@ -76,12 +75,11 @@ export default function RequirementsView({ initialDbRequirements = [] }: Require
             day: "numeric",
             year: "numeric",
         }),
-        quotesCount: 0,
+        quotesCount: initialQuotes.filter((quote) => quote.requirementId === dbReq.id).length,
         rawDescription: dbReq.rawDescription || undefined,
     }))
 
-    // Use DB requirements if present, otherwise fallback to store
-    const requirements = dbRequirements.length > 0 ? dbRequirements : storeRequirements
+    const requirements = dbRequirements
 
     const handleDelete = async (id: string, title: string) => {
         setDeletingId(id)
@@ -114,9 +112,11 @@ export default function RequirementsView({ initialDbRequirements = [] }: Require
         return matchesStatus && matchesSearch
     })
 
-    const pendingOffersCount = selectPendingOffersCount(quotations)
+    const pendingOffersCount = initialQuotes.filter((quote) => quote.status === "pending").length
     const quotedCount = requirements.filter((r) => r.status === "Quoted").length
-    const confirmedCount = requirements.filter((r) => r.status === "Order Confirmed" || r.status === "In Production" || r.status === "Shipped").length
+    const confirmedCount = initialOrders.filter(({ order }) =>
+        ["confirmed", "proof_pending", "proof_approved", "in_production", "quality_check", "dispatched", "delivered", "completed"].includes(order.status)
+    ).length
 
     return (
         <div className="mx-auto w-full max-w-5xl space-y-8 text-foreground">
@@ -375,9 +375,9 @@ export default function RequirementsView({ initialDbRequirements = [] }: Require
 
                                         <div className="flex items-center gap-2 self-end sm:self-auto">
                                             {(() => {
-                                                const pendingForReq = selectPendingOffersForRequirement(quotations, req.id)
-                                                const acceptedForReq = selectAcceptedOfferForRequirement(quotations, req.id)
-                                                const relatedOrder = orders.find((o) => o.requirementId === req.id)
+                                                const pendingForReq = initialQuotes.filter((quote) => quote.requirementId === req.id && quote.status === "pending")
+                                                const acceptedForReq = initialQuotes.some((quote) => quote.requirementId === req.id && quote.status === "accepted")
+                                                const relatedOrder = initialOrders.some(({ order }) => order.quoteId && initialQuotes.some((quote) => quote.id === order.quoteId && quote.requirementId === req.id))
 
                                                 if (pendingForReq.length > 0) {
                                                     return (

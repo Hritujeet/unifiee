@@ -37,6 +37,7 @@ export const vendorReviewsTable = pgTable("vendor_reviews", {
     updatedAt: timestamp("updated_at").notNull().defaultNow().$onUpdate(() => new Date()),
 }, (table) => [
     index("vendor_reviews_vendor_idx").on(table.vendorId),
+    index("vendor_reviews_order_idx").on(table.orderId),
     index("vendor_reviews_business_idx").on(table.businessId),
     check("vendor_reviews_rating_range_check", sql`${table.overallRating} >= 1 AND ${table.overallRating} <= 5`),
 ])

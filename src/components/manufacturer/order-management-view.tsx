@@ -2,22 +2,23 @@
 
 import { useRef, useState } from "react"
 import Link from "next/link"
-import { updateOrderStatusAction } from "@/actions/vendor-actions"
+import {
+    confirmOrderAction,
+    dispatchOrderAction,
+    markDeliveredAction,
+    markQualityCheckAction,
+    startProductionAction,
+    uploadProofAction,
+} from "@/actions/vendor-actions"
+import { ORDER_STATUS_LABELS, type OrderStatus } from "@/lib/orders/lifecycle"
 import {
     ShoppingCart,
     Package,
     Search,
     MapPin,
-    Phone,
-    Mail,
     CheckCircle2,
     Truck,
-    Clock,
     Plus,
-    Building2,
-    Calendar,
-    ArrowRight,
-    Sparkles,
     ShieldCheck,
     Check,
 } from "lucide-react"
@@ -27,9 +28,6 @@ import { Badge } from "@/components/ui/badge"
 import {
     Card,
     CardContent,
-    CardHeader,
-    CardTitle,
-    CardDescription,
 } from "@/components/ui/card"
 import {
     Select,
@@ -94,20 +92,26 @@ interface OrderManagementViewProps {
 }
 
 const LIFECYCLE_STEPS = [
-    { key: "submitted", label: "Request Received" },
-    { key: "confirmed", label: "Accepted" },
-    { key: "processing", label: "Production" },
-    { key: "shipped", label: "Dispatched" },
+    { key: "placed", label: "Placed" },
+    { key: "confirmed", label: "Confirmed" },
+    { key: "proof_pending", label: "Proof" },
+    { key: "proof_approved", label: "Proof approved" },
+    { key: "in_production", label: "Production" },
+    { key: "quality_check", label: "Quality check" },
+    { key: "dispatched", label: "Dispatched" },
     { key: "delivered", label: "Delivered" },
 ]
 
 function getStageIndex(status: string): number {
     switch (status) {
-        case "submitted": return 0
+        case "placed": return 0
         case "confirmed": return 1
-        case "processing": return 2
-        case "shipped": return 3
-        case "delivered": return 4
+        case "proof_pending": return 2
+        case "proof_approved": return 3
+        case "in_production": return 4
+        case "quality_check": return 5
+        case "dispatched": return 6
+        case "delivered": return 7
         default: return 0
     }
 }
@@ -133,13 +137,17 @@ export function OrderManagementView({ initialOrders }: OrderManagementViewProps)
 
     const handleUpdateStatus = async (
         orderId: string,
-        newStatus: "confirmed" | "processing" | "shipped" | "delivered"
+        newStatus: "confirmed" | "in_production" | "delivered"
     ) => {
         if (inFlightRef.current) return
         inFlightRef.current = true
         setUpdatingId(orderId)
         try {
-            const res = await updateOrderStatusAction(orderId, newStatus, crypto.randomUUID())
+            const res = newStatus === "confirmed"
+                ? await confirmOrderAction(orderId, crypto.randomUUID())
+                : newStatus === "in_production"
+                    ? await startProductionAction(orderId, crypto.randomUUID())
+                    : await markDeliveredAction(orderId, crypto.randomUUID())
             if (res.success) {
                 setOrders((prev) =>
                     prev.map((o) =>
@@ -198,10 +206,12 @@ export function OrderManagementView({ initialOrders }: OrderManagementViewProps)
                         </SelectTrigger>
                         <SelectContent>
                             <SelectItem value="all">All Orders ({orders.length})</SelectItem>
-                            <SelectItem value="submitted">New Requests</SelectItem>
+                            <SelectItem value="placed">New Requests</SelectItem>
                             <SelectItem value="confirmed">Confirmed / Accepted</SelectItem>
-                            <SelectItem value="processing">In Production</SelectItem>
-                            <SelectItem value="shipped">Dispatched / Shipped</SelectItem>
+                            <SelectItem value="proof_pending">Awaiting proof review</SelectItem>
+                            <SelectItem value="in_production">In Production</SelectItem>
+                            <SelectItem value="quality_check">Ready for dispatch</SelectItem>
+                            <SelectItem value="dispatched">Dispatched</SelectItem>
                             <SelectItem value="delivered">Delivered</SelectItem>
                         </SelectContent>
                     </Select>
@@ -235,16 +245,16 @@ export function OrderManagementView({ initialOrders }: OrderManagementViewProps)
                                                     className={
                                                         order.status === "delivered"
                                                             ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/30 text-[10px] font-bold uppercase"
-                                                            : order.status === "shipped"
+                                                            :                                                             order.status === "dispatched"
                                                             ? "bg-blue-500/10 text-blue-600 border-blue-500/30 text-[10px] font-bold uppercase"
-                                                            : order.status === "processing"
+                                                            : order.status === "in_production" || order.status === "quality_check"
                                                             ? "bg-primary/10 text-primary border-primary/30 text-[10px] font-bold uppercase"
                                                             : order.status === "confirmed"
                                                             ? "bg-teal-500/10 text-teal-600 border-teal-500/30 text-[10px] font-bold uppercase"
                                                             : "bg-amber-500/10 text-amber-600 border-amber-500/30 text-[10px] font-bold uppercase"
                                                     }
                                                 >
-                                                    {order.status === "submitted" ? "New Request" : order.status}
+                                                    {ORDER_STATUS_LABELS[order.status as OrderStatus] ?? order.status}
                                                 </Badge>
                                             </div>
                                             <p className="text-xs text-muted-foreground flex items-center gap-2 flex-wrap">
@@ -368,7 +378,7 @@ export function OrderManagementView({ initialOrders }: OrderManagementViewProps)
 
                                         {/* Status Progression Workflow */}
                                         <div className="flex items-center gap-2">
-                                            {order.status === "submitted" && (
+                                            {order.status === "placed" && (
                                                 <Button
                                                     size="sm"
                                                     disabled={isUpdating}
@@ -388,47 +398,102 @@ export function OrderManagementView({ initialOrders }: OrderManagementViewProps)
                                                     disabled={isUpdating}
                                                     aria-busy={isUpdating}
                                                     aria-disabled={isUpdating}
-                                                    onClick={() => handleUpdateStatus(order.id, "processing")}
+                                                    onClick={async () => {
+                                                        const fileUrl = window.prompt("Paste the HTTPS proof URL")
+                                                        if (!fileUrl) return
+                                                        setUpdatingId(order.id)
+                                                        const result = await uploadProofAction({ orderId: order.id, fileUrl, idempotencyKey: crypto.randomUUID() })
+                                                        setUpdatingId(null)
+                                                        if (result.success) router.refresh()
+                                                        else toast.error(result.error)
+                                                    }}
                                                     className="h-8 text-xs gap-1.5 font-semibold shadow-xs"
                                                 >
                                                     <Package className="size-3.5" />
-                                                    Start Production Batch
+                                                    Upload artwork proof
                                                 </Button>
                                             )}
 
-                                            {order.status === "processing" && (
+                                            {order.status === "proof_approved" && (
                                                 <Button
                                                     size="sm"
                                                     disabled={isUpdating}
                                                     aria-busy={isUpdating}
                                                     aria-disabled={isUpdating}
                                                     variant="secondary"
-                                                    onClick={() => handleUpdateStatus(order.id, "shipped")}
+                                                    onClick={() => handleUpdateStatus(order.id, "in_production")}
                                                     className="h-8 text-xs gap-1.5 font-semibold border shadow-xs"
                                                 >
                                                     <Truck className="size-3.5" />
-                                                    Mark Dispatched & In Transit
+                                                    Start production
                                                 </Button>
                                             )}
 
-                                            {order.status === "shipped" && (
+                                            {order.status === "in_production" && (
+                                                <Button
+                                                    size="sm"
+                                                    disabled={isUpdating}
+                                                    onClick={async () => {
+                                                        setUpdatingId(order.id)
+                                                        const result = await markQualityCheckAction(order.id, "Quality check completed.", crypto.randomUUID())
+                                                        setUpdatingId(null)
+                                                        if (result.success) router.refresh()
+                                                        else toast.error(result.error)
+                                                    }}
+                                                    variant="secondary"
+                                                    className="h-8 text-xs gap-1.5 font-semibold border shadow-xs"
+                                                >
+                                                    <ShieldCheck className="size-3.5" />
+                                                    Pass quality check
+                                                </Button>
+                                            )}
+
+                                            {order.status === "quality_check" && (
                                                 <Button
                                                     size="sm"
                                                     disabled={isUpdating}
                                                     aria-busy={isUpdating}
                                                     aria-disabled={isUpdating}
+                                                    onClick={async () => {
+                                                        const courier = window.prompt("Courier partner")
+                                                        const trackingNumber = courier && window.prompt("Tracking number")
+                                                        const eta = trackingNumber && window.prompt("Estimated delivery date (YYYY-MM-DD)")
+                                                        if (!courier || !trackingNumber || !eta) return
+                                                        setUpdatingId(order.id)
+                                                        const result = await dispatchOrderAction({
+                                                            orderId: order.id,
+                                                            courier,
+                                                            trackingNumber,
+                                                            eta,
+                                                            idempotencyKey: crypto.randomUUID(),
+                                                        })
+                                                        setUpdatingId(null)
+                                                        if (result.success) router.refresh()
+                                                        else toast.error(result.error)
+                                                    }}
+                                                    className="h-8 text-xs gap-1.5 font-semibold bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs"
+                                                >
+                                                    <CheckCircle2 className="size-3.5" />
+                                                    Add shipment details
+                                                </Button>
+                                            )}
+
+                                            {order.status === "dispatched" && (
+                                                <Button
+                                                    size="sm"
+                                                    disabled={isUpdating}
                                                     onClick={() => handleUpdateStatus(order.id, "delivered")}
                                                     className="h-8 text-xs gap-1.5 font-semibold bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs"
                                                 >
                                                     <CheckCircle2 className="size-3.5" />
-                                                    Confirm Buyer Delivery
+                                                    Mark delivered
                                                 </Button>
                                             )}
 
                                             {order.status === "delivered" && (
                                                 <Badge variant="outline" className="text-emerald-600 bg-emerald-500/10 border-emerald-500/30 gap-1.5 py-1 px-2.5 font-bold">
                                                     <ShieldCheck className="size-3.5" />
-                                                    Fulfilled & Escrow Settled
+                                                    Awaiting buyer confirmation
                                                 </Badge>
                                             )}
                                         </div>

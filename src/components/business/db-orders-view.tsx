@@ -5,17 +5,11 @@ import { useRouter } from "next/navigation"
 import { cancelOrderAction, type BusinessOrderSummary } from "@/actions/order-actions"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
 import { toast } from "sonner"
-
-const statusLabels: Record<string, string> = {
-    submitted: "Request received",
-    confirmed: "Confirmed",
-    processing: "In production",
-    shipped: "Shipped",
-    delivered: "Delivered",
-    cancelled: "Cancelled",
-}
+import { OrderStatusBadge } from "@/components/orders/order-status-badge"
+import { OrderStepper } from "@/components/orders/order-stepper"
+import { OrderTimeline } from "@/components/orders/order-timeline"
+import { ShipmentCard } from "@/components/orders/shipment-card"
 
 export default function DbOrdersView({ orders }: { orders: BusinessOrderSummary[] }) {
     const router = useRouter()
@@ -55,8 +49,8 @@ export default function DbOrdersView({ orders }: { orders: BusinessOrderSummary[
                 <Card><CardContent className="py-12 text-center text-sm text-muted-foreground">No database-backed orders yet. Accept a vendor offer to create one.</CardContent></Card>
             ) : (
                 <div className="grid gap-4">
-                    {orders.map(({ order, vendorName, milestones }) => {
-                        const canCancel = ["draft", "submitted", "confirmed"].includes(order.status)
+                    {orders.map(({ order, vendorName, milestones, shipment }) => {
+                        const canCancel = ["placed", "confirmed", "proof_pending", "proof_approved"].includes(order.status)
                         return (
                             <Card key={order.id}>
                                 <CardHeader className="flex flex-row items-start justify-between gap-4">
@@ -66,17 +60,19 @@ export default function DbOrdersView({ orders }: { orders: BusinessOrderSummary[
                                             Vendor: {vendorName} · Total: ₹{Number(order.total).toLocaleString("en-IN")}
                                         </p>
                                     </div>
-                                    <Badge variant={order.status === "cancelled" ? "destructive" : "secondary"}>
-                                        {statusLabels[order.status] ?? order.status}
-                                    </Badge>
+                                    <OrderStatusBadge status={order.status} />
                                 </CardHeader>
                                 <CardContent className="space-y-4">
-                                    <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
-                                        {milestones.map((milestone) => (
-                                            <span key={milestone.id} className="rounded-full border px-2.5 py-1">
-                                                {milestone.title}
-                                            </span>
-                                        ))}
+                                    <OrderStepper status={order.status} />
+                                    <div className="grid gap-4 border-t pt-4 sm:grid-cols-2">
+                                        <div>
+                                            <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Timeline</h3>
+                                            <OrderTimeline milestones={milestones} />
+                                        </div>
+                                        <div>
+                                            <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Shipment</h3>
+                                            <ShipmentCard shipment={shipment} />
+                                        </div>
                                     </div>
                                     {order.cancellationReason && (
                                         <p className="text-xs text-destructive">Cancellation reason: {order.cancellationReason}</p>

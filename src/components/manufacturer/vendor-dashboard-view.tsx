@@ -6,17 +6,12 @@ import {
     Package,
     ShoppingCart,
     Plus,
-    Clock,
-    ChevronRight,
     TrendingUp,
-    Shield,
     CheckCircle2,
     Truck,
     ShieldCheck,
     ArrowUpRight,
-    Sparkles,
     Boxes,
-    Building2,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
@@ -27,14 +22,13 @@ import {
     CardTitle,
 } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { ORDER_STATUS_LABELS, type OrderStatus } from "@/lib/orders/lifecycle"
 
 export interface VendorDashboardViewProps {
     vendorName: string
     companyName: string
     metrics: {
         grossEarnings: number
-        settledEarnings: number
-        inEscrow: number
         totalOrders: number
         activeOrdersCount: number
         publishedOfferingsCount: number
@@ -93,7 +87,7 @@ export default function VendorDashboardView({
                             <span className="hidden sm:inline text-xs text-muted-foreground">&bull;</span>
                             <span className="text-xs text-muted-foreground flex items-center gap-1.5">
                                 <span className="size-1.5 rounded-full bg-emerald-500" />
-                                Instant Escrow Settlement Enabled
+                                Payments not connected yet
                             </span>
                         </div>
 
@@ -102,7 +96,7 @@ export default function VendorDashboardView({
                         </h1>
 
                         <p className="max-w-2xl text-xs sm:text-sm text-muted-foreground leading-relaxed">
-                            Manage your packaging offerings, review buyer orders, and track your escrow earnings on the UNIFIÉE B2B supply network.
+                            Manage your packaging offerings, review buyer orders, and fulfill every order from confirmation to delivery.
                         </p>
                     </div>
 
@@ -129,7 +123,7 @@ export default function VendorDashboardView({
                 <div className="flex items-center justify-between">
                     <h2 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
                         <TrendingUp className="size-3.5 text-primary" />
-                        Commercial Performance & Escrow Overview
+                        Commercial performance
                     </h2>
                     <span className="text-[11px] text-muted-foreground">Currency: INR (₹)</span>
                 </div>
@@ -157,24 +151,23 @@ export default function VendorDashboardView({
                         </CardContent>
                     </Card>
 
-                    {/* Escrow Balance */}
+                    {/* Payment status */}
                     <Card className="border shadow-xs hover:border-amber-500/40 transition-all hover:shadow-sm group bg-card">
                         <CardHeader className="p-5 pb-2">
                             <div className="flex items-center justify-between">
                                 <CardDescription className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                                    In Escrow
+                                    Payment status
                                 </CardDescription>
                                 <div className="size-8 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center group-hover:bg-amber-500 group-hover:text-white transition-colors">
-                                    <Shield className="size-4" />
                                 </div>
                             </div>
                             <CardTitle className="text-2xl font-black tracking-tight text-foreground mt-2">
-                                ₹{metrics.inEscrow.toLocaleString("en-IN")}
+                                Payments not connected yet
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="p-5 pt-1">
                             <p className="text-[11px] text-amber-600 dark:text-amber-400 font-medium flex items-center gap-1">
-                                Released automatically on delivery
+                                Payment is arranged offline in this prototype
                             </p>
                         </CardContent>
                     </Card>
@@ -190,13 +183,13 @@ export default function VendorDashboardView({
                                     <CheckCircle2 className="size-4" />
                                 </div>
                             </div>
-                            <CardTitle className="text-2xl font-black tracking-tight text-foreground mt-2">
-                                ₹{metrics.settledEarnings.toLocaleString("en-IN")}
+                            <CardTitle className="text-base font-semibold tracking-tight text-foreground mt-2">
+                                Payments not connected yet
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="p-5 pt-1">
                             <p className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-1">
-                                Completed payments to bank
+                                Payment is arranged offline in this prototype
                             </p>
                         </CardContent>
                     </Card>
@@ -283,14 +276,14 @@ export default function VendorDashboardView({
                                                     className={
                                                         order.status === "delivered"
                                                             ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/30 text-[10px] uppercase font-semibold"
-                                                            : order.status === "shipped"
+                                                            :                                                             order.status === "dispatched"
                                                             ? "bg-blue-500/10 text-blue-600 border-blue-500/30 text-[10px] uppercase font-semibold"
-                                                            : order.status === "processing"
+                                                            : order.status === "in_production" || order.status === "quality_check"
                                                             ? "bg-primary/10 text-primary border-primary/30 text-[10px] uppercase font-semibold"
                                                             : "bg-amber-500/10 text-amber-600 border-amber-500/30 text-[10px] uppercase font-semibold"
                                                     }
                                                 >
-                                                    {order.status === "submitted" ? "New Request" : order.status}
+                                                    {ORDER_STATUS_LABELS[order.status as OrderStatus] ?? order.status}
                                                 </Badge>
                                             </div>
                                             <p className="text-muted-foreground text-[11px]">

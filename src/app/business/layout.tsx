@@ -9,6 +9,7 @@ import RoleProvider from "@/components/providers/role-provider";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import BusinessAppSidebar from "@/components/business/app-sidebar";
 import { AssistantPanel } from "@/components/ai/assistant-panel";
+import { ThemeToggle } from "@/components/site/theme-toggle";
 
 export default async function BusinessLayout({ children }: { children: React.ReactNode }) {
     // 1. Must be signed in
@@ -39,9 +40,12 @@ export default async function BusinessLayout({ children }: { children: React.Rea
                 <SidebarInset className="min-w-0 bg-background text-foreground">
                     {/* Mobile header with sidebar trigger */}
                     <header className="flex h-14 shrink-0 items-center justify-between border-b border-border/40 px-4 md:hidden">
-                        <div className="flex items-center gap-2">
-                            <SidebarTrigger className="-ml-1" />
-                            <span className="text-sm font-semibold tracking-tight">Unifiée Business</span>
+                        <div className="flex w-full items-center justify-between gap-2">
+                            <div className="flex items-center gap-2">
+                                <SidebarTrigger className="-ml-1" />
+                                <span className="text-sm font-semibold tracking-tight">Unifiée Business</span>
+                            </div>
+                            <ThemeToggle />
                         </div>
                     </header>
                     <main className="flex min-w-0 flex-1 flex-col p-3 sm:p-4 md:p-6 lg:p-8">

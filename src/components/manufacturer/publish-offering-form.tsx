@@ -746,7 +746,7 @@ export function PublishOfferingForm() {
                                     </div>
                                     <div className="flex items-center gap-1.5">
                                         <CheckCircle2 className="size-3 text-emerald-500" />
-                                        <span>Escrow Protection: Payment released on buyer receipt</span>
+                                        <span>Payments are arranged offline in this prototype</span>
                                     </div>
                                 </div>
                             </CardContent>

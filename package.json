@@ -8,9 +8,12 @@
     "start": "next start",
     "db:reset": "tsx scripts/reset-db.ts",
     "lint": "eslint",
-    "test:hardening": "tsx --test tests/idempotency.test.ts",
+    "test:hardening": "tsx --test tests/idempotency.test.ts tests/order-lifecycle.test.ts",
     "ai:eval": "tsx --env-file=.env.local scripts/run-evals.ts",
-    "ai:backfill": "tsx --env-file=.env.local scripts/backfill-embeddings.ts"
+    "ai:backfill": "tsx --env-file=.env.local scripts/backfill-embeddings.ts",
+    "db:seed": "tsx --env-file=.env.local scripts/seed/index.ts",
+    "db:seed:reset": "tsx --env-file=.env.local scripts/seed/index.ts --reset",
+    "db:verify": "tsx --env-file=.env.local scripts/seed/verify.ts"
   },
   "dependencies": {
     "@ai-sdk/google": "^4.0.104",

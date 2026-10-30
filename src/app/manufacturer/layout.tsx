@@ -10,6 +10,7 @@ import RoleProvider from "@/components/providers/role-provider";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import AppSidebar from "@/components/manufacturer/app-sidebar";
 import { AssistantPanel } from "@/components/ai/assistant-panel";
+import { ThemeToggle } from "@/components/site/theme-toggle";
 
 export default async function ManufacturerLayout({ children }: { children: React.ReactNode }) {
     // 1. Must be signed in
@@ -66,6 +67,7 @@ export default async function ManufacturerLayout({ children }: { children: React
                                 <span className="text-sm leading-none">+</span>
                                 <span>Post Offering</span>
                             </Link>
+                            <ThemeToggle />
                         </div>
                     </header>
                     <main className="flex min-w-0 flex-1 flex-col gap-5 p-3 sm:p-4 md:gap-7 md:p-6 lg:p-8">
