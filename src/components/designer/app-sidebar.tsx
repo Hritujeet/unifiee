@@ -39,18 +39,18 @@ export default function DesignerAppSidebar() {
     }
 
     return (
-        <Sidebar collapsible="icon">
+        <Sidebar collapsible="icon" className="border-r border-sidebar-border bg-sidebar">
             <SidebarHeader className="h-16 justify-center border-b border-sidebar-border px-4 pt-4 pb-2 group-data-[collapsible=icon]:h-14 group-data-[collapsible=icon]:px-2 group-data-[collapsible=icon]:py-0">
                 <SidebarMenu>
                     <SidebarMenuItem>
                         <SidebarMenuButton size="lg" asChild className="hover:bg-transparent hover:text-foreground">
-                            <Link href="/designer">
-                                <div className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-primary text-sm font-bold text-primary-foreground shadow-sm">
-                                    u.
+                            <Link href="/designer" className="flex items-center gap-2.5">
+                                <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary text-sm font-semibold text-primary-foreground shadow-xs">
+                                    U
                                 </div>
                                 <div className="flex flex-col leading-tight gap-0.5">
-                                    <span className="text-sm font-bold tracking-tight">unifiée</span>
-                                    <span className="text-[10px] font-medium uppercase tracking-[0.16em] text-muted-foreground">Studio</span>
+                                    <span className="text-sm font-semibold tracking-tight text-sidebar-foreground">UNIFIÉE</span>
+                                    <span className="text-[11px] text-muted-foreground font-normal">Studio</span>
                                 </div>
                             </Link>
                         </SidebarMenuButton>

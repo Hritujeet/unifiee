@@ -209,21 +209,21 @@ export function OfferingsList({ initialOfferings }: OfferingsListProps) {
                         return (
                             <Card
                                 key={item.id}
-                                className="border-2 border-primary/20 hover:border-primary/50 shadow-xs hover:shadow-md transition-all bg-card overflow-hidden flex flex-col justify-between group rounded-xl"
+                                className="border border-border hover:border-primary/40 shadow-xs transition-colors duration-150 bg-card overflow-hidden flex flex-col justify-between group rounded-xl"
                             >
                                 {/* Top Status & Fulfilment Banner - Identical to Live Buyer Directory Preview */}
-                                <div className="bg-primary/5 px-4 py-2.5 border-b border-primary/20 flex items-center justify-between">
+                                <div className="bg-muted/40 px-4 py-2.5 border-b border-border flex items-center justify-between">
                                     <button
                                         type="button"
                                         onClick={() => handleToggleStatus(item.id, item.status)}
                                         disabled={isToggling}
-                                        className="text-[11px] font-semibold text-primary flex items-center gap-1.5 hover:opacity-80 transition-opacity"
+                                        className="text-[11px] font-medium text-foreground flex items-center gap-1.5 hover:opacity-80 transition-opacity"
                                         title="Click to toggle status"
                                     >
                                         <span
                                             className={`size-2 rounded-full ${
                                                 item.status === "active"
-                                                    ? "bg-emerald-500 animate-pulse"
+                                                    ? "bg-emerald-500"
                                                     : item.status === "paused"
                                                     ? "bg-amber-500"
                                                     : "bg-muted-foreground"
@@ -239,7 +239,7 @@ export function OfferingsList({ initialOfferings }: OfferingsListProps) {
                                                 : "Draft"}
                                         </span>
                                     </button>
-                                    <Badge variant="outline" className="text-[9px] uppercase font-bold tracking-wider">
+                                    <Badge variant="outline" className="text-[9px] uppercase font-semibold tracking-wider">
                                         {(item.fulfilmentMode || "made_to_order").replace("_", " ")}
                                     </Badge>
                                 </div>
@@ -251,7 +251,7 @@ export function OfferingsList({ initialOfferings }: OfferingsListProps) {
                                             <Badge variant="secondary" className="text-[10px] uppercase font-semibold capitalize">
                                                 {formatCategoryDisplayName(item.offeringType)}
                                             </Badge>
-                                            <h3 className="font-heading text-base font-extrabold text-foreground leading-snug group-hover:text-primary transition-colors line-clamp-1">
+                                            <h3 className="font-heading text-base font-semibold text-foreground leading-snug group-hover:text-primary transition-colors line-clamp-1">
                                                 {item.title}
                                             </h3>
                                             <p className="text-xs text-muted-foreground line-clamp-2">

@@ -22,6 +22,14 @@ import {
 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog"
 import { Badge } from "@/components/ui/badge"
 import {
     DropdownMenu,
@@ -58,6 +66,7 @@ export function DesignerServicesManager({
     const [editorOpen, setEditorOpen] = useState(false)
     const [editingGig, setEditingGig] = useState<ServiceWithRelations | undefined>(undefined)
     const [loadingId, setLoadingId] = useState<string | null>(null)
+    const [deleteConfirmGig, setDeleteConfirmGig] = useState<ServiceWithRelations | null>(null)
 
     const handleCreateNew = () => {
         setEditingGig(undefined)
@@ -87,14 +96,15 @@ export function DesignerServicesManager({
         }
     }
 
-    const handleDelete = async (gig: ServiceWithRelations) => {
-        if (!window.confirm(`Are you sure you want to delete "${gig.title}"?`)) return
-
+    const confirmDelete = async () => {
+        if (!deleteConfirmGig) return
+        const gig = deleteConfirmGig
         setLoadingId(gig.id)
         try {
             const res = await deleteGigAction(gig.id)
             if (res.success) {
                 toast.success("Gig deleted")
+                setDeleteConfirmGig(null)
                 router.refresh()
             } else {
                 toast.error("Couldn't delete gig")
@@ -112,7 +122,7 @@ export function DesignerServicesManager({
                 <p className="text-xs sm:text-sm text-muted-foreground">
                     {services.length} {services.length === 1 ? "gig listed" : "gigs listed"}
                 </p>
-                <Button onClick={handleCreateNew} className="bg-blue-600 hover:bg-blue-700 text-white text-xs gap-1.5 h-9">
+                <Button onClick={handleCreateNew} className="text-xs gap-1.5 h-9">
                     <Plus className="size-4" />
                     <span>Create New Gig</span>
                 </Button>
@@ -131,7 +141,7 @@ export function DesignerServicesManager({
                         return (
                             <article
                                 key={gig.id}
-                                className={`flex flex-col rounded-2xl border border-border/60 bg-card shadow-xs transition-all duration-200 hover:border-blue-500/40 hover:shadow-sm overflow-hidden ${
+                                className={`flex flex-col rounded-xl border border-border bg-card shadow-xs transition-colors duration-150 hover:border-primary/40 overflow-hidden ${
                                     isLoading ? "opacity-60 pointer-events-none" : ""
                                 }`}
                             >
@@ -153,7 +163,7 @@ export function DesignerServicesManager({
 
                                     {/* Status Badge */}
                                     <div className="absolute left-3 top-3">
-                                        <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider border backdrop-blur-md ${statusColors[gig.status] || statusColors.paused}`}>
+                                        <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider border  ${statusColors[gig.status] || statusColors.paused}`}>
                                             {gig.status}
                                         </span>
                                     </div>
@@ -164,7 +174,7 @@ export function DesignerServicesManager({
                                             <DropdownMenuTrigger asChild>
                                                 <button
                                                     type="button"
-                                                    className="flex size-7 items-center justify-center rounded-full bg-black/60 backdrop-blur-md text-white hover:bg-black/80 transition-colors"
+                                                    className="flex size-7 items-center justify-center rounded-full bg-black/60  text-white hover:bg-black/80 transition-colors"
                                                 >
                                                     <MoreVertical className="size-3.5" />
                                                 </button>
@@ -199,7 +209,7 @@ export function DesignerServicesManager({
                                                 )}
 
                                                 <DropdownMenuItem
-                                                    onClick={() => handleDelete(gig)}
+                                                    onClick={() => setDeleteConfirmGig(gig)}
                                                     className="gap-2 text-destructive cursor-pointer"
                                                 >
                                                     <Trash2 className="size-3.5" />
@@ -291,7 +301,7 @@ export function DesignerServicesManager({
                     <p className="max-w-md text-xs text-muted-foreground leading-relaxed">
                         Publish Fiverr-style packaging gigs with tiered packages (Basic, Standard, Premium), dieline guarantees, and 3D mockups.
                     </p>
-                    <Button onClick={handleCreateNew} className="bg-blue-600 hover:bg-blue-700 text-white text-xs gap-1.5 mt-2">
+                    <Button onClick={handleCreateNew} className="text-xs gap-1.5 mt-2">
                         <Plus className="size-4" />
                         <span>Create Your First Gig</span>
                     </Button>
@@ -306,6 +316,24 @@ export function DesignerServicesManager({
                 hasBio={hasBio}
                 hasSpecialization={hasSpecialization}
             />
+            {/* Delete Confirmation Dialog */}
+            <Dialog open={!!deleteConfirmGig} onOpenChange={(open) => !open && setDeleteConfirmGig(null)}>
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Delete gig</DialogTitle>
+                        <DialogDescription>
+                            Are you sure you want to delete &ldquo;{deleteConfirmGig?.title}&rdquo;? Active and completed client orders will not be affected.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter className="gap-2">
+                        <Button variant="outline" size="sm" onClick={() => setDeleteConfirmGig(null)} disabled={loadingId !== null}>Cancel</Button>
+                        <Button variant="destructive" size="sm" disabled={loadingId !== null} onClick={confirmDelete}>
+                            {loadingId ? <Loader2 className="size-3.5 animate-spin" /> : "Delete gig"}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
         </div>
     )
 }

@@ -47,16 +47,16 @@ export function OfferingCard({
     const fulfilment = (offering.fulfilmentMode || "made_to_order").replace(/_/g, " ")
 
     return (
-        <Card className="border-2 border-primary/20 hover:border-primary/50 shadow-xs hover:shadow-md transition-all bg-card overflow-hidden flex flex-col justify-between group rounded-xl">
+        <Card className="border border-border hover:border-primary/40 shadow-xs transition-colors duration-150 bg-card overflow-hidden flex flex-col justify-between group rounded-xl">
             {/* Top Status & Fulfilment Banner - Identical to Live Buyer Directory Preview */}
-            <div className="bg-primary/5 px-4 py-2.5 border-b border-primary/20 flex items-center justify-between">
-                <span className="text-[11px] font-semibold text-primary flex items-center gap-1.5">
-                    <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
+            <div className="bg-muted/40 px-4 py-2.5 border-b border-border flex items-center justify-between">
+                <span className="text-[11px] font-medium text-foreground flex items-center gap-1.5">
+                    <span className="size-2 rounded-full bg-emerald-500" />
                     <span className="truncate max-w-[200px]">
                         {offering.vendorName || "Verified Manufacturer"}
                     </span>
                 </span>
-                <Badge variant="outline" className="text-[9px] uppercase font-bold tracking-wider">
+                <Badge variant="outline" className="text-[9px] uppercase font-semibold tracking-wider">
                     {fulfilment}
                 </Badge>
             </div>
@@ -69,7 +69,7 @@ export function OfferingCard({
                             {formatCategoryDisplayName(offering.offeringType)}
                         </Badge>
                         <h3
-                            className="font-heading text-base font-extrabold text-foreground leading-snug group-hover:text-primary transition-colors line-clamp-1"
+                            className="font-heading text-base font-semibold text-foreground leading-snug group-hover:text-primary transition-colors line-clamp-1"
                             title={offering.title}
                         >
                             {offering.title}
@@ -207,22 +207,22 @@ export function QuoteCard({ quote, onAccept, isProcessing }: QuoteCardProps) {
             : parseFloat(String(quote.totalPrice)) || 0
 
     return (
-        <Card className="border-2 border-primary/20 hover:border-primary/50 shadow-xs hover:shadow-md transition-all bg-card overflow-hidden flex flex-col justify-between group rounded-xl">
+        <Card className="border border-border hover:border-primary/40 shadow-xs transition-colors duration-150 bg-card overflow-hidden flex flex-col justify-between group rounded-xl">
             {/* Top Status Banner */}
-            <div className="bg-primary/5 px-4 py-2.5 border-b border-primary/20 flex items-center justify-between">
-                <span className="text-[11px] font-semibold text-primary flex items-center gap-1.5">
+            <div className="bg-muted/40 px-4 py-2.5 border-b border-border flex items-center justify-between">
+                <span className="text-[11px] font-medium text-foreground flex items-center gap-1.5">
                     <span
                         className={`size-2 rounded-full ${
                             quote.status === "pending"
-                                ? "bg-emerald-500 animate-pulse"
+                                ? "bg-emerald-500"
                                 : quote.status === "accepted"
-                                ? "bg-blue-500"
+                                ? "bg-primary"
                                 : "bg-muted-foreground"
                         }`}
                     />
                     <span className="truncate max-w-[200px]">{quote.vendorName}</span>
                 </span>
-                <Badge variant="outline" className="text-[9px] uppercase font-bold tracking-wider">
+                <Badge variant="outline" className="text-[9px] uppercase font-semibold tracking-wider">
                     {quote.status === "pending" ? "Custom Offer" : quote.status}
                 </Badge>
             </div>
@@ -235,7 +235,7 @@ export function QuoteCard({ quote, onAccept, isProcessing }: QuoteCardProps) {
                             {formatCategoryDisplayName(quote.packagingType || "custom")}
                         </Badge>
                         <h3
-                            className="font-heading text-base font-extrabold text-foreground leading-snug group-hover:text-primary transition-colors line-clamp-1"
+                            className="font-heading text-base font-semibold text-foreground leading-snug group-hover:text-primary transition-colors line-clamp-1"
                             title={quote.requirementTitle}
                         >
                             {quote.requirementTitle}

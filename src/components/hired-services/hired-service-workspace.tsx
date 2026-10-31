@@ -396,7 +396,7 @@ export function HiredServiceWorkspace({ data }: { data: WorkspaceData }) {
             </div>
 
             {/* Header Card */}
-            <div className="rounded-2xl border border-border/60 bg-card p-5 sm:p-6 shadow-xs space-y-6">
+            <div className="rounded-xl border border-border/60 bg-card p-5 sm:p-6 shadow-xs space-y-6">
                 <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                     <div className="space-y-1.5 min-w-0">
                         <div className="flex flex-wrap items-center gap-2">
@@ -464,7 +464,7 @@ export function HiredServiceWorkspace({ data }: { data: WorkspaceData }) {
                                             isCompleted
                                                 ? "bg-emerald-600 text-white"
                                                 : isCurrent
-                                                ? "bg-blue-600 text-white shadow-xs"
+                                                ? "bg-primary text-primary-foreground shadow-xs"
                                                 : "bg-muted text-muted-foreground"
                                         }`}
                                     >
@@ -508,7 +508,7 @@ export function HiredServiceWorkspace({ data }: { data: WorkspaceData }) {
                                     size="sm"
                                     onClick={handleAcceptRequest}
                                     disabled={isPending}
-                                    className="bg-blue-600 hover:bg-blue-700 text-white text-xs gap-1.5"
+                                    className="bg-primary hover:bg-primary/90 text-primary-foreground text-xs gap-1.5"
                                 >
                                     {isPending ? <Loader2 className="size-3.5 animate-spin" /> : <Check className="size-3.5" />}
                                     <span>Accept & Start Work</span>
@@ -522,7 +522,7 @@ export function HiredServiceWorkspace({ data }: { data: WorkspaceData }) {
                                 size="sm"
                                 onClick={() => setDeliverOpen(true)}
                                 disabled={isPending}
-                                className="bg-blue-600 hover:bg-blue-700 text-white text-xs gap-1.5"
+                                className="bg-primary hover:bg-primary/90 text-primary-foreground text-xs gap-1.5"
                             >
                                 <UploadCloud className="size-3.5" />
                                 <span>Deliver Artwork</span>
@@ -694,7 +694,7 @@ export function HiredServiceWorkspace({ data }: { data: WorkspaceData }) {
             {activeTab === "brief" && (
                 <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
                     <div className="space-y-6">
-                        <div className="rounded-2xl border border-border/60 bg-card p-5 sm:p-6 shadow-xs space-y-4">
+                        <div className="rounded-xl border border-border/60 bg-card p-5 sm:p-6 shadow-xs space-y-4">
                             <h2 className="font-heading text-base font-semibold text-foreground flex items-center gap-2">
                                 <FileText className="size-4 text-blue-500" />
                                 <span>Packaging Brief & Specifications</span>
@@ -766,7 +766,7 @@ export function HiredServiceWorkspace({ data }: { data: WorkspaceData }) {
 
                     {/* Sidebar / Snapshot details */}
                     <div className="space-y-4">
-                        <div className="rounded-2xl border border-border/60 bg-card p-5 text-xs space-y-4 shadow-xs">
+                        <div className="rounded-xl border border-border/60 bg-card p-5 text-xs space-y-4 shadow-xs">
                             <h3 className="font-heading font-semibold text-foreground">Package Scope</h3>
 
                             <div className="space-y-2">
@@ -803,7 +803,7 @@ export function HiredServiceWorkspace({ data }: { data: WorkspaceData }) {
                         </div>
 
                         {/* Counterparty card */}
-                        <div className="rounded-2xl border border-border/60 bg-card p-5 text-xs space-y-3 shadow-xs">
+                        <div className="rounded-xl border border-border/60 bg-card p-5 text-xs space-y-3 shadow-xs">
                             <h3 className="font-heading font-semibold text-foreground">
                                 {role === "designer" ? "Client Contact" : "Designer Contact"}
                             </h3>
@@ -819,7 +819,7 @@ export function HiredServiceWorkspace({ data }: { data: WorkspaceData }) {
 
             {/* TAB 2: Conversation */}
             {activeTab === "messages" && (
-                <div className="rounded-2xl border border-border/60 bg-card shadow-xs flex flex-col h-[580px]">
+                <div className="rounded-xl border border-border/60 bg-card shadow-xs flex flex-col h-[580px]">
                     {/* Header */}
                     <div className="p-4 border-b border-border/40 flex items-center justify-between text-xs">
                         <div className="flex items-center gap-2">
@@ -849,9 +849,9 @@ export function HiredServiceWorkspace({ data }: { data: WorkspaceData }) {
                                             {senderName} · {new Date(msg.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                                         </span>
                                         <div
-                                            className={`max-w-[75%] rounded-2xl px-4 py-2.5 text-xs leading-relaxed ${
+                                            className={`max-w-[75%] rounded-xl px-4 py-2.5 text-xs leading-relaxed ${
                                                 isMe
-                                                    ? "bg-blue-600 text-white rounded-br-xs"
+                                                    ? "bg-primary text-primary-foreground rounded-br-xs"
                                                     : "bg-muted text-foreground rounded-bl-xs border border-border/50"
                                             }`}
                                         >
@@ -888,7 +888,7 @@ export function HiredServiceWorkspace({ data }: { data: WorkspaceData }) {
                                 placeholder="Type a message to discuss dielines, artwork, or revisions..."
                                 className="text-xs h-9 bg-background"
                             />
-                            <Button type="submit" size="sm" className="bg-blue-600 hover:bg-blue-700 text-white h-9 px-3 gap-1">
+                            <Button type="submit" size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground h-9 px-3 gap-1">
                                 <Send className="size-3.5" />
                                 <span className="hidden sm:inline">Send</span>
                             </Button>
@@ -911,7 +911,7 @@ export function HiredServiceWorkspace({ data }: { data: WorkspaceData }) {
             {activeTab === "deliveries" && (
                 <div className="space-y-4">
                     {deliveries.length === 0 ? (
-                        <div className="rounded-2xl border border-dashed border-border/60 bg-card p-10 text-center text-xs text-muted-foreground space-y-3">
+                        <div className="rounded-xl border border-dashed border-border/60 bg-card p-10 text-center text-xs text-muted-foreground space-y-3">
                             <UploadCloud className="size-10 mx-auto text-muted-foreground/40" />
                             <h3 className="font-heading text-base font-semibold text-foreground">No Deliveries Submitted Yet</h3>
                             <p className="max-w-md mx-auto">
@@ -921,7 +921,7 @@ export function HiredServiceWorkspace({ data }: { data: WorkspaceData }) {
                                 <Button
                                     size="sm"
                                     onClick={() => setDeliverOpen(true)}
-                                    className="bg-blue-600 hover:bg-blue-700 text-white text-xs gap-1.5"
+                                    className="bg-primary hover:bg-primary/90 text-primary-foreground text-xs gap-1.5"
                                 >
                                     <UploadCloud className="size-3.5" />
                                     <span>Submit First Delivery</span>
@@ -930,7 +930,7 @@ export function HiredServiceWorkspace({ data }: { data: WorkspaceData }) {
                         </div>
                     ) : (
                         deliveries.map((del) => (
-                            <div key={del.id} className="rounded-2xl border border-border/60 bg-card p-5 sm:p-6 shadow-xs space-y-4">
+                            <div key={del.id} className="rounded-xl border border-border/60 bg-card p-5 sm:p-6 shadow-xs space-y-4">
                                 <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border/40 pb-3">
                                     <div className="flex items-center gap-2">
                                         <Badge className="bg-emerald-600 text-white text-xs">Version {del.versionNumber}</Badge>
@@ -1012,7 +1012,7 @@ export function HiredServiceWorkspace({ data }: { data: WorkspaceData }) {
 
             {/* TAB 4: Timeline / Events */}
             {activeTab === "timeline" && (
-                <div className="rounded-2xl border border-border/60 bg-card p-5 sm:p-6 shadow-xs space-y-5">
+                <div className="rounded-xl border border-border/60 bg-card p-5 sm:p-6 shadow-xs space-y-5">
                     <h2 className="font-heading text-base font-semibold text-foreground flex items-center gap-2">
                         <History className="size-4 text-muted-foreground" />
                         <span>Audit Trail & Event Log</span>
@@ -1039,7 +1039,7 @@ export function HiredServiceWorkspace({ data }: { data: WorkspaceData }) {
 
             {/* TAB 5: Review */}
             {activeTab === "review" && review && (
-                <div className="rounded-2xl border border-border/60 bg-card p-5 sm:p-6 shadow-xs space-y-5">
+                <div className="rounded-xl border border-border/60 bg-card p-5 sm:p-6 shadow-xs space-y-5">
                     <div className="flex items-start justify-between">
                         <div>
                             <div className="flex items-center gap-1.5 text-amber-500">
@@ -1237,7 +1237,7 @@ export function HiredServiceWorkspace({ data }: { data: WorkspaceData }) {
                             size="sm"
                             disabled={isPending}
                             onClick={handleDeliverWork}
-                            className="bg-blue-600 hover:bg-blue-700 text-white text-xs gap-1"
+                            className="bg-primary hover:bg-primary/90 text-primary-foreground text-xs gap-1"
                         >
                             {isPending && <Loader2 className="size-3 animate-spin" />}
                             Submit Delivery
@@ -1277,7 +1277,7 @@ export function HiredServiceWorkspace({ data }: { data: WorkspaceData }) {
                             size="sm"
                             disabled={isPending}
                             onClick={handleRequestRevision}
-                            className="bg-blue-600 hover:bg-blue-700 text-white text-xs gap-1"
+                            className="bg-primary hover:bg-primary/90 text-primary-foreground text-xs gap-1"
                         >
                             {isPending && <Loader2 className="size-3 animate-spin" />}
                             Send Revision Request
@@ -1307,7 +1307,7 @@ export function HiredServiceWorkspace({ data }: { data: WorkspaceData }) {
                                         key={star}
                                         type="button"
                                         onClick={() => setRating(star)}
-                                        className="text-amber-500 hover:scale-110 transition-transform"
+                                        className="text-amber-500 transition-colors"
                                     >
                                         <Star className={`size-5 ${star <= rating ? "fill-amber-500" : "text-muted-foreground/30"}`} />
                                     </button>
@@ -1402,7 +1402,7 @@ export function HiredServiceWorkspace({ data }: { data: WorkspaceData }) {
                             size="sm"
                             disabled={isPending}
                             onClick={handleReplyToReview}
-                            className="bg-blue-600 hover:bg-blue-700 text-white text-xs gap-1"
+                            className="bg-primary hover:bg-primary/90 text-primary-foreground text-xs gap-1"
                         >
                             {isPending && <Loader2 className="size-3 animate-spin" />}
                             Post Reply
@@ -1440,7 +1440,7 @@ export function HiredServiceWorkspace({ data }: { data: WorkspaceData }) {
                             size="sm"
                             disabled={isPending}
                             onClick={handleAttachArtwork}
-                            className="bg-blue-600 hover:bg-blue-700 text-white text-xs gap-1"
+                            className="bg-primary hover:bg-primary/90 text-primary-foreground text-xs gap-1"
                         >
                             {isPending && <Loader2 className="size-3 animate-spin" />}
                             Link Artwork

@@ -26,7 +26,7 @@ export function BusinessDashboardPreview() {
     <div className="flex min-h-[360px] bg-background text-left sm:min-h-[400px] lg:min-h-[420px]">
       <aside className="hidden w-48 shrink-0 border-r border-border/50 bg-sidebar p-3 md:block">
         <div className="mb-5 flex items-center gap-2 px-1">
-          <div className="flex size-6 items-center justify-center rounded-md bg-blue-600 text-[11px] font-bold text-white">
+          <div className="flex size-6 items-center justify-center rounded-lg bg-primary text-[11px] font-semibold text-primary-foreground">
             U
           </div>
           <div className="leading-tight">
@@ -61,14 +61,14 @@ export function BusinessDashboardPreview() {
               2 items are waiting for your review.
             </p>
           </div>
-          <span className="inline-flex h-7 shrink-0 items-center gap-1 rounded-lg bg-blue-600 px-2 text-[9px] font-medium text-white sm:h-8 sm:rounded-xl sm:px-3 sm:text-[11px]">
+          <span className="inline-flex h-7 shrink-0 items-center gap-1 rounded-lg bg-primary px-2 text-[9px] font-medium text-primary-foreground sm:h-8 sm:rounded-xl sm:px-3 sm:text-[11px]">
             <Plus className="size-3.5" />
             <span className="hidden sm:inline">New requirement</span>
             <span className="sm:hidden">New</span>
           </span>
         </div>
 
-        <div className="rounded-xl border border-amber-500/30 bg-linear-to-br from-amber-500/[0.08] via-amber-500/[0.03] to-transparent px-2.5 py-2 sm:px-3 sm:py-2.5">
+        <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 px-2.5 py-2 sm:px-3 sm:py-2.5">
           <p className="mb-1.5 text-[10px] font-semibold sm:mb-2 sm:text-[11px]">Needs your review</p>
           <div className="flex items-center justify-between gap-2 border-t border-border/40 py-1.5 text-[9px] sm:text-[11px]">
             <span className="flex min-w-0 items-center gap-1.5 font-medium sm:gap-2">
@@ -121,7 +121,7 @@ export function BusinessDashboardPreview() {
           <div className="min-w-0 rounded-xl border border-border/60 lg:col-span-2">
             <div className="flex items-center justify-between border-b border-border/40 px-3 py-2.5">
               <p className="text-xs font-semibold">Active orders</p>
-              <p className="text-[10px] text-blue-500">Review all orders</p>
+              <p className="text-[10px] text-primary">Review all orders</p>
             </div>
             <div className="divide-y divide-border/40 px-3">
               {[
@@ -138,7 +138,7 @@ export function BusinessDashboardPreview() {
                     {stages.map((_, i) => (
                       <span
                         key={i}
-                        className={`h-1.5 flex-1 rounded-full ${i < Number(filled) ? "bg-blue-600" : "bg-muted"}`}
+                        className={`h-1.5 flex-1 rounded-full ${i < Number(filled) ? "bg-primary" : "bg-muted"}`}
                       />
                     ))}
                   </div>
@@ -177,7 +177,7 @@ export function BusinessDashboardPreview() {
 export function VendorDashboardPreview() {
   return (
     <div className="min-h-[340px] space-y-3 bg-background p-3 text-left sm:min-h-[380px] sm:space-y-4 sm:p-5">
-      <div className="relative overflow-hidden rounded-2xl border border-primary/20 bg-linear-to-br from-primary/10 via-background to-primary/5 p-3 sm:p-5">
+      <div className="relative overflow-hidden rounded-2xl border border-primary/20 bg-muted/40 p-3 sm:p-5">
         <div className="flex flex-wrap items-center gap-2">
           <span className="inline-flex items-center gap-1 rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[9px] font-semibold text-primary sm:text-[10px]">
             <ShieldCheck className="size-3" />
@@ -352,10 +352,8 @@ export function DesignerStudioPreview() {
             ["Seasonal sleeve variants", "₹9,500 / set"],
           ].map(([title, price]) => (
             <div key={title} className="group overflow-hidden rounded-xl border bg-card">
-              <div className="relative flex h-20 items-center justify-center overflow-hidden bg-linear-to-br from-amber-100 via-orange-50 to-stone-200 dark:from-amber-950/50 dark:via-stone-900 dark:to-stone-800">
-                <div className="absolute -left-5 -top-8 size-24 rounded-full bg-white/30 blur-2xl" />
-                <div className="absolute -right-3 -bottom-10 size-24 rounded-full bg-orange-400/20 blur-2xl" />
-                <div className="relative mt-1 flex h-14 w-10 flex-col items-center drop-shadow-md transition-transform duration-300 group-hover:rotate-[-4deg] group-hover:scale-105">
+              <div className="relative flex h-20 items-center justify-center overflow-hidden bg-muted/50">
+                <div className="relative mt-1 flex h-14 w-10 flex-col items-center drop-shadow-xs transition-opacity duration-150">
                   <div className="h-2 w-10 rounded-t-md bg-stone-200 dark:bg-stone-600" />
                   <div className="relative flex w-9 flex-1 items-center justify-center rounded-b-md bg-[#f7f2e8] text-[7px] font-semibold tracking-[0.12em] text-stone-800">
                     <span className="absolute inset-x-0 top-3 h-1 bg-emerald-700/80" />

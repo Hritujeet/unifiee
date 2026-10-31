@@ -12,7 +12,7 @@ export function CtaSection() {
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,color-mix(in_oklch,var(--primary)_12%,transparent),transparent_65%)]" />
 
       <FadeIn className="relative mx-auto max-w-3xl px-6">
-        <div className="rounded-3xl border border-border/80 bg-card/95 dark:bg-neutral-950/95 p-8 shadow-[0_24px_70px_-24px_rgba(0,0,0,0.5)] md:p-12">
+        <div className="rounded-2xl border border-border bg-card p-8 shadow-xs md:p-12">
           <p className="font-mono text-[11px] tracking-[0.2em] text-muted-foreground uppercase">
             Start with one requirement
           </p>
@@ -23,7 +23,7 @@ export function CtaSection() {
             Begin with a packaging brief—not another list of suppliers to work through alone.
           </p>
 
-          <div className="mt-8 flex flex-col overflow-hidden rounded-2xl border border-border bg-muted/30 sm:flex-row sm:items-center">
+          <div className="mt-8 flex flex-col overflow-hidden rounded-xl border border-border bg-muted/30 sm:flex-row sm:items-center">
             <div className="flex min-w-0 flex-1 items-center gap-3 px-4 py-3.5 text-sm text-muted-foreground">
               <MessageSquare className="size-4 shrink-0" />
               <span className="truncate">I need 8oz cups, seasonal sleeves, delivered in Kota…</span>

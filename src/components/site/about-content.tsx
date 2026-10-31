@@ -130,7 +130,7 @@ export function AboutContent() {
             transition={{ duration: 0.7, delay: 0.12, ease: motionEase }}
             className="mt-14 md:mt-20"
           >
-            <div className="relative overflow-hidden rounded-3xl border border-border/70 bg-card/50 p-6 shadow-[0_30px_90px_-55px_rgba(0,0,0,0.65)] backdrop-blur-sm sm:p-10">
+            <div className="relative overflow-hidden rounded-2xl border border-border bg-card p-6 shadow-xs sm:p-10">
               <div className="pointer-events-none absolute -right-24 -top-32 size-80 rounded-full bg-primary/10 blur-3xl" />
               <div className="relative flex flex-col gap-7 sm:flex-row sm:items-center sm:justify-between">
                 <div>

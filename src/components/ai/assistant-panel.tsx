@@ -245,11 +245,11 @@ export function AssistantPanel({ role = "business", userName }: AssistantPanelPr
                         size="lg"
                         type="button"
                         onClick={() => setIsOpen(true)}
-                        className="group relative h-10 rounded-full px-3.5 shadow-lg"
+                        className="group relative h-10 rounded-full px-3.5 shadow-md"
                         aria-label="Open AI Assistant"
                     >
                         <div className="relative">
-                            <Sparkles className="size-5 transition-transform duration-300 group-hover:rotate-12" />
+                            <Sparkles className="size-5 transition-transform duration-200" />
                         </div>
                         <span className="hidden sm:inline text-xs font-semibold tracking-wide pr-1">
                             AI Assistant
@@ -260,7 +260,7 @@ export function AssistantPanel({ role = "business", userName }: AssistantPanelPr
 
             {/* Chat Modal / Slide-over Window */}
             {isOpen && (
-                <div className="fixed inset-x-0 bottom-0 z-50 flex h-[min(680px,calc(100dvh-1rem))] max-h-[calc(100dvh-1rem)] flex-col overflow-hidden rounded-t-2xl border border-border bg-background shadow-xl animate-in fade-in-50 slide-in-from-bottom-6 duration-200 sm:inset-x-auto sm:bottom-5 sm:right-5 sm:h-[min(580px,85vh)] sm:max-h-[85vh] sm:w-[min(420px,calc(100vw-2.5rem))] sm:rounded-xl">
+                <div className="fixed inset-x-0 bottom-0 z-50 flex h-[min(680px,calc(100dvh-1rem))] max-h-[calc(100dvh-1rem)] flex-col overflow-hidden rounded-t-xl border border-border bg-background shadow-lg animate-in fade-in-50 slide-in-from-bottom-6 duration-200 sm:inset-x-auto sm:bottom-5 sm:right-5 sm:h-[min(580px,85vh)] sm:max-h-[85vh] sm:w-[min(420px,calc(100vw-2.5rem))] sm:rounded-xl">
                     {/* Header */}
                     <div className="flex items-center justify-between border-b border-border px-4 py-3">
                         <div className="flex items-center gap-2.5">

@@ -170,150 +170,151 @@ export function SignupForm({
 
   return (
     <div className={cn("w-full max-w-sm", className)} {...props}>
-      <Card className="border-0 bg-transparent shadow-none">
-        <CardContent className="flex flex-col px-0 py-0">
-          {step === "details" ? (
-            <>
-              <h1 className="font-heading text-2xl font-semibold tracking-tight text-foreground">
-                Create an account
-              </h1>
-              <p className="mt-1.5 text-sm text-muted-foreground">
-                Join UNIFIÉE — one place for all your packaging needs
-              </p>
+      <div className="flex flex-col">
+        {step === "details" ? (
+          <>
+            <h1 className="font-heading text-2xl font-semibold tracking-tight text-foreground">
+              Create an account
+            </h1>
+            <p className="mt-1.5 text-sm text-muted-foreground">
+              Join UNIFIÉE to manage and source custom packaging
+            </p>
 
-              <form onSubmit={handleBasicSubmit(onBasicSubmit)} className="mt-8 flex w-full flex-col gap-4" noValidate>
-                <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="name" className="text-xs text-muted-foreground">
-                    Name
-                  </Label>
+            <form onSubmit={handleBasicSubmit(onBasicSubmit)} className="mt-8 flex w-full flex-col gap-4" noValidate>
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="name" className="text-xs text-muted-foreground">
+                  Name
+                </Label>
+                <Input
+                  id="name"
+                  type="text"
+                  autoComplete="name"
+                  autoFocus
+                  placeholder="Alex"
+                  className="h-9 rounded-lg text-sm"
+                  aria-invalid={!!basicErrors.name}
+                  {...registerBasic("name")}
+                />
+                {basicErrors.name && (
+                  <p className="text-[11px] font-medium text-destructive animate-in fade-in slide-in-from-top-1">{basicErrors.name.message}</p>
+                )}
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="email" className="text-xs text-muted-foreground">
+                  Email
+                </Label>
+                <Input
+                  id="email"
+                  type="email"
+                  autoComplete="email"
+                  placeholder="you@company.com"
+                  className="h-9 rounded-lg text-sm"
+                  aria-invalid={!!basicErrors.email}
+                  {...registerBasic("email")}
+                />
+                {basicErrors.email && (
+                  <p className="text-[11px] font-medium text-destructive animate-in fade-in slide-in-from-top-1">{basicErrors.email.message}</p>
+                )}
+              </div>
+
+              <Button disabled={busy} type="submit">
+                Continue
+              </Button>
+
+              <div className="relative flex items-center gap-3 text-xs text-muted-foreground">
+                <Separator className="flex-1" />
+                <span className="font-mono uppercase tracking-widest shrink-0">or</span>
+                <Separator className="flex-1" />
+              </div>
+
+              <Button disabled={busy} variant="outline" type="button" className="gap-2.5 hover:bg-muted/50" onClick={() => googleMutation.mutate()}>
+                {googleMutation.isPending ? <Loader2 className="animate-spin size-4" /> : <GoogleIcon />}
+                Continue with Google
+              </Button>
+            </form>
+
+            <p className="mt-6 text-center text-sm text-muted-foreground">
+              Already have an account?{" "}
+              <Link href="/sign-in" className="font-medium text-foreground transition-colors underline-offset-4 hover:underline">
+                Sign In
+              </Link>
+            </p>
+          </>
+        ) : (
+          <>
+            <button
+              type="button"
+              onClick={() => {
+                setStep("details")
+                setShowPassword(false)
+              }}
+              className="mb-6 flex w-fit items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
+            >
+              <ArrowLeft className="size-3.5" />
+              Back
+            </button>
+
+            <h1 className="font-heading text-2xl font-semibold tracking-tight text-foreground">
+              Secure your account
+            </h1>
+            <p className="mt-1.5 truncate text-sm text-muted-foreground">
+              Creating account for {pendingEmail}
+            </p>
+
+            <form onSubmit={handlePasswordSubmit(onPasswordSubmit)} className="mt-8 flex flex-col gap-4" noValidate>
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="password" className="text-xs text-muted-foreground">
+                  Password
+                </Label>
+                <div className="relative">
                   <Input
-                    id="name"
-                    type="text"
-                    autoComplete="name"
-                    placeholder="Alex"
-                    className="h-10 rounded-lg text-sm"
-                    aria-invalid={!!basicErrors.name}
-                    {...registerBasic("name")}
-                  />
-                  {basicErrors.name && (
-                    <p className="text-[11px] font-medium text-destructive animate-in fade-in slide-in-from-top-1">{basicErrors.name.message}</p>
-                  )}
-                </div>
-
-                <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="email" className="text-xs text-muted-foreground">
-                    Email
-                  </Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    autoComplete="email"
-                    placeholder="you@company.com"
-                    className="h-10 rounded-lg text-sm"
-                    aria-invalid={!!basicErrors.email}
-                    {...registerBasic("email")}
-                  />
-                  {basicErrors.email && (
-                    <p className="text-[11px] font-medium text-destructive animate-in fade-in slide-in-from-top-1">{basicErrors.email.message}</p>
-                  )}
-                </div>
-
-                <Button disabled={busy} type="submit" className="transition-all active:scale-[0.98]">
-                  Continue
-                </Button>
-
-                <div className="relative flex items-center gap-3 text-xs text-muted-foreground">
-                  <Separator className="flex-1" />
-                  <span className="font-mono uppercase tracking-widest shrink-0">or</span>
-                  <Separator className="flex-1" />
-                </div>
-
-                <Button disabled={busy} variant="outline" type="button" className="gap-2.5 transition-all hover:bg-muted/50 active:scale-[0.98]" onClick={() => googleMutation.mutate()}>
-                  {googleMutation.isPending ? <Loader2 className="animate-spin size-4" /> : <GoogleIcon />}
-                  Continue with Google
-                </Button>
-              </form>
-
-              <p className="mt-6 text-center text-sm text-muted-foreground">
-                Already have an account?{" "}
-                <Link href="/sign-in" className="font-medium text-foreground transition-colors underline-offset-4 hover:underline">
-                  Sign In
-                </Link>
-              </p>
-            </>
-          ) : (
-            <>
-              <button
-                type="button"
-                onClick={() => {
-                  setStep("details")
-                  setShowPassword(false)
-                }}
-                className="mb-6 flex w-fit items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
-              >
-                <ArrowLeft className="size-3.5" />
-                Back
-              </button>
-
-              <h1 className="font-heading text-2xl font-semibold tracking-tight text-foreground">
-                Secure your account
-              </h1>
-              <p className="mt-1.5 truncate text-sm text-muted-foreground">
-                Creating account for {pendingEmail}
-              </p>
-
-              <form onSubmit={handlePasswordSubmit(onPasswordSubmit)} className="mt-8 flex flex-col gap-4" noValidate>
-                <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="password" className="text-xs text-muted-foreground">
-                    Password
-                  </Label>
-                  <div className="relative">
-                    <Input
-                      id="password"
-                      type={showPassword ? "text" : "password"}
-                      autoComplete="new-password"
-                      className="h-10 rounded-lg text-sm pr-10"
-                      aria-invalid={!!passwordErrors.password}
-                      {...registerPassword("password")}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                    >
-                      {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
-                    </button>
-                  </div>
-                  {passwordErrors.password && (
-                    <p className="text-[11px] font-medium text-destructive animate-in fade-in slide-in-from-top-1">{passwordErrors.password.message}</p>
-                  )}
-                </div>
-
-                <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="confirmPassword" className="text-xs text-muted-foreground">
-                    Confirm Password
-                  </Label>
-                  <Input
-                    id="confirmPassword"
+                    id="password"
                     type={showPassword ? "text" : "password"}
                     autoComplete="new-password"
-                    className="h-10 rounded-lg text-sm"
-                    aria-invalid={!!passwordErrors.confirmPassword}
-                    {...registerPassword("confirmPassword")}
+                    autoFocus
+                    className="h-9 rounded-lg text-sm pr-10"
+                    aria-invalid={!!passwordErrors.password}
+                    {...registerPassword("password")}
                   />
-                  {passwordErrors.confirmPassword && (
-                    <p className="text-[11px] font-medium text-destructive animate-in fade-in slide-in-from-top-1">{passwordErrors.confirmPassword.message}</p>
-                  )}
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 rounded-sm p-0.5 text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+                  >
+                    {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                  </button>
                 </div>
+                {passwordErrors.password && (
+                  <p className="text-[11px] font-medium text-destructive animate-in fade-in slide-in-from-top-1">{passwordErrors.password.message}</p>
+                )}
+              </div>
 
-                <Button disabled={mutation.isPending || isRedirecting} type="submit" className="transition-all active:scale-[0.98]">
-                  {(mutation.isPending || isRedirecting) ? <Loader2 className="animate-spin" /> : "Register"}
-                </Button>
-              </form>
-            </>
-          )}
-        </CardContent>
-      </Card>
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="confirmPassword" className="text-xs text-muted-foreground">
+                  Confirm Password
+                </Label>
+                <Input
+                  id="confirmPassword"
+                  type={showPassword ? "text" : "password"}
+                  autoComplete="new-password"
+                  className="h-9 rounded-lg text-sm"
+                  aria-invalid={!!passwordErrors.confirmPassword}
+                  {...registerPassword("confirmPassword")}
+                />
+                {passwordErrors.confirmPassword && (
+                  <p className="text-[11px] font-medium text-destructive animate-in fade-in slide-in-from-top-1">{passwordErrors.confirmPassword.message}</p>
+                )}
+              </div>
+
+              <Button disabled={mutation.isPending || isRedirecting} type="submit">
+                {(mutation.isPending || isRedirecting) ? <Loader2 className="animate-spin" /> : "Register"}
+              </Button>
+            </form>
+          </>
+        )}
+      </div>
     </div>
   )
 }

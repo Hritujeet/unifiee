@@ -92,7 +92,7 @@ export default async function PublicDesignerProfilePage({ params }: PublicDesign
     return (
         <div className="mx-auto w-full max-w-6xl space-y-8 px-4 py-8 sm:px-6 lg:px-8">
             <section className="overflow-hidden rounded-2xl border bg-card text-card-foreground">
-                <div className="h-36 bg-linear-to-r from-muted via-accent to-secondary sm:h-48" />
+                <div className="h-36 bg-muted sm:h-48" />
                 <div className="px-5 pb-7 sm:px-8">
                     <div className="-mt-10 flex flex-col justify-between gap-5 sm:-mt-12 sm:flex-row sm:items-end">
                         <div className="flex items-end gap-4">
@@ -103,10 +103,10 @@ export default async function PublicDesignerProfilePage({ params }: PublicDesign
                                     width={96}
                                     height={96}
                                     unoptimized
-                                    className="size-20 rounded-2xl border-4 border-card bg-background object-cover sm:size-24"
+                                    className="size-20 rounded-xl border-4 border-card bg-background object-cover sm:size-24"
                                 />
                             ) : (
-                                <InitialsAvatar name={name} className="size-20 rounded-2xl border-4 border-card text-2xl sm:size-24" />
+                                <InitialsAvatar name={name} className="size-20 rounded-xl border-4 border-card text-2xl sm:size-24" />
                             )}
                             <div className="pb-1">
                                 <h1 className="font-heading text-2xl font-semibold tracking-tight sm:text-3xl">{name}</h1>

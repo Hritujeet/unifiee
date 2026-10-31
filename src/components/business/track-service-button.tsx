@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useRef, useTransition } from "react"
-import { ArrowRight, LoaderCircle, UserRoundPlus } from "lucide-react"
+import { ArrowRight, Loader2, UserRoundPlus } from "lucide-react"
 import { toast } from "sonner"
 import { trackHiredDesignerService } from "@/actions/business-hired-services"
 import { Button } from "@/components/ui/button"
@@ -43,7 +43,7 @@ export function TrackServiceButton({ serviceId, tracked }: { serviceId: string; 
 
     return (
         <Button type="button" className="flex-1" onClick={trackService} disabled={isPending} aria-busy={isPending} aria-disabled={isPending}>
-            {isPending ? <LoaderCircle className="size-4 animate-spin" /> : <UserRoundPlus className="size-4" />}
+            {isPending ? <Loader2 className="size-4 animate-spin" /> : <UserRoundPlus className="size-4" />}
             Track as hired
         </Button>
     )

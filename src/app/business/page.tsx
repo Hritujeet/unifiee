@@ -156,10 +156,10 @@ export default async function BusinessDashboardPage() {
     return (
         <div className="w-full space-y-6">
             {pendingDeliveries.length > 0 && (
-                <div className="rounded-2xl border border-purple-500/30 bg-purple-500/10 p-4 shadow-xs">
+                <div className="rounded-xl border border-primary/20 bg-primary/5 p-4 shadow-xs">
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                         <div className="flex items-center gap-3">
-                            <div className="flex size-9 items-center justify-center rounded-xl bg-purple-500/20 text-purple-600 dark:text-purple-400 shrink-0">
+                            <div className="flex size-9 items-center justify-center rounded-lg bg-primary/10 text-primary shrink-0">
                                 <FileCheck2 className="size-5" />
                             </div>
                             <div>
@@ -177,7 +177,7 @@ export default async function BusinessDashboardPage() {
 
                         <Link
                             href={`/business/hired-services/${pendingDeliveries[0].id}`}
-                            className="inline-flex items-center gap-1.5 rounded-lg bg-purple-600 hover:bg-purple-700 px-3 py-1.5 text-xs font-semibold text-white shadow-xs transition-colors shrink-0"
+                            className="inline-flex items-center gap-1.5 rounded-lg bg-primary hover:bg-primary/90 px-3 py-1.5 text-xs font-semibold text-primary-foreground shadow-xs transition-colors shrink-0"
                         >
                             <span>Review Delivery</span>
                             <ArrowRight className="size-3.5" />

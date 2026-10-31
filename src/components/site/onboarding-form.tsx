@@ -116,7 +116,7 @@ const OnboardingForm = () => {
                 className="text-center mb-14 max-w-2xl"
             >
                 <p className="text-xs font-mono text-muted-foreground tracking-widest uppercase mb-4">
-                    — Join the network —
+                    Join the network
                 </p>
                 <h1 className="font-heading text-4xl sm:text-5xl font-semibold tracking-tight leading-tight">
                     {step === "select" ? "Who are you joining as?" : step === "vendor-type" ? "What kind of vendor are you?" : step === "manufacturer" ? "Manufacturer Registration" : step === "designer" ? "Designer Registration" : "Business Registration"}
@@ -194,8 +194,8 @@ const OnboardingForm = () => {
                                         <FieldLabel
                                             key={opt.value}
                                             htmlFor={opt.value}
-                                            className={`cursor-pointer transition-all duration-300 border rounded-2xl overflow-hidden p-0 block h-full ${selected
-                                                    ? "border-primary bg-primary/5 ring-2 ring-primary/25 shadow-md"
+                                            className={`cursor-pointer transition-colors duration-150 border rounded-xl overflow-hidden p-0 block h-full ${selected
+                                                    ? "border-primary bg-primary/5 ring-1 ring-primary shadow-xs"
                                                     : "border-border hover:border-primary/40 hover:bg-muted/40"
                                                 }`}
                                         >
@@ -231,24 +231,24 @@ const OnboardingForm = () => {
                                         animate={{ opacity: 1, y: 0 }}
                                         exit={{ opacity: 0, y: -6 }}
                                         transition={{ duration: 0.35, ease: customEase }}
-                                        className="mt-8 text-center text-xs font-mono text-muted-foreground tracking-widest uppercase animate-pulse"
+                                        className="mt-8 text-center text-xs font-mono text-muted-foreground tracking-widest uppercase"
                                     >
-                                        ↑ select one to continue
+                                        Select an option to continue
                                     </motion.p>
                                 ) : (
                                     <motion.div
                                         key="continue-btn"
-                                        initial={{ opacity: 0, y: 10, scale: 0.97 }}
-                                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                                        exit={{ opacity: 0, y: -10, scale: 0.97 }}
-                                        transition={{ duration: 0.4, ease: customEase }}
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, y: -10 }}
+                                        transition={{ duration: 0.25, ease: customEase }}
                                         className="mt-8 flex justify-center"
                                     >
                                         <button
                                             onClick={handleContinue}
-                                            className="px-8 py-3 rounded-xl bg-primary text-primary-foreground text-sm font-semibold tracking-wide shadow-md hover:opacity-90 hover:scale-[1.03] active:scale-[0.98] transition-all duration-200 cursor-pointer"
+                                            className="px-8 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-medium tracking-wide shadow-xs hover:bg-primary/90 transition-colors duration-150 cursor-pointer"
                                         >
-                                            Continue →
+                                            Continue
                                         </button>
                                     </motion.div>
                                 )}
@@ -278,8 +278,8 @@ const OnboardingForm = () => {
                                         <FieldLabel
                                             key={opt.value}
                                             htmlFor={opt.value}
-                                            className={`cursor-pointer transition-all duration-300 border rounded-2xl overflow-hidden p-0 block h-full ${selected
-                                                    ? "border-primary bg-primary/5 ring-2 ring-primary/25 shadow-md"
+                                            className={`cursor-pointer transition-colors duration-150 border rounded-xl overflow-hidden p-0 block h-full ${selected
+                                                    ? "border-primary bg-primary/5 ring-1 ring-primary shadow-xs"
                                                     : "border-border hover:border-primary/40 hover:bg-muted/40"
                                                 }`}
                                         >
@@ -314,24 +314,24 @@ const OnboardingForm = () => {
                                         animate={{ opacity: 1, y: 0 }}
                                         exit={{ opacity: 0, y: -6 }}
                                         transition={{ duration: 0.35, ease: customEase }}
-                                        className="mt-8 text-center text-xs font-mono text-muted-foreground tracking-widest uppercase animate-pulse"
+                                        className="mt-8 text-center text-xs font-mono text-muted-foreground tracking-widest uppercase"
                                     >
-                                        ↑ select one to continue
+                                        Select an option to continue
                                     </motion.p>
                                 ) : (
                                     <motion.div
                                         key="continue-btn2"
-                                        initial={{ opacity: 0, y: 10, scale: 0.97 }}
-                                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                                        exit={{ opacity: 0, y: -10, scale: 0.97 }}
-                                        transition={{ duration: 0.4, ease: customEase }}
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, y: -10 }}
+                                        transition={{ duration: 0.25, ease: customEase }}
                                         className="mt-8 flex justify-center"
                                     >
                                         <button
                                             onClick={handleContinue}
-                                            className="px-8 py-3 rounded-xl bg-primary text-primary-foreground text-sm font-semibold tracking-wide shadow-md hover:opacity-90 hover:scale-[1.03] active:scale-[0.98] transition-all duration-200 cursor-pointer"
+                                            className="px-8 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-medium tracking-wide shadow-xs hover:bg-primary/90 transition-colors duration-150 cursor-pointer"
                                         >
-                                            Continue →
+                                            Continue
                                         </button>
                                     </motion.div>
                                 )}

@@ -58,18 +58,18 @@ export default function BusinessAppSidebar() {
     ]
 
     return (
-        <Sidebar collapsible="icon" className="border-r border-border/40 bg-sidebar">
+        <Sidebar collapsible="icon" className="border-r border-sidebar-border bg-sidebar">
             {/* Brand */}
-            <SidebarHeader className="h-16 justify-center px-4 pt-3 pb-2 group-data-[collapsible=icon]:h-14 group-data-[collapsible=icon]:px-2 group-data-[collapsible=icon]:py-0">
+            <SidebarHeader className="h-16 justify-center border-b border-sidebar-border px-4 group-data-[collapsible=icon]:h-14 group-data-[collapsible=icon]:px-2 group-data-[collapsible=icon]:py-0">
                 <SidebarMenu>
                     <SidebarMenuItem>
                         <SidebarMenuButton size="lg" asChild className="hover:bg-transparent hover:text-foreground">
                             <Link href="/business" className="flex items-center gap-2.5">
-                                <div className="flex size-7 shrink-0 items-center justify-center rounded-md bg-blue-600 text-white font-bold text-sm shadow-sm">
+                                <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground font-semibold text-sm shadow-xs">
                                     U
                                 </div>
                                 <div className="flex flex-col leading-tight gap-0.5">
-                                    <span className="text-sm font-semibold tracking-tight text-foreground">Unifiée</span>
+                                    <span className="text-sm font-semibold tracking-tight text-sidebar-foreground">UNIFIÉE</span>
                                     <span className="text-[11px] text-muted-foreground font-normal">Business</span>
                                 </div>
                             </Link>
@@ -88,7 +88,7 @@ export default function BusinessAppSidebar() {
                                 asChild
                                 isActive={isDashboardActive}
                                 tooltip="Dashboard"
-                                className="font-medium text-sm transition-all data-[active=true]:bg-blue-600 data-[active=true]:text-white data-[active=true]:font-semibold data-[active=true]:shadow-sm hover:data-[active=true]:bg-blue-600"
+                                className="font-medium text-sm transition-colors data-[active=true]:bg-primary data-[active=true]:text-primary-foreground data-[active=true]:font-medium"
                             >
                                 <Link href="/business">
                                     <LayoutDashboard className="size-4" />
@@ -114,7 +114,7 @@ export default function BusinessAppSidebar() {
                                             asChild
                                             isActive={isActive}
                                             tooltip={route.title}
-                                            className="font-normal text-sm text-muted-foreground hover:text-foreground transition-all data-[active=true]:bg-blue-600 data-[active=true]:text-white data-[active=true]:font-medium"
+                                            className="font-normal text-sm text-muted-foreground hover:text-foreground transition-colors data-[active=true]:bg-primary data-[active=true]:text-primary-foreground data-[active=true]:font-medium"
                                         >
                                             <Link href={route.url} className="flex items-center gap-2">
                                                 <route.icon className="size-4" />
@@ -143,7 +143,7 @@ export default function BusinessAppSidebar() {
                                             asChild
                                             isActive={isActive}
                                             tooltip={route.title}
-                                            className="font-normal text-sm text-muted-foreground hover:text-foreground transition-all data-[active=true]:bg-blue-600 data-[active=true]:text-white data-[active=true]:font-medium"
+                                            className="font-normal text-sm text-muted-foreground hover:text-foreground transition-colors data-[active=true]:bg-primary data-[active=true]:text-primary-foreground data-[active=true]:font-medium"
                                         >
                                             <Link href={route.url}>
                                                 <route.icon className="size-4" />

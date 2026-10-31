@@ -177,10 +177,10 @@ export function NavbarClient({ initialSession, initialRole }: NavbarClientProps)
   return (
     <header
       className={cn(
-        "fixed inset-x-0 top-0 z-50 border-b transition-all duration-300",
+        "fixed inset-x-0 top-0 z-50 border-b transition-colors duration-200",
         scrolled || mobileOpen
-          ? "border-border/70 bg-background/85 shadow-[0_8px_30px_-18px_rgba(0,0,0,0.3)] backdrop-blur-xl"
-          : "border-transparent bg-transparent backdrop-blur-md"
+          ? "border-border bg-background/95 shadow-xs"
+          : "border-transparent bg-transparent"
       )}
     >
       <div className="mx-auto max-w-7xl px-5 sm:px-6">

@@ -21,10 +21,20 @@ import {
     Plus,
     ShieldCheck,
     Check,
+    Loader2,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
+import { Label } from "@/components/ui/label"
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog"
 import {
     Card,
     CardContent,
@@ -122,6 +132,55 @@ export function OrderManagementView({ initialOrders }: OrderManagementViewProps)
     const [searchQuery, setSearchQuery] = useState("")
     const [statusFilter, setStatusFilter] = useState("all")
     const [updatingId, setUpdatingId] = useState<string | null>(null)
+    const [proofOrderId, setProofOrderId] = useState<string | null>(null)
+    const [proofUrl, setProofUrl] = useState("")
+    const [dispatchOrderId, setDispatchOrderId] = useState<string | null>(null)
+    const [courier, setCourier] = useState("")
+    const [trackingNumber, setTrackingNumber] = useState("")
+    const [eta, setEta] = useState("")
+    const handleUploadProof = async () => {
+        if (!proofOrderId || !proofUrl.trim()) return
+        setUpdatingId(proofOrderId)
+        try {
+            const result = await uploadProofAction({ orderId: proofOrderId, fileUrl: proofUrl.trim(), idempotencyKey: crypto.randomUUID() })
+            if (result.success) {
+                toast.success("Proof uploaded")
+                setProofOrderId(null)
+                setProofUrl("")
+                router.refresh()
+            } else {
+                toast.error("Couldn't upload proof")
+            }
+        } finally {
+            setUpdatingId(null)
+        }
+    }
+
+    const handleDispatchOrder = async () => {
+        if (!dispatchOrderId || !courier.trim() || !trackingNumber.trim() || !eta.trim()) return
+        setUpdatingId(dispatchOrderId)
+        try {
+            const result = await dispatchOrderAction({
+                orderId: dispatchOrderId,
+                courier: courier.trim(),
+                trackingNumber: trackingNumber.trim(),
+                eta: eta.trim(),
+                idempotencyKey: crypto.randomUUID(),
+            })
+            if (result.success) {
+                toast.success("Shipment added")
+                setDispatchOrderId(null)
+                setCourier("")
+                setTrackingNumber("")
+                setEta("")
+                router.refresh()
+            } else {
+                toast.error("Couldn't save shipment")
+            }
+        } finally {
+            setUpdatingId(null)
+        }
+    }
     const inFlightRef = useRef(false)
 
     const filtered = orders.filter((item) => {
@@ -398,16 +457,8 @@ export function OrderManagementView({ initialOrders }: OrderManagementViewProps)
                                                     disabled={isUpdating}
                                                     aria-busy={isUpdating}
                                                     aria-disabled={isUpdating}
-                                                    onClick={async () => {
-                                                        const fileUrl = window.prompt("Paste the HTTPS proof URL")
-                                                        if (!fileUrl) return
-                                                        setUpdatingId(order.id)
-                                                        const result = await uploadProofAction({ orderId: order.id, fileUrl, idempotencyKey: crypto.randomUUID() })
-                                                        setUpdatingId(null)
-                                                        if (result.success) router.refresh()
-                                                        else toast.error("Couldn't upload proof")
-                                                    }}
-                                                    className="h-8 text-xs gap-1.5 font-semibold shadow-xs"
+                                                    onClick={() => { setProofOrderId(order.id); setProofUrl(""); }}
+className="h-8 text-xs gap-1.5 font-medium shadow-xs"
                                                 >
                                                     <Package className="size-3.5" />
                                                     Upload artwork proof
@@ -454,24 +505,8 @@ export function OrderManagementView({ initialOrders }: OrderManagementViewProps)
                                                     disabled={isUpdating}
                                                     aria-busy={isUpdating}
                                                     aria-disabled={isUpdating}
-                                                    onClick={async () => {
-                                                        const courier = window.prompt("Courier partner")
-                                                        const trackingNumber = courier && window.prompt("Tracking number")
-                                                        const eta = trackingNumber && window.prompt("Estimated delivery date (YYYY-MM-DD)")
-                                                        if (!courier || !trackingNumber || !eta) return
-                                                        setUpdatingId(order.id)
-                                                        const result = await dispatchOrderAction({
-                                                            orderId: order.id,
-                                                            courier,
-                                                            trackingNumber,
-                                                            eta,
-                                                            idempotencyKey: crypto.randomUUID(),
-                                                        })
-                                                        setUpdatingId(null)
-                                                        if (result.success) router.refresh()
-                                                        else toast.error("Couldn't save shipment")
-                                                    }}
-                                                    className="h-8 text-xs gap-1.5 font-semibold bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs"
+                                                    onClick={() => { setDispatchOrderId(order.id); setCourier(""); setTrackingNumber(""); setEta(""); }}
+className="h-8 text-xs gap-1.5 font-medium shadow-xs"
                                                 >
                                                     <CheckCircle2 className="size-3.5" />
                                                     Add shipment details
@@ -483,7 +518,7 @@ export function OrderManagementView({ initialOrders }: OrderManagementViewProps)
                                                     size="sm"
                                                     disabled={isUpdating}
                                                     onClick={() => handleUpdateStatus(order.id, "delivered")}
-                                                    className="h-8 text-xs gap-1.5 font-semibold bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs"
+                                                    className="h-8 text-xs gap-1.5 font-medium shadow-xs"
                                                 >
                                                     <CheckCircle2 className="size-3.5" />
                                                     Mark delivered
@@ -504,6 +539,93 @@ export function OrderManagementView({ initialOrders }: OrderManagementViewProps)
                     })}
                 </div>
             )}
+            {/* Upload Proof Dialog */}
+            <Dialog open={!!proofOrderId} onOpenChange={(open) => !open && setProofOrderId(null)}>
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Upload Artwork Proof</DialogTitle>
+                        <DialogDescription>
+                            Enter the secure HTTPS link to the print dieline or artwork proof for buyer review.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-2 py-2">
+                        <Label htmlFor="proof-url" className="text-xs text-muted-foreground">Proof URL (HTTPS)</Label>
+                        <Input
+                            id="proof-url"
+                            type="url"
+                            placeholder="https://..."
+                            value={proofUrl}
+                            onChange={(e) => setProofUrl(e.target.value)}
+                            className="h-9 text-xs"
+                        />
+                    </div>
+                    <DialogFooter className="gap-2">
+                        <Button variant="outline" size="sm" onClick={() => setProofOrderId(null)}>Cancel</Button>
+                        <Button
+                            size="sm"
+                            disabled={!proofUrl.trim().startsWith("http") || updatingId !== null}
+                            onClick={handleUploadProof}
+                        >
+                            {updatingId ? <Loader2 className="size-3.5 animate-spin" /> : "Upload Proof"}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Add Shipment Details Dialog */}
+            <Dialog open={!!dispatchOrderId} onOpenChange={(open) => !open && setDispatchOrderId(null)}>
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Dispatch & Shipment Details</DialogTitle>
+                        <DialogDescription>
+                            Provide courier and tracking information for the buyer.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-3 py-2">
+                        <div className="space-y-1.5">
+                            <Label htmlFor="courier-name" className="text-xs text-muted-foreground">Courier Partner</Label>
+                            <Input
+                                id="courier-name"
+                                placeholder="e.g., Blue Dart, Delhivery"
+                                value={courier}
+                                onChange={(e) => setCourier(e.target.value)}
+                                className="h-9 text-xs"
+                            />
+                        </div>
+                        <div className="space-y-1.5">
+                            <Label htmlFor="tracking-num" className="text-xs text-muted-foreground">Tracking Number</Label>
+                            <Input
+                                id="tracking-num"
+                                placeholder="e.g., AWB12345678"
+                                value={trackingNumber}
+                                onChange={(e) => setTrackingNumber(e.target.value)}
+                                className="h-9 text-xs"
+                            />
+                        </div>
+                        <div className="space-y-1.5">
+                            <Label htmlFor="eta-date" className="text-xs text-muted-foreground">Estimated Delivery Date</Label>
+                            <Input
+                                id="eta-date"
+                                type="date"
+                                value={eta}
+                                onChange={(e) => setEta(e.target.value)}
+                                className="h-9 text-xs"
+                            />
+                        </div>
+                    </div>
+                    <DialogFooter className="gap-2">
+                        <Button variant="outline" size="sm" onClick={() => setDispatchOrderId(null)}>Cancel</Button>
+                        <Button
+                            size="sm"
+                            disabled={!courier.trim() || !trackingNumber.trim() || !eta.trim() || updatingId !== null}
+                            onClick={handleDispatchOrder}
+                        >
+                            {updatingId ? <Loader2 className="size-3.5 animate-spin" /> : "Save Dispatch Details"}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
         </div>
     )
 }

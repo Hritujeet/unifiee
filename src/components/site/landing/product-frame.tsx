@@ -12,7 +12,7 @@ export function ProductFrame({
   return (
     <div
       className={cn(
-        "group/frame transform-gpu relative overflow-hidden rounded-2xl border border-border/70 bg-card shadow-[0_24px_80px_-24px_rgba(0,0,0,0.5)] ring-1 ring-white/5 transition-shadow duration-500 hover:shadow-[0_30px_90px_-28px_rgba(37,99,235,0.25)]",
+        "group/frame transform-gpu relative overflow-hidden rounded-xl border border-border bg-card shadow-xs",
         className,
       )}
     >
@@ -26,7 +26,7 @@ export function ProductFrame({
           {url}
         </div>
         <span className="hidden shrink-0 items-center gap-1.5 text-[9px] text-muted-foreground sm:inline-flex">
-          <span className="size-1.5 animate-pulse rounded-full bg-emerald-500" />
+          <span className="size-1.5 rounded-full bg-emerald-500" />
           Preview
         </span>
       </div>

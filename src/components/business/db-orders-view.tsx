@@ -2,34 +2,54 @@
 
 import { useRef, useState } from "react"
 import { useRouter } from "next/navigation"
+import Link from "next/link"
 import { cancelOrderAction, type BusinessOrderSummary } from "@/actions/order-actions"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog"
+import { Textarea } from "@/components/ui/textarea"
+import { Label } from "@/components/ui/label"
 import { toast } from "sonner"
 import { OrderStatusBadge } from "@/components/orders/order-status-badge"
 import { OrderStepper } from "@/components/orders/order-stepper"
 import { OrderTimeline } from "@/components/orders/order-timeline"
 import { ShipmentCard } from "@/components/orders/shipment-card"
+import { Loader2, Package } from "lucide-react"
 
 export default function DbOrdersView({ orders }: { orders: BusinessOrderSummary[] }) {
     const router = useRouter()
     const [pendingId, setPendingId] = useState<string | null>(null)
+    const [orderToCancel, setOrderToCancel] = useState<string | null>(null)
+    const [cancelReason, setCancelReason] = useState("")
     const inFlightRef = useRef(false)
 
-    async function cancelOrder(orderId: string) {
-        const reason = window.prompt("Why are you cancelling this order?")
-        if (!reason?.trim()) return
+    async function handleConfirmCancel() {
+        if (!orderToCancel || !cancelReason.trim()) return
 
         if (inFlightRef.current) return
         inFlightRef.current = true
-        setPendingId(orderId)
+        setPendingId(orderToCancel)
         try {
-            const result = await cancelOrderAction({ orderId, role: "business", reason, idempotencyKey: crypto.randomUUID() })
+            const result = await cancelOrderAction({
+                orderId: orderToCancel,
+                role: "business",
+                reason: cancelReason.trim(),
+                idempotencyKey: crypto.randomUUID(),
+            })
             if (!result.success) {
                 toast.error("Couldn't cancel order")
                 return
             }
             toast.success("Order cancelled")
+            setOrderToCancel(null)
+            setCancelReason("")
             router.refresh()
         } catch {
             toast.error("Couldn't cancel order", { description: "Try again." })
@@ -42,11 +62,22 @@ export default function DbOrdersView({ orders }: { orders: BusinessOrderSummary[
     return (
         <div className="mx-auto w-full max-w-5xl space-y-6">
             <div>
-                <h1 className="font-heading text-3xl font-semibold tracking-tight">Orders</h1>
-                <p className="mt-2 text-sm text-muted-foreground">Track your orders from confirmation through delivery.</p>
+                <h1 className="font-heading text-2xl sm:text-3xl font-bold tracking-tight text-foreground">Orders</h1>
+                <p className="mt-1 text-sm text-muted-foreground">Track your orders from confirmation through delivery.</p>
             </div>
             {orders.length === 0 ? (
-                <Card><CardContent className="py-12 text-center text-sm text-muted-foreground">No database-backed orders yet. Accept a vendor offer to create one.</CardContent></Card>
+                <Card className="border-dashed">
+                    <CardContent className="flex flex-col items-center justify-center py-16 text-center">
+                        <Package className="size-10 text-muted-foreground/50 mb-3" />
+                        <h3 className="text-base font-semibold text-foreground">No orders placed yet</h3>
+                        <p className="mt-1 max-w-sm text-xs text-muted-foreground">
+                            Once you accept a vendor offer or complete an order checkout, you can track production, proofs, and shipments here.
+                        </p>
+                        <Button asChild size="sm" className="mt-5 text-xs">
+                            <Link href="/business/offers">Browse vendor offers</Link>
+                        </Button>
+                    </CardContent>
+                </Card>
             ) : (
                 <div className="grid gap-4">
                     {orders.map(({ order, vendorName, milestones, shipment }) => {
@@ -84,9 +115,20 @@ export default function DbOrdersView({ orders }: { orders: BusinessOrderSummary[
                                             disabled={pendingId !== null}
                                             aria-busy={pendingId === order.id}
                                             aria-disabled={pendingId === order.id}
-                                            onClick={() => cancelOrder(order.id)}
+                                            onClick={() => {
+                                                setOrderToCancel(order.id)
+                                                setCancelReason("")
+                                            }}
+                                            className="text-xs"
                                         >
-                                            {pendingId === order.id ? "Cancelling..." : "Cancel order"}
+                                            {pendingId === order.id ? (
+                                                <span className="flex items-center gap-1.5">
+                                                    <Loader2 className="size-3.5 animate-spin" />
+                                                    <span>Cancelling...</span>
+                                                </span>
+                                            ) : (
+                                                "Cancel order"
+                                            )}
                                         </Button>
                                     )}
                                 </CardContent>
@@ -95,6 +137,47 @@ export default function DbOrdersView({ orders }: { orders: BusinessOrderSummary[
                     })}
                 </div>
             )}
+
+            {/* Cancel Order Dialog */}
+            <Dialog open={!!orderToCancel} onOpenChange={(open) => !open && setOrderToCancel(null)}>
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Cancel order</DialogTitle>
+                        <DialogDescription>
+                            Please state the reason for cancelling this order. The vendor will be notified.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-2 py-2">
+                        <Label htmlFor="cancel-reason" className="text-xs text-muted-foreground">Reason</Label>
+                        <Textarea
+                            id="cancel-reason"
+                            value={cancelReason}
+                            onChange={(e) => setCancelReason(e.target.value)}
+                            placeholder="e.g., Change in packaging specification or timeline"
+                            rows={3}
+                            className="text-xs resize-none"
+                        />
+                    </div>
+                    <DialogFooter className="gap-2">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setOrderToCancel(null)}
+                            disabled={pendingId !== null}
+                        >
+                            Back
+                        </Button>
+                        <Button
+                            variant="destructive"
+                            size="sm"
+                            disabled={!cancelReason.trim() || pendingId !== null}
+                            onClick={handleConfirmCancel}
+                        >
+                            {pendingId ? <Loader2 className="size-3.5 animate-spin" /> : "Confirm cancellation"}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     )
 }

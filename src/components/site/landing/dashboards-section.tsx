@@ -144,10 +144,9 @@ function DashboardCard({
           scale: prefersReduced ? 1 : stackScale,
           willChange: "transform, opacity",
         }}
-        className="transform-gpu relative rounded-3xl border border-border/80 dark:bg-neutral-950 bg-white p-6 shadow-[0_16px_50px_-16px_rgba(0,0,0,0.3)] sm:p-8 lg:p-10"
+        className="transform-gpu relative rounded-2xl border border-border bg-card p-6 shadow-xs sm:p-8 lg:p-10"
       >
-        {/* Subtle ambient gradient glow */}
-        <div className="pointer-events-none absolute -right-16 -top-16 size-72 rounded-full bg-[radial-gradient(circle,color-mix(in_oklch,var(--primary)_8%,transparent)_0%,transparent_70%)]" />
+
 
         {/* Card header badge */}
         <div className="relative mb-6 flex items-center justify-between border-b border-border/50 pb-4">

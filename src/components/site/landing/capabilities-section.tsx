@@ -76,7 +76,7 @@ export function CapabilitiesSection() {
               <div className="flex items-center justify-between border-b border-border/60 px-4 py-2">
                 <span className="text-muted-foreground">intake · live</span>
                 <span className="flex items-center gap-1.5 text-[9px] text-emerald-500">
-                  <span className="size-1.5 animate-pulse rounded-full bg-emerald-500" />
+                  <span className="size-1.5 rounded-full bg-emerald-500" />
                   ready
                 </span>
               </div>

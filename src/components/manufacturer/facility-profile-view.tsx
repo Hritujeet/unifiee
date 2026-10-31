@@ -59,7 +59,7 @@ export function FacilityProfileView({ profile }: VendorProfileProps) {
             {/* Profile Overview Card */}
             <Card className="border shadow-xs bg-card overflow-hidden">
                 <div className="bg-card p-6 border-b flex flex-col sm:flex-row sm:items-center gap-4">
-                    <div className="size-14 rounded-2xl bg-primary text-primary-foreground font-black text-xl flex items-center justify-center shadow-sm">
+                    <div className="size-14 rounded-xl bg-primary text-primary-foreground font-semibold text-xl flex items-center justify-center shadow-xs">
                         {profile.companyName ? profile.companyName.charAt(0).toUpperCase() : "M"}
                     </div>
                     <div>

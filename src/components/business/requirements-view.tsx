@@ -23,6 +23,14 @@ import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog"
+import {
     Requirement,
     OrderWorkflowStatus,
 } from "@/lib/business/types"
@@ -54,6 +62,7 @@ export default function RequirementsView({
 }: RequirementsViewProps) {
     const router = useRouter()
     const [deletingId, setDeletingId] = useState<string | null>(null)
+    const [deleteConfirmReq, setDeleteConfirmReq] = useState<{ id: string; title: string } | null>(null)
     const [searchQuery, setSearchQuery] = useState("")
     const [statusFilter, setStatusFilter] = useState<string>("all")
 
@@ -91,6 +100,7 @@ export default function RequirementsView({
                 return
             }
             toast.success("Requirement deleted")
+            setDeleteConfirmReq(null)
             router.refresh()
         } catch {
             toast.error("Couldn't delete requirement")
@@ -123,7 +133,7 @@ export default function RequirementsView({
             {/* 1. PAGE HEADER */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-5 border-b border-border/40 pb-6">
                 <div className="space-y-1.5">
-                    <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-blue-500/10 text-blue-500 border border-blue-500/20">
+                    <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[11px] font-medium bg-primary/10 text-primary border border-primary/20">
                         <Layers className="size-3" />
                         <span>Client Procurement</span>
                     </div>
@@ -136,19 +146,19 @@ export default function RequirementsView({
                 </div>
 
                 <div className="flex items-center gap-3 shrink-0">
-                    <Button asChild variant="outline" size="sm" className="h-10 px-4 rounded-xl text-xs font-medium border-border/50 hover:bg-muted/50">
+                    <Button asChild variant="outline" size="sm" className="h-9 px-3.5 text-xs font-medium border-border hover:bg-muted/50">
                         <Link href="/business/offers" className="flex items-center gap-2">
-                            <Tag className="size-3.5 text-amber-500" />
+                            <Tag className="size-3.5 text-muted-foreground" />
                             <span>View offers</span>
                             {pendingOffersCount > 0 && (
-                                <span className="flex size-5 items-center justify-center rounded-full bg-amber-500/15 text-amber-500 text-[10px] font-semibold">
+                                <span className="flex size-5 items-center justify-center rounded-full bg-primary/10 text-primary text-[10px] font-semibold">
                                     {pendingOffersCount}
                                 </span>
                             )}
                         </Link>
                     </Button>
                     {/* Primary Button */}
-                    <Button asChild size="sm" className="h-10 px-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-medium text-xs shadow-sm hover:shadow-md transition-all">
+                    <Button asChild size="sm" className="h-9 px-3.5 text-xs font-medium shadow-xs">
                         <Link href="/business/requirements/new" className="flex items-center gap-1.5">
                             <Plus className="size-4" />
                             <span>New requirement</span>
@@ -158,18 +168,18 @@ export default function RequirementsView({
             </div>
 
             {/* 2. AI INTAKE BANNER */}
-            <div className="relative overflow-hidden rounded-2xl border bg-card p-6 shadow-xs">
+            <div className="relative overflow-hidden rounded-xl border border-border bg-card p-6 shadow-xs">
                 <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
                     <div className="flex items-start gap-4">
-                        <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-blue-500/15 text-blue-500 border border-blue-500/30 shadow-xs mt-0.5">
+                        <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary border border-primary/20 shadow-xs mt-0.5">
                             <Sparkles className="size-5" />
                         </div>
                         <div className="space-y-1.5">
                             <div className="flex items-center gap-2">
-                                <span className="text-xs font-bold tracking-wider uppercase text-blue-500">
+                                <span className="text-xs font-semibold tracking-wider uppercase text-primary">
                                     AI-Assisted Intake
                                 </span>
-                                <Badge variant="outline" className="text-[10px] border-blue-500/30 bg-blue-500/10 text-blue-400 font-medium">
+                                <Badge variant="outline" className="text-[10px] border-primary/30 bg-primary/5 text-primary font-medium">
                                     Structured Fields
                                 </Badge>
                             </div>
@@ -183,7 +193,7 @@ export default function RequirementsView({
                     </div>
 
                     <div className="shrink-0 flex items-center md:self-center">
-                        <Button asChild variant="outline" className="h-10 px-5 rounded-xl border-blue-500/40 text-blue-600 dark:text-blue-400 hover:bg-blue-500/10 font-medium text-xs sm:text-sm shadow-xs gap-2">
+                        <Button asChild variant="outline" className="h-9 px-4 text-xs font-medium shadow-xs gap-2">
                             <Link href="/business/requirements/new">
                                 <span>Submit new requirement</span>
                                 <ArrowRight className="size-4" />
@@ -411,8 +421,8 @@ export default function RequirementsView({
                                                 }
 
                                                 return (
-                                                    <span className="text-[11px] text-muted-foreground flex items-center gap-1">
-                                                        <Radio className="size-3 text-blue-500 animate-pulse" />
+                                                    <span className="text-[11px] text-muted-foreground flex items-center gap-1.5">
+                                                        <Radio className="size-3 text-muted-foreground" />
                                                         Saved privately • Search vendors when ready
                                                     </span>
                                                 )
@@ -425,9 +435,10 @@ export default function RequirementsView({
                                                     variant="ghost"
                                                     size="sm"
                                                     disabled={deletingId === req.id}
-                                                    onClick={() => handleDelete(req.id, req.title)}
+                                                    onClick={() => setDeleteConfirmReq({ id: req.id, title: req.title })}
                                                     className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
                                                     title="Delete requirement"
+                                                    aria-label="Delete requirement"
                                                 >
                                                     {deletingId === req.id ? (
                                                         <Loader2 className="size-3.5 animate-spin" />
@@ -444,6 +455,36 @@ export default function RequirementsView({
                     </div>
                 )}
             </div>
+
+            {/* Delete Confirmation Dialog */}
+            <Dialog open={!!deleteConfirmReq} onOpenChange={(open) => !open && setDeleteConfirmReq(null)}>
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Delete requirement</DialogTitle>
+                        <DialogDescription>
+                            Are you sure you want to delete &ldquo;{deleteConfirmReq?.title}&rdquo;? This action cannot be undone.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter className="mt-4 gap-2">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setDeleteConfirmReq(null)}
+                            disabled={deletingId !== null}
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            variant="destructive"
+                            size="sm"
+                            disabled={deletingId !== null}
+                            onClick={() => deleteConfirmReq && handleDelete(deleteConfirmReq.id, deleteConfirmReq.title)}
+                        >
+                            {deletingId ? <Loader2 className="size-4 animate-spin" /> : "Delete requirement"}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     )
 }

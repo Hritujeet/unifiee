@@ -687,13 +687,13 @@ export function PublishOfferingForm() {
                         </div>
 
                         {/* Interactive Preview Card */}
-                        <Card className="border-2 border-primary/30 shadow-md bg-card overflow-hidden">
-                            <div className="bg-primary/5 px-4 py-2.5 border-b border-primary/20 flex items-center justify-between">
-                                <span className="text-[11px] font-semibold text-primary flex items-center gap-1.5">
-                                    <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
+                        <Card className="border border-border shadow-xs bg-card overflow-hidden rounded-xl">
+                            <div className="bg-muted/40 px-4 py-2.5 border-b border-border flex items-center justify-between">
+                                <span className="text-[11px] font-medium text-foreground flex items-center gap-1.5">
+                                    <span className="size-2 rounded-full bg-emerald-500" />
                                     How Buyers See Your Offering
                                 </span>
-                                <Badge variant="outline" className="text-[9px] uppercase font-bold">
+                                <Badge variant="outline" className="text-[9px] uppercase font-semibold">
                                     {fulfilmentMode.replace("_", " ")}
                                 </Badge>
                             </div>

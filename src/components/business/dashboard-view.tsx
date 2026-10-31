@@ -129,7 +129,8 @@ export default function BusinessDashboardView({
                 {/* Single Primary Action: ONLY filled button on page per memo rules */}
                 <Button
                     asChild
-                    className="h-9 sm:h-10 px-4 bg-blue-600 hover:bg-blue-500 text-white font-medium text-xs sm:text-sm rounded-xl shadow-xs self-start sm:self-auto shrink-0"
+                    size="sm"
+                    className="h-9 px-3.5 text-xs font-medium shadow-xs self-start sm:self-auto shrink-0"
                 >
                     <Link href="/business/requirements/new" className="flex items-center gap-1.5">
                         <Plus className="size-4" />
@@ -638,7 +639,7 @@ export default function BusinessDashboardView({
                             </div>
 
                             {/* Dieline Visual representation (Curved Paper Cup Wrap) */}
-                            <div className="relative w-full max-w-[280px] h-20 mt-4 border border-dashed border-sky-400/60 rounded-t-[40px] rounded-b-[8px] flex items-center justify-center bg-sky-500/5 px-4 shadow-sm">
+                            <div className="relative w-full max-w-[280px] h-20 mt-4 border border-dashed border-primary/40 rounded-lg flex items-center justify-center bg-muted/40 px-4 shadow-xs">
                                 <div className="text-center space-y-0.5">
                                     <div className="text-[11px] font-semibold text-neutral-200 tracking-wider uppercase font-mono">
                                         UNIFIÉE ROASTERY CAFE

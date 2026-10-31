@@ -39,6 +39,7 @@ export function AiErrorState({
                                 variant="ghost"
                                 size="icon-xs"
                                 type="button"
+                                aria-label="Dismiss error"
                                 onClick={onDismiss}
                                 className="text-muted-foreground hover:text-foreground"
                             >

@@ -27,7 +27,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select"
-import { Search, ShoppingBag } from "lucide-react"
+import { PackageSearch, Search, ShoppingBag } from "lucide-react"
 import {
     formatCategoryDisplayName,
     normalizeCategoryKey,
@@ -237,13 +237,27 @@ export default function DbOffersView({
                 </div>
 
                 {filteredOfferings.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed py-14 text-center text-muted-foreground bg-card">
+                    <div className="flex flex-col items-center justify-center rounded-xl border border-dashed py-14 px-4 text-center text-muted-foreground bg-card">
+                        <PackageSearch className="size-8 text-muted-foreground/60 mb-3" />
                         <p className="text-sm font-semibold text-foreground">
                             No offerings match your search criteria
                         </p>
-                        <p className="text-xs text-muted-foreground mt-1">
-                            Try adjusting your filters or search keywords.
+                        <p className="text-xs text-muted-foreground mt-1 max-w-sm">
+                            Try adjusting your search terms or clearing your category filter.
                         </p>
+                        {(searchQuery || categoryFilter !== "all") && (
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                    setSearchQuery("")
+                                    setCategoryFilter("all")
+                                }}
+                                className="mt-4 text-xs"
+                            >
+                                Clear filters
+                            </Button>
+                        )}
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">

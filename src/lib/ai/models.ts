@@ -6,7 +6,7 @@ import { isRateLimitOrQuotaError } from "./errors";
 export const MODEL_IDS = {
     MISTRAL_CHAT: "mistral-small-latest" as const,
     MISTRAL_EMBED: "mistral-embed" as const,
-    GEMINI_FLASH: "gemini-2.5-flash" as const,
+    GEMINI_FLASH: (process.env.GEMINI_MODEL || "gemini-3.5-flash-lite") as string,
 } as const;
 
 export const EMBEDDING_DIMENSION = 1024;
@@ -54,7 +54,7 @@ const TASK_CONFIGS: Record<
         maxOutputTokens: number;
     }
 > = {
-    // Interactive & Assistant tasks (Gemini 2.5 Flash)
+    // Interactive & Assistant tasks (Gemini 3.5 Flash-Lite)
     assistant_chat: { provider: "google", temperature: 0.3, maxOutputTokens: 2048 },
     navigation_help: { provider: "google", temperature: 0.1, maxOutputTokens: 512 },
     suggested_replies: { provider: "google", temperature: 0.5, maxOutputTokens: 1024 },

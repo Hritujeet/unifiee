@@ -221,10 +221,10 @@ export function DesignerMarketplace({
                             key={cat.id}
                             type="button"
                             onClick={() => setSelectedCategory(cat.id)}
-                            className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-all ${
+                            className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
                                 isSelected
-                                    ? "bg-blue-600 text-white shadow-xs"
-                                    : "border border-border/60 bg-card text-muted-foreground hover:bg-muted hover:text-foreground"
+                                    ? "bg-primary text-primary-foreground shadow-xs"
+                                    : "border border-border bg-card text-muted-foreground hover:bg-muted hover:text-foreground"
                             }`}
                         >
                             <Icon className="size-3.5" />
@@ -264,7 +264,7 @@ export function DesignerMarketplace({
                             value={String(maxDeliveryDays)}
                             onChange={(e) => setMaxDeliveryDays(e.target.value === "all" ? "all" : Number(e.target.value))}
                             aria-label="Filter delivery time"
-                            className="h-9.5 rounded-lg border border-border/60 bg-background px-3 text-xs text-foreground focus:ring-1 focus:ring-blue-500"
+                            className="h-9 rounded-lg border border-border bg-background px-3 text-xs text-foreground focus:ring-1 focus:ring-primary focus:outline-none"
                         >
                             <option value="all">Delivery: Any</option>
                             <option value="3">Within 3 days</option>
@@ -277,7 +277,7 @@ export function DesignerMarketplace({
                             value={String(maxPrice)}
                             onChange={(e) => setMaxPrice(e.target.value === "all" ? "all" : Number(e.target.value))}
                             aria-label="Filter price"
-                            className="h-9.5 rounded-lg border border-border/60 bg-background px-3 text-xs text-foreground focus:ring-1 focus:ring-blue-500"
+                            className="h-9 rounded-lg border border-border bg-background px-3 text-xs text-foreground focus:ring-1 focus:ring-primary focus:outline-none"
                         >
                             <option value="all">Budget: Any</option>
                             <option value="5000">Under ₹5,000</option>
@@ -290,11 +290,11 @@ export function DesignerMarketplace({
                             value={String(minRating)}
                             onChange={(e) => setMinRating(e.target.value === "all" ? "all" : Number(e.target.value))}
                             aria-label="Filter rating"
-                            className="h-9.5 rounded-lg border border-border/60 bg-background px-3 text-xs text-foreground focus:ring-1 focus:ring-blue-500"
+                            className="h-9 rounded-lg border border-border bg-background px-3 text-xs text-foreground focus:ring-1 focus:ring-primary focus:outline-none"
                         >
                             <option value="all">Rating: Any</option>
-                            <option value="4.5">★ 4.5 & up</option>
-                            <option value="4.8">★ 4.8 & up</option>
+                            <option value="4.5">4.5 stars and above</option>
+                            <option value="4.8">4.8 stars and above</option>
                         </select>
 
                         {/* Sort */}
@@ -302,7 +302,7 @@ export function DesignerMarketplace({
                             value={sortBy}
                             onChange={(e) => setSortBy(e.target.value as any)}
                             aria-label="Sort listings"
-                            className="h-9.5 rounded-lg border border-border/60 bg-background px-3 text-xs text-foreground focus:ring-1 focus:ring-blue-500"
+                            className="h-9 rounded-lg border border-border bg-background px-3 text-xs text-foreground focus:ring-1 focus:ring-primary focus:outline-none"
                         >
                             <option value="recommended">Sort: Recommended</option>
                             <option value="price_asc">Sort: Price Low to High</option>
@@ -348,7 +348,7 @@ export function DesignerMarketplace({
                         return (
                             <article
                                 key={listing.serviceId}
-                                className="group relative flex flex-col rounded-2xl border border-border/60 bg-card shadow-xs transition-all duration-200 hover:-translate-y-0.5 hover:border-blue-500/40 hover:shadow-md overflow-hidden"
+                                className="group relative flex flex-col rounded-xl border border-border bg-card shadow-xs transition-colors duration-150 hover:border-primary/40 overflow-hidden"
                             >
                                 {/* Cover Image (16:10 Aspect Ratio) */}
                                 <Link href={gigUrl} className="relative aspect-16/10 w-full overflow-hidden bg-muted block">
@@ -361,7 +361,7 @@ export function DesignerMarketplace({
 
                                     {/* Category badge */}
                                     <div className="absolute left-3 top-3">
-                                        <Badge variant="secondary" className="bg-black/60 backdrop-blur-md text-[10px] text-white border-white/10 uppercase tracking-wider">
+                                        <Badge variant="secondary" className="bg-background/90 text-foreground border border-border text-[10px] uppercase font-semibold tracking-wider">
                                             {listing.category?.replace(/_/g, " ") || "Packaging"}
                                         </Badge>
                                     </div>
@@ -369,11 +369,12 @@ export function DesignerMarketplace({
                                     {/* Favorite / Save button */}
                                     <button
                                         type="button"
+                                        aria-label={isFavorited ? "Remove from saved gigs" : "Save gig"}
                                         onClick={(e) => {
                                             e.preventDefault()
                                             handleToggleSave(listing.serviceId)
                                         }}
-                                        className="absolute right-3 top-3 flex size-8 items-center justify-center rounded-full bg-black/60 backdrop-blur-md text-white hover:scale-110 transition-all"
+                                        className="absolute right-3 top-3 flex size-8 items-center justify-center rounded-full bg-background/90 text-foreground border border-border hover:bg-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
                                     >
                                         <Heart className={`size-4 ${isFavorited ? "fill-rose-500 text-rose-500" : ""}`} />
                                     </button>
@@ -389,8 +390,8 @@ export function DesignerMarketplace({
                                                 <p className="truncate text-xs font-semibold text-foreground flex items-center gap-1">
                                                     {listing.designerName}
                                                     {listing.isVerified && (
-                                                        <span className="size-3.5 inline-flex items-center justify-center rounded-full bg-blue-500 text-white text-[8px] font-bold">
-                                                            ✓
+                                                        <span className="size-3.5 inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[8px] font-bold">
+                                                            <Check className="size-2.5" />
                                                         </span>
                                                     )}
                                                 </p>
@@ -406,7 +407,7 @@ export function DesignerMarketplace({
                                     </div>
 
                                     {/* Gig Title */}
-                                    <Link href={gigUrl} className="block group-hover:text-blue-500 transition-colors">
+                                    <Link href={gigUrl} className="block group-hover:text-primary transition-colors">
                                         <h3 className="font-heading text-sm font-semibold leading-snug text-foreground line-clamp-2">
                                             {listing.serviceTitle}
                                         </h3>
@@ -609,7 +610,7 @@ function GigCardImage({
 
     if (hasError) {
         return (
-            <div className="flex h-full w-full flex-col items-center justify-center bg-gradient-to-br from-secondary/60 to-muted/80 p-4 text-center">
+            <div className="flex h-full w-full flex-col items-center justify-center bg-muted p-4 text-center">
                 <Package className="size-8 text-muted-foreground/50 mb-2 stroke-1" />
                 <span className="line-clamp-2 text-xs font-medium text-muted-foreground">{title}</span>
             </div>
@@ -629,7 +630,7 @@ function GigCardImage({
                     setHasError(true)
                 }
             }}
-            className="object-cover transition-transform duration-300 group-hover:scale-102"
+            className="object-cover"
         />
     )
 }

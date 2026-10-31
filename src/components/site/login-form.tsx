@@ -202,123 +202,118 @@ export function LoginForm({
 
   return (
     <div className={cn("w-full max-w-sm", className)} {...props}>
-      <Card className="border-0 bg-transparent shadow-none">
-        <CardContent className="flex flex-col px-0 py-0">
-          {step === "email" ? (
-            <>
-              <h1 className="font-heading text-2xl font-semibold tracking-tight text-foreground">
-                Welcome back
-              </h1>
-              <p className="mt-1.5 text-sm text-muted-foreground">
-                Sign in to your UNIFIÉE account
-              </p>
+      <div className="flex flex-col">
+        {step === "email" ? (
+          <>
+            <h1 className="font-heading text-2xl font-semibold tracking-tight text-foreground">
+              Welcome back
+            </h1>
+            <p className="mt-1.5 text-sm text-muted-foreground">
+              Sign in to your UNIFIÉE account
+            </p>
 
-              <form onSubmit={handleEmailSubmit(onEmailSubmit)} className="mt-8 flex w-full flex-col gap-4" noValidate>
-                <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="email" className="text-xs text-muted-foreground">
-                    Email
+            <form onSubmit={handleEmailSubmit(onEmailSubmit)} className="mt-8 flex w-full flex-col gap-4" noValidate>
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="email" className="text-xs text-muted-foreground">
+                  Email
+                </Label>
+                <Input
+                  id="email"
+                  type="email"
+                  autoComplete="email"
+                  autoFocus
+                  placeholder="you@company.com"
+                  className="h-9 rounded-lg text-sm"
+                  aria-invalid={!!emailErrors.email}
+                  {...registerEmail("email")}
+                />
+                {emailErrors.email && (
+                  <p className="text-[11px] font-medium text-destructive animate-in fade-in slide-in-from-top-1">{emailErrors.email.message}</p>
+                )}
+              </div>
+
+              <Button disabled={busy} type="submit">
+                {checkEmailMutation.isPending ? <Loader2 className="animate-spin" /> : "Continue"}
+              </Button>
+
+              <div className="relative flex items-center gap-3 text-xs text-muted-foreground">
+                <Separator className="flex-1" />
+                <span className="font-mono uppercase tracking-widest shrink-0">or</span>
+                <Separator className="flex-1" />
+              </div>
+
+              <Button disabled={busy} variant="outline" type="button" className="gap-2.5 hover:bg-muted/50" onClick={() => googleMutation.mutate()}>
+                {googleMutation.isPending ? <Loader2 className="animate-spin size-4" /> : <GoogleIcon />}
+                Continue with Google
+              </Button>
+            </form>
+
+            <p className="mt-6 text-center text-sm text-muted-foreground">
+              Don&apos;t have an account?{" "}
+              <Link href="/sign-up" className="font-medium text-foreground transition-colors underline-offset-4 hover:underline">
+                Sign up
+              </Link>
+            </p>
+          </>
+        ) : (
+          <>
+            <button
+              type="button"
+              onClick={() => {
+                setStep("email")
+                setShowPassword(false)
+              }}
+              className="mb-6 flex w-fit items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
+            >
+              <ArrowLeft className="size-3.5" />
+              Back
+            </button>
+
+            <h1 className="font-heading text-2xl font-semibold tracking-tight text-foreground">
+              Enter your password
+            </h1>
+            <p className="mt-1.5 truncate text-sm text-muted-foreground">
+              Signing in as {emailToLogin}
+            </p>
+
+            <form onSubmit={handlePasswordSubmit(onPasswordSubmit)} className="mt-8 flex flex-col gap-4" noValidate>
+              <div className="flex flex-col gap-1.5">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="password" className="text-xs text-muted-foreground">
+                    Password
                   </Label>
+                </div>
+                <div className="relative">
                   <Input
-                    id="email"
-                    type="email"
-                    autoComplete="email"
-                    placeholder="you@company.com"
-                    className="h-10 rounded-lg text-sm"
-                    aria-invalid={!!emailErrors.email}
-                    {...registerEmail("email")}
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    autoComplete="current-password"
+                    autoFocus
+                    className="h-9 rounded-lg text-sm pr-10"
+                    aria-invalid={!!passwordErrors.password}
+                    {...registerPassword("password")}
                   />
-                  {emailErrors.email && (
-                    <p className="text-[11px] font-medium text-destructive animate-in fade-in slide-in-from-top-1">{emailErrors.email.message}</p>
-                  )}
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 rounded-sm p-0.5 text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+                  >
+                    {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                  </button>
                 </div>
+                {passwordErrors.password && (
+                  <p className="text-[11px] font-medium text-destructive animate-in fade-in slide-in-from-top-1">{passwordErrors.password.message}</p>
+                )}
+              </div>
 
-                <Button disabled={busy} type="submit" className="transition-all active:scale-[0.98]">
-                  {checkEmailMutation.isPending ? <Loader2 className="animate-spin" /> : "Continue"}
-                </Button>
-
-                <div className="relative flex items-center gap-3 text-xs text-muted-foreground">
-                  <Separator className="flex-1" />
-                  <span className="font-mono uppercase tracking-widest shrink-0">or</span>
-                  <Separator className="flex-1" />
-                </div>
-
-                <Button disabled={busy} variant="outline" type="button" className="gap-2.5 transition-all hover:bg-muted/50 active:scale-[0.98]" onClick={() => googleMutation.mutate()}>
-                  {googleMutation.isPending ? <Loader2 className="animate-spin size-4" /> : <GoogleIcon />}
-                  Continue with Google
-                </Button>
-              </form>
-
-              <p className="mt-6 text-center text-sm text-muted-foreground">
-                Don&apos;t have an account?{" "}
-                <Link href="/sign-up" className="font-medium text-foreground transition-colors underline-offset-4 hover:underline">
-                  Sign up
-                </Link>
-              </p>
-            </>
-          ) : (
-            <>
-              <button
-                type="button"
-                onClick={() => {
-                  setStep("email")
-                  setShowPassword(false)
-                }}
-                className="mb-6 flex w-fit items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
-              >
-                <ArrowLeft className="size-3.5" />
-                Back
-              </button>
-
-              <h1 className="font-heading text-2xl font-semibold tracking-tight text-foreground">
-                Enter your password
-              </h1>
-              <p className="mt-1.5 truncate text-sm text-muted-foreground">
-                Signing in as {emailToLogin}
-              </p>
-
-              <form onSubmit={handlePasswordSubmit(onPasswordSubmit)} className="mt-8 flex flex-col gap-4" noValidate>
-                <div className="flex flex-col gap-1.5">
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="password" className="text-xs text-muted-foreground">
-                      Password
-                    </Label>
-                    <Link
-                      href="#"
-                      className="text-xs text-muted-foreground hover:text-foreground underline-offset-4 hover:underline transition-colors"
-                    >
-                      Forgot password?
-                    </Link>
-                  </div>
-                  <div className="relative">
-                    <Input
-                      id="password"
-                      type={showPassword ? "text" : "password"}
-                      autoComplete="current-password"
-                      className="h-10 rounded-lg text-sm pr-10"
-                      aria-invalid={!!passwordErrors.password}
-                      {...registerPassword("password")}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                    >
-                      {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
-                    </button>
-                  </div>
-                  {passwordErrors.password && (
-                    <p className="text-[11px] font-medium text-destructive animate-in fade-in slide-in-from-top-1">{passwordErrors.password.message}</p>
-                  )}
-                </div>
-
-                <Button disabled={loginMutation.isPending || isRedirecting} type="submit" className="transition-all active:scale-[0.98]">
-                  {(loginMutation.isPending || isRedirecting) ? <Loader2 className="animate-spin" /> : "Sign In"}
-                </Button>
-              </form>
-            </>
-          )}
-        </CardContent>
-      </Card>
+              <Button disabled={loginMutation.isPending || isRedirecting} type="submit">
+                {(loginMutation.isPending || isRedirecting) ? <Loader2 className="animate-spin" /> : "Sign In"}
+              </Button>
+            </form>
+          </>
+        )}
+      </div>
     </div>
   )
 }

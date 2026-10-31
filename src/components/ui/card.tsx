@@ -14,7 +14,7 @@ function Card({
       data-slot="card"
       data-size={size}
       className={cn(
-        "group/card flex flex-col overflow-hidden rounded-xl border border-border/60 bg-card text-card-foreground shadow-xs transition-all",
+        "group/card flex flex-col overflow-hidden rounded-xl border border-border bg-card text-card-foreground shadow-xs transition-colors",
         className
       )}
       {...props}
@@ -27,7 +27,7 @@ function CardHeader({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="card-header"
       className={cn(
-        "flex flex-col space-y-1.5 p-6 group-data-[size=sm]/card:p-4.5 group-data-[size=sm]/card:pb-2",
+        "flex flex-col space-y-1.5 p-6 group-data-[size=sm]/card:p-4 group-data-[size=sm]/card:pb-2",
         className
       )}
       {...props}
@@ -72,7 +72,7 @@ function CardContent({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="card-content"
-      className={cn("p-6 pt-0 group-data-[size=sm]/card:p-4.5 group-data-[size=sm]/card:pt-0", className)}
+      className={cn("p-6 pt-0 group-data-[size=sm]/card:p-4 group-data-[size=sm]/card:pt-0", className)}
       {...props}
     />
   )
@@ -83,7 +83,7 @@ function CardFooter({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="card-footer"
       className={cn(
-        "flex items-center p-6 pt-0 group-data-[size=sm]/card:p-4.5 group-data-[size=sm]/card:pt-0",
+        "flex items-center p-6 pt-0 group-data-[size=sm]/card:p-4 group-data-[size=sm]/card:pt-0",
         className
       )}
       {...props}

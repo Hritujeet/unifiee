@@ -100,11 +100,11 @@ export default async function DesignerEarningsPage() {
 
             {/* Centered Blur Overlay & Coming Soon Card */}
             <div className="absolute inset-0 z-20 flex flex-col items-center justify-center p-4 sm:p-6 text-center">
-                <div className="mx-auto flex max-w-lg flex-col items-center rounded-2xl border border-border/80 bg-card/95 p-6 sm:p-8 shadow-2xl backdrop-blur-md">
+                <div className="mx-auto flex max-w-lg flex-col items-center rounded-xl border border-border bg-card p-6 sm:p-8 shadow-xs">
                     <div className="flex size-14 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-500 mb-4 ring-1 ring-amber-500/20 shadow-sm">
                         <Sparkles className="size-7" />
                     </div>
-                    <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1 text-xs font-semibold text-amber-600 dark:text-amber-400 mb-3">
+                    <span className="inline-flex items-center gap-1.5 rounded-md border border-primary/25 bg-primary/5 px-2.5 py-0.5 text-xs font-medium text-primary mb-3">
                         Coming Soon
                     </span>
                     <h2 className="font-heading text-xl font-bold tracking-tight text-foreground sm:text-2xl">

@@ -416,7 +416,7 @@ export function GigEditorDialog({
                                     size="sm"
                                     disabled={isGeneratingAi}
                                     onClick={handleGenerateWithAi}
-                                    className="bg-blue-600 hover:bg-blue-700 text-white text-xs shrink-0 h-8.5 gap-1"
+                                    className="bg-primary hover:bg-primary/90 text-primary-foreground text-xs shrink-0 h-8.5 gap-1"
                                 >
                                     {isGeneratingAi ? <Loader2 className="size-3 animate-spin" /> : <Sparkles className="size-3" />}
                                     <span>Draft with AI</span>
@@ -556,7 +556,7 @@ export function GigEditorDialog({
                                         packageTierTab === "standard" ? "bg-card text-foreground shadow-xs" : "text-muted-foreground"
                                     }`}
                                 >
-                                    Standard {hasStandard ? "✓" : "+"}
+                                    Standard {hasStandard ? "(Active)" : "(Optional)"}
                                 </button>
                                 <button
                                     type="button"
@@ -565,7 +565,7 @@ export function GigEditorDialog({
                                         packageTierTab === "premium" ? "bg-card text-foreground shadow-xs" : "text-muted-foreground"
                                     }`}
                                 >
-                                    Premium {hasPremium ? "✓" : "+"}
+                                    Premium {hasPremium ? "(Active)" : "(Optional)"}
                                 </button>
                             </div>
 
@@ -1035,7 +1035,7 @@ export function GigEditorDialog({
                                 type="button"
                                 size="sm"
                                 onClick={() => setStep((s) => (s + 1) as any)}
-                                className="bg-blue-600 hover:bg-blue-700 text-white text-xs gap-1"
+                                className="bg-primary hover:bg-primary/90 text-primary-foreground text-xs gap-1"
                             >
                                 Next
                                 <ArrowRight className="size-3" />
@@ -1046,7 +1046,7 @@ export function GigEditorDialog({
                                 size="sm"
                                 disabled={isPending || !hasBio || !hasSpecialization}
                                 onClick={() => handleSubmit("published")}
-                                className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs gap-1.5 shadow-sm"
+                                className="bg-primary hover:bg-primary/90 text-primary-foreground text-xs gap-1.5 shadow-sm"
                             >
                                 {isPending ? <Loader2 className="size-3.5 animate-spin" /> : <Check className="size-3.5" />}
                                 <span>Publish Gig</span>
