@@ -58,12 +58,14 @@ export function StatCard({
     detail,
     icon: Icon,
     tone = "primary",
+    comingSoon = false,
 }: {
     label: string
     value: string
     detail: string
     icon: LucideIcon
     tone?: "primary" | "secondary" | "accent"
+    comingSoon?: boolean
 }) {
     const tones = {
         primary: "bg-primary/10 text-primary",
@@ -72,15 +74,25 @@ export function StatCard({
     }
 
     return (
-        <article className="rounded-xl border bg-card p-5 text-card-foreground">
-            <div className="flex items-start justify-between gap-3">
-                <div>
-                    <p className="text-sm font-medium text-muted-foreground">{label}</p>
-                    <p className="mt-2 font-heading text-3xl font-semibold tracking-tight text-foreground">{value}</p>
+        <article className="relative overflow-hidden rounded-xl border bg-card p-5 text-card-foreground">
+            <div className={comingSoon ? "blur-[2.5px] select-none pointer-events-none opacity-50" : undefined}>
+                <div className="flex items-start justify-between gap-3">
+                    <div>
+                        <p className="text-sm font-medium text-muted-foreground">{label}</p>
+                        <p className="mt-2 font-heading text-3xl font-semibold tracking-tight text-foreground">{value}</p>
+                    </div>
+                    <span className={`flex size-10 items-center justify-center rounded-xl ${tones[tone]}`}><Icon className="size-5" /></span>
                 </div>
-                <span className={`flex size-10 items-center justify-center rounded-xl ${tones[tone]}`}><Icon className="size-5" /></span>
+                <p className="mt-3 text-xs text-muted-foreground">{detail}</p>
             </div>
-            <p className="mt-3 text-xs text-muted-foreground">{detail}</p>
+            {comingSoon && (
+                <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-background/50 backdrop-blur-[2px]">
+                    <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/30 bg-background/95 px-2.5 py-1 text-[11px] font-semibold text-foreground shadow-xs">
+                        <Sparkles className="size-3 text-amber-500" />
+                        Coming Soon
+                    </span>
+                </div>
+            )}
         </article>
     )
 }

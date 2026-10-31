@@ -1,0 +1,554 @@
+P0: EUREKA JR COMPETITION PROTOTYPE SUBMISSION
+UNIFIÉE — B2B Food & Beverage Packaging Operating System
+P1: Comprehensive Technical & Non-Coder Conceptual Breakdown
+Architecture, Three-Sided Closed Loop, Cryptographic Safety, Hybrid RAG, Tiered Creative Gigs & 9-Stage Manufacturing Lifecycle
+P2: 
+P3: 1. Executive Summary & Conceptual Mental Model
+P4: UNIFIÉE is an end-to-end B2B operating platform engineered specifically for the Food and Beverage (F&B) packaging procurement lifecycle. It coordinates F&B Brands (cafés, cloud kitchens, QSRs), Packaging Designers (freelancers, prepress studios), and Packaging Manufacturers (converting plants, cup fabricators, printers).
+P5: 
+P6: The Core Problem: F&B packaging involves intricate mechanical parameters: paper grammage (GSM), corrugated flute thickness (E-flute for pizza boxes vs B-flute for shipping cartons), barrier liners (polyethylene vs aqueous water-based barriers), and die-cut tolerances. Miscommunication leads to costly prepress errors, wrong MOQs, and wasted manufacturing runs.
+P7: The Solution Architecture: UNIFIÉE standardizes technical specification drafting with AI, enables hybrid vector retrieval for supplier matching, facilitates prepress dieline signoffs, and manages orders across a 6-stage lifecycle.
+P8: 
+P9: Figure: UNIFIÉE Public Gateway & Three-Sided Value Proposition
+P10: 2. Platform Architecture: Connecting the Three Sides
+P11: The core architectural innovation of UNIFIÉE is its ability to bridge three distinct marketplace personas into a unified transaction pipeline:
+P12: F&B Businesses (Buyers): Post natural-language requirements, compare automated vendor quotes, browse pre-vetted designers, approve pre-press digital proofs, and track shipment milestones.
+P13: Packaging Designers (Creators): List structural design services (dielines, label art, 3D mockups), utilize AI to write gigs and briefs, receive brand commissions, and deliver print-ready files directly to the order record.
+P14: Packaging Manufacturers (Converters): Publish industrial product lines with tiered volume pricing, quote on inbound brand requirements, receive client-approved dielines, and advance factory fulfillment stages.
+P15: 2.1 Real-World Journey: 'Bella Crust Pizza'
+P16: To understand how the three sides interact in practice, consider the journey of an artisanal pizzeria named 'Bella Crust':
+P17: 1. Requirement Ingestion: Bella Crust inputs: 'Need 2500 matte black 12-inch pizza boxes'. Gemini 2.5 Flash extracts: 3-ply E-Flute Corrugated Board with matte black flood-coat exterior printing and grease-resistant food liner, 12x12x2 in, 2-color brand print.
+P18: 2. Creative Prepress Collaboration: Bella Crust browses /business/designers, filters for 'dieline structural' and 'boxes', and selects Studio Apex's Standard package (₹6,500, 3-day turnaround, CAD dieline + 3D mockup, 3 revisions). Studio Apex models the CAD dieline to exact manufacturing fold tolerances and delivers vector files in the workspace. Bella Crust reviews and accepts delivery.
+P19: 3. Supplier Bidding: The technical specification is matched against factory catalogs using hybrid search (pgvector + full-text RRF). Delta Eco Packs submits a binding quote of ₹17.20/box.
+P20: 4. Artwork Linking & Factory Production: Bella Crust accepts Delta Eco Packs' quotation and attaches the completed Studio Apex dieline to the manufacturing order. Delta Eco Packs uploads a digital prepress proof for final confirmation. Bella Crust approves the proof, and the order advances through production (in_production -> quality_check -> dispatched with courier tracking -> delivered -> completed).
+P21: Note on Prototype Test Personas: The prototype database seeds test account personas ('Brewed Cafe' for the business, 'John' for the manufacturer, 'The Dark Knight' for the designer studio, while landing mockups showcase fictional brands like 'Bluebird Café'). The narrative above uses 'Bella Crust Pizzeria' and 'Delta Eco Packs' as the canonical illustrative scenario to explain the end-to-end commercial workflow.
+P22: 
+P23: Figure: The Closed-Loop Packaging Procurement & Prepress Lifecycle
+P24: 3. Technical Stack: Plain-English Guide
+P25: Below is an overview of what each layer of the technical stack does and why it was selected for the platform:
+P26: 
+P27: 4. System Architecture & Relational Schema Teardown
+P28: The platform is structured across 36 distinct database tables grouped into five functional categories: Identity & Security, Entity Profiles, Marketplace Catalog, Tiered Designer Gigs & Workspace, and Manufacturing Orders & Prepress Pipeline.
+P29: 
+P30: 
+P31: Figure: UNIFIÉE Multi-Tier System Architecture & Request Flow
+P32: Code Reference: src/lib/db/schema/designer-service.ts
+P33: 
+P34: Code Reference: src/lib/db/schema/order-lifecycle.ts
+P35: 
+P36: 5. Security, Cryptographic Idempotency & Rate Limiting
+P37: 
+P38: Code Reference: src/lib/server/idempotency-core.ts
+P39: 
+P40: 6. AI Architecture & Hybrid Search Comprehension
+P41: 
+P42: Code Reference: src/lib/ai/retrieval.ts
+P43: 
+P44: 7. Feature Breakdown & Implementation Walkthrough
+P45: 7.1 Authentication, Social Login & Rate Limiting
+P46: 
+P47: Technical Flow: The client calls `check-email` to determine authentication method, then submits to Better Auth's handler (`src/app/api/auth/[...all]/route.ts`).
+P48: Code Reference: src/app/api/auth/check-email/route.ts
+P49: 
+P50: 7.2 Multi-Role Onboarding & Pathway Routing
+P51: 
+P52: Technical Flow: `src/components/site/onboarding-form.tsx` guides the user and invokes `registerBusinessAction`, `registerManufacturerAction`, or `registerDesignerAction`.
+P53: 
+P54: Figure: Step 1: Role Pathway Selection (Business vs. Vendor)
+P55: 
+P56: Figure: Step 2: Vendor Specialization (Manufacturer vs. Designer)
+P57: 
+P58: Figure: Step 3: F&B Business Registration Form (Step 1 of business entity onboarding)
+P59: Code Reference: src/actions/business-registration.ts
+P60: 
+P61: 7.3 AI-Assisted Packaging Specification Extractor
+P62: 
+P63: Technical Flow: Executes `POST /api/ai/requirements/extract` using Google Gemini 2.5 Flash and `Output.object({ schema: aiRequirementOutputSchema })`.
+P64: Code Reference: src/app/api/ai/requirements/extract/route.ts
+P65: 
+P66: 7.4 Semantic Vendor & Designer Matching via Hybrid RAG
+P67: 
+P68: Technical Flow: The route `src/app/api/ai/requirements/search-vendors/route.ts` runs vector search (`<=>`) and full-text search, fused via Reciprocal Rank Fusion.
+P69: Code Reference: src/app/api/ai/requirements/search-vendors/route.ts
+P70: 
+P71: 7.5 Quotation Acceptance & Cryptographic Idempotent Purchase Orders
+P72: 
+P73: Technical Flow: Server Action `createOrderFromQuoteAction` in `src/actions/order-actions.ts` runs `beginIdempotency()` with an SHA-256 hash before inserting into `business_orders`.
+P74: Code Reference: src/actions/order-actions.ts
+P75: 
+P76: 7.6 Fiverr-Style Packaging Designer Gigs, Tiered Packages & AI Gig Studio
+P77: 
+P78: Technical Flow: Component `src/components/designer/gig-editor-dialog.tsx` provides a 5-step wizard. Server Action `saveDesignerGigAction` in `src/actions/designer-services.ts` verifies profile completeness, saves package tiers into `designer_service_packages`, and synchronizes vector embeddings in `ai_documents` via `syncEntityEmbeddings`.
+P79: 
+P80: Figure: Packaging Designer Studio (initial onboarding state showing studio overview, profile strength card, and gig listing entry point)
+P81: Code Reference: src/actions/designer-services.ts
+P82: 
+P83: 7.7 Creative Marketplace Discovery, Faceted Filtering & Saved Gigs
+P84: 
+P85: Technical Flow: Page `src/app/business/designers/page.tsx` renders `designer-marketplace.tsx`. Queries in `src/lib/business/marketplace.ts` run hybrid search combining PostgreSQL full-text search with `pgvector` embedding distances. The gig detail view (`src/components/business/gig-detail-view.tsx`) displays an interactive package comparison matrix, FAQ accordions, verified review ratings, and a sticky checkout purchase panel.
+P86: Code Reference: src/lib/business/marketplace.ts
+P87: 
+P88: 7.8 Design Order Checkout, Structured Packaging Brief & Offline Payment Safeguards
+P89: 
+P90: Technical Flow: Form `src/components/business/order-checkout-form.tsx` validates data via Zod schema `placeDesignOrderSchema`. Server Action `placeDesignOrderAction` in `src/actions/hired-service-orders.ts` blocks self-hiring, snapshots package deliverables and brief JSON into `business_hired_services`, logs initial status `requested` into `hired_service_events`, and triggers an email notification via Resend.
+P91: Code Reference: src/actions/hired-service-orders.ts
+P92: 
+P93: 7.9 Collaborative Prepress Design Workspace, Versioned Deliveries & Messaging
+P94: 
+P95: Technical Flow: Component `src/components/hired-services/hired-service-workspace.tsx` leverages TanStack Query for polling messages. Lifecycle transitions are evaluated against `canTransition` in `src/lib/hired-services/lifecycle.ts`. Every state change is recorded in `hired_service_events` within a database transaction.
+P96: Code Reference: src/lib/hired-services/lifecycle.ts
+P97: 
+P98: 7.10 Verified Post-Completion Reviews & Instant SQL Rating Aggregates
+P99: 
+P100: Technical Flow: Server Action `submitDesignerReviewAction` in `src/actions/hired-service-orders.ts` checks that `order.status === 'completed'` and verifies that no prior review exists (`order_id UNIQUE`). Inside an atomic SQL transaction, it inserts into `designer_reviews` and executes SQL aggregations (`AVG(rating)` and `COUNT(*)`) to update `rating_avg` and `rating_count` on `designer_services` and `packaging_designers`.
+P101: Code Reference: src/actions/hired-service-orders.ts
+P102: 
+P103: 7.11 9-Stage Manufacturing Packaging Order Lifecycle & Prepress Proof Approval
+P104: 
+P105: Technical Flow: Defined in `src/lib/orders/lifecycle.ts`. State transitions are enforced by `canTransition(from, to, actor)`. Proof uploads write to `order_artwork_proofs` with automatic version incrementing. Dispute tickets are managed in `order_issues`. Milestones and courier dispatches write to `order_fulfillment_milestones` and `order_shipments`.
+P106: 
+P107: Figure: F&B Business Dashboard displaying active manufacturing order cards with the 'Review proof' dieline signoff action
+P108: Code Reference: src/lib/orders/lifecycle.ts
+P109: 
+P110: 7.12 Manufacturer Operations Hub & Offering Studio
+P111: 
+P112: Technical Flow: Page `src/app/manufacturer/orders/[id]/page.tsx` renders `vendor-order-detail-view.tsx`. Actions in `src/actions/vendor-actions.ts` manage catalog offerings (`createOfferingAction`), update order statuses (`updateOrderStatusAction`), and upload artwork proofs (`uploadProofAction`).
+P113: 
+P114: Figure: Packaging Manufacturer Command Center (initial dashboard state displaying plant metrics, incoming order queues, and published offerings entry)
+P115: Code Reference: src/actions/vendor-actions.ts
+P116: 
+P117: 7.13 Context-Aware Floating AI Assistant & Multi-Model Orchestration
+P118: 
+P119: Technical Flow: Component `src/components/ai/assistant-panel.tsx` streams responses from `POST /api/ai/assistant` using Vercel AI SDK `toTextStreamResponse`.
+P120: Code Reference: src/app/api/ai/assistant/route.ts
+P121: 
+P122: 8. Build, Environment & Evaluator Demo Walkthrough
+P123: Follow the instructions below to run and evaluate the UNIFIÉE prototype locally:
+P124: 8.1 Prerequisites & Installation
+P125: Runtime Requirements: Node.js 20.x or higher, npm 10.x+, and a PostgreSQL 15+ database with the pgvector extension enabled.
+P126: Install Dependencies: Run `npm install` in the project root.
+P127: 8.2 Required Environment Variables (.env.local)
+P128: DATABASE_URL: Pooled PostgreSQL connection string (Neon pooler) used for all application queries.
+P129: DATABASE_URL_UNPOOLED: Direct PostgreSQL connection string used for schema migrations with drizzle-kit.
+P130: BETTER_AUTH_SECRET: 32-character secret key used to sign and encrypt session cookies.
+P131: BETTER_AUTH_URL: Root URL of the application (e.g., http://localhost:3000).
+P132: NEXT_PUBLIC_BASE_URL: Public URL used for client redirects and canonical links.
+P133: GOOGLE_CLIENT_ID / SECRET: Google OAuth 2.0 credentials for social sign-in.
+P134: GEMINI_API_KEY: Google Generative AI key for Gemini 2.5 Flash spec extraction and assistant.
+P135: MISTRAL_API_KEY: Mistral AI key for mistral-embed vector search and secondary model failover.
+P136: RESEND_API_KEY: Resend API key for transactional email notifications.
+P137: 8.3 Evaluator Demo Script: Testing the Prototype
+P138: To test the complete three-sided workflow as an evaluator:
+P139: 1. Start Server: Run `npm run dev` and open `http://localhost:3000`.
+P140: 2. Onboarding Experience: Click 'Get Started' -> Select 'I'm an F&B Business' -> Enter brand details to enter the Business Portal.
+P141: 3. Test AI Spec Extractor: Navigate to `/business/requirements/new`. Click the 'Pizza Boxes' prompt preset. Click 'Extract Specs with AI'. Observe Gemini 2.5 Flash parse dimensions, GSM, and flute profiles into structured fields.
+P142: 4. Test Designer Marketplace & Gigs: Navigate to `/business/designers`. Search for 'dieline', filter by 'boxes', and click a gig card. Inspect the package comparison table (Basic, Standard, Premium), FAQ, and reviews. Click 'Continue', fill out the packaging brief form, and click 'Place Design Order'.
+P143: 5. Test Design Collaboration Workspace: Open the resulting order at `/business/hired-services/[id]`. Switch between the Brief, Messages, and Deliveries tabs. Test posting a message and observing unread badge tracking.
+P144: 6. Test Proof Approval in Manufacturing: Navigate to `/business`. On the active manufacturing order, click 'Review proof'. Inspect the digital dieline dialog and click 'Approve Proof & Start Print' to see the order transition to 'In Production'.
+P145: 7. Test Factory Operations: Visit `/manufacturer` to view production milestones, upload prepress proofs, and manage dispatch tracking.
+P146: 9. Prototype Limitations & Simulated Features
+P147: In accordance with competition transparency guidelines, the following items represent prototype boundaries in the current MVP build:
+P148: Payment & Escrow UI is a Visual Placeholder: The escrow settlement badges ('Instant Escrow Settlement Enabled', 'In Escrow', 'Settled & Paid') and monetary balances shown in screenshots are front-end design mockups demonstrating the intended user experience. Live payment gateways (Razorpay/Stripe) and banking disbursements are not connected. Both checkout and order views explicitly display: 'Payment is arranged directly between you and the designer. Online payments are not connected yet.'
+P149: Factory Handoff is Simulated: Clicking 'Approve Proof' updates the prototype's client/server workflow store and database milestone records to 'In Production'. Direct digital dispatch to automated factory prepress ERP machinery is simulated.
+P150: Artwork Storage Uses External URLs: Dielines and portfolio images currently store external HTTPS URLs (Figma, Google Drive, portfolio links) in PostgreSQL. Dedicated cloud blob storage (AWS S3 / Cloudflare R2) with presigned direct uploads is scheduled for Phase 2.
+P151: Logistics Tracking Uses Milestone Triggers: Shipping milestones are updated via supplier dashboard actions rather than live carrier webhooks (Delhivery, Blue Dart).
+P152: Demo Persona Names: The database contains initial seed personas ('Brewed Cafe', 'John', 'The Dark Knight'). The narrative in this document uses 'Bella Crust Pizzeria' and 'Delta Eco Packs' as an illustrative scenario.
+P153: 10. Automated Test Suite & Hardening Verification
+P154: The platform codebase is continuously protected by an automated test suite verifying domain safety, state machines, and concurrency protection:
+P155: 
+P156: Design Order Lifecycle State Machine: Verified that designers can accept or decline but cannot mark completed; designers can deliver from active or revision_requested; businesses can cancel requested orders or request revisions; terminal states forbid further transitions.
+P157: Auto-Transitions & Deadlines: Verified that evaluateAutoTransitions expires requested orders >48h, auto-completes unreviewed deliveries >3 days, and getDeadlineInfo accurately tags overdue and upcoming orders.
+P158: Revision Limits & Self-Hire Block: Verified that revision requests beyond included count are blocked, unlimited (-1) revisions are honored, ordering paused/deleted gigs is forbidden, and designers cannot hire their own gigs.
+P159: Review Immutability: Verified that reviews cannot be submitted before completion, only one review per order is permitted, and reviews are locked against editing after 7 days.
+P160: Manufacturing State Machine: Verified that converters can only step forward through the 9-stage sequence and businesses cannot advance factory production stages.
+P161: Cryptographic Idempotency: Verified that SHA-256 payload hashes are deterministic regardless of object key order, and duplicate keys return cached responses without duplicate database mutations.
+T0_R0_C0_P0: THE HIGH-LEVEL CONCEPT
+Think of UNIFIÉE as a purpose-built industrial coordination engine combining three synchronized systems:
+1. Part Creative Studio Marketplace: A specialized Fiverr-style creative exchange where packaging designers publish tiered service gigs (Basic, Standard, Premium packages with optional extras and FAQs) for CAD dielines, label artwork, and 3D mockups.
+2. Part B2B Manufacturing Exchange: An industrial catalog and quoting engine enabling corrugated box converters, paper cup fabricators, and commercial printers to list live factory lines with volume discount slabs.
+3. Part Prepress & Production Workflow Hub: Rather than stopping at introductions, UNIFIÉE orchestrates the complete mechanical pipeline—from conversational AI specification extraction to dieline CAD drafting, automated bidding, prepress artwork proof signoffs, and live factory fulfillment milestone tracking.
+T1_R0_C0_P0: Layer
+T1_R0_C1_P0: Technology
+T1_R0_C2_P0: Plain-English Role & Business Value
+T1_R1_C0_P0: UI Framework
+T1_R1_C1_P0: Next.js 16.3 (App Router)
+T1_R1_C2_P0: The web application engine that delivers instant screen loading and zero sluggishness via React Server Components and Server Actions.
+T1_R2_C0_P0: Language
+T1_R2_C1_P0: TypeScript 5.x
+T1_R2_C2_P0: The strict safety net that catches data bugs and typos before they ever reach real users.
+T1_R3_C0_P0: Design Engine
+T1_R3_C1_P0: Tailwind CSS v4
+T1_R3_C2_P0: High-performance styling system optimized for mobile phones and industrial factory monitors.
+T1_R4_C0_P0: UI Components
+T1_R4_C1_P0: Radix UI & Base UI
+T1_R4_C2_P0: Accessible building blocks ensuring full keyboard navigation and screen-reader support.
+T1_R5_C0_P0: Database Engine
+T1_R5_C1_P0: PostgreSQL (Neon Serverless)
+T1_R5_C2_P0: The secure cloud vault that stores financial orders, bids, and user credentials with 100% ACID data integrity.
+T1_R6_C0_P0: AI Vector Memory
+T1_R6_C1_P0: pgvector Extension
+T1_R6_C2_P0: Allows the database to understand the 'meaning' of packaging requests rather than matching keywords blindly.
+T1_R7_C0_P0: Database Mapper
+T1_R7_C1_P0: Drizzle ORM 1.0
+T1_R7_C2_P0: Connects the application directly to PostgreSQL with compile-time type safety and high query speeds.
+T1_R8_C0_P0: Authentication
+T1_R8_C1_P0: Better Auth 1.7.5
+T1_R8_C2_P0: Manages user login sessions, Google OAuth, and protects against automated hacker bot attacks.
+T1_R9_C0_P0: AI Framework
+T1_R9_C1_P0: Vercel AI SDK 7.0 (ai: 7.0.152)
+T1_R9_C2_P0: Connects the app to AI models with real-time streaming and structured JSON output guarantees.
+T1_R10_C0_P0: Primary AI Model
+T1_R10_C1_P0: Google Gemini 2.5 Flash
+T1_R10_C2_P0: Extracts technical packaging specifications from rough buyer notes.
+T1_R11_C0_P0: Fallback AI Model
+T1_R11_C1_P0: Mistral Small (Latest)
+T1_R11_C2_P0: The backup AI engine that seamlessly takes over if primary API quotas or rate limits are reached.
+T1_R12_C0_P0: Vector Embeddings
+T1_R12_C1_P0: Mistral Embed (1024-dim)
+T1_R12_C2_P0: Translates packaging descriptions into 1024-number mathematical fingerprints for instant search.
+T1_R13_C0_P0: Server Sync
+T1_R13_C1_P0: TanStack React Query 5.103
+T1_R13_C2_P0: Keeps marketplace listings, workspace messages (15s polling), and incoming bids synchronized without page reloads.
+T1_R14_C0_P0: Transactional Email
+T1_R14_C1_P0: Resend 6.29.0
+T1_R14_C2_P0: Sends automated email confirmations when design orders are placed, accepted, delivered, or updated.
+T1_R15_C0_P0: File Storage (Current)
+T1_R15_C1_P0: HTTPS URL Pointers
+T1_R15_C2_P0: In the prototype, artwork and dieline files live on external HTTPS URLs (Figma, Drive, portfolio links) stored in Postgres. S3/R2 presigned upload buckets are scheduled for production.
+T2_R0_C0_P0: DATABASE ARCHITECTURE IN PLAIN ENGLISH
+Think of the database as five interconnected filing cabinets:
+1. Identity & Security (5 tables): Stores user logins, encrypted session cookies, and cryptographic idempotency audit records.
+2. Profiles & Portfolios (4 tables): Stores restaurant legal details, factory machinery capabilities, and verified designer portfolios.
+3. Factory Catalog & Volume Slabs (4 tables): Stores standardized packaging types, factory products, and volume discount slabs.
+4. Designer Gigs & Collaborative Workspace (8 tables): Stores tiered gigs, Basic/Standard/Premium packages, gig add-ons, saved gigs, hired orders, chronological status events, versioned file deliveries, in-app conversation threads, and post-completion reviews.
+5. Manufacturing Orders & Prepress Pipeline (8 tables): Stores brand requirements, manufacturer bids, purchase orders, order line items, prepress artwork proofs, dispute tickets, fulfillment milestones, and shipment tracking.
+T3_R0_C0_P0: // src/lib/db/schema/designer-service.ts
+export const designerServicePackagesTable = pgTable("designer_service_packages", {
+    id: uuid("id").primaryKey().notNull(),
+    serviceId: uuid("service_id").notNull().references(() => designerServiceTable.id, { onDelete: "cascade" }),
+    tier: packageTierEnum("tier").notNull(), // basic | standard | premium
+    name: varchar("name", { length: 100 }).notNull(),
+    description: text("description").notNull(),
+    price: numeric("price", { precision: 12, scale: 2 }).notNull(),
+    deliveryDays: integer("delivery_days").notNull(),
+    revisionsIncluded: integer("revisions_included").notNull().default(2), // -1 for unlimited
+    deliverables: json("deliverables").$type<string[]>().notNull().default([]),
+    sourceFilesIncluded: boolean("source_files_included").notNull().default(false),
+    commercialUseIncluded: boolean("commercial_use_included").notNull().default(true),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+    index("designer_service_packages_service_idx").on(table.serviceId),
+    uniqueIndex("designer_service_packages_service_tier_unique").on(table.serviceId, table.tier),
+])
+T4_R0_C0_P0: // src/lib/db/schema/order-lifecycle.ts
+export const orderArtworkProofsTable = pgTable("order_artwork_proofs", {
+    id: uuid("id").primaryKey().notNull(),
+    orderId: uuid("order_id").notNull().references(() => businessOrdersTable.id, { onDelete: "cascade" }),
+    version: integer("version").notNull(),
+    fileUrl: text("file_url").notNull(),
+    status: orderProofStatusEnum("status").notNull().default("pending"),
+    feedback: text("feedback"),
+    uploadedBy: text("uploaded_by").notNull().references(() => user.id, { onDelete: "restrict" }),
+    decidedBy: text("decided_by").references(() => user.id, { onDelete: "set null" }),
+    decidedAt: timestamp("decided_at"),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (table) => [
+    index("order_artwork_proofs_order_idx").on(table.orderId),
+    uniqueIndex("order_artwork_proofs_order_version_unique").on(table.orderId, table.version),
+])
+T5_R0_C0_P0: THE ANTI-DOUBLE-BILLING SAFEGUARD
+Why Cryptographic Idempotency Matters in B2B Packaging:
+In B2B commerce, an order can cost ₹50,000 or more. If a café manager on a poor Wi-Fi connection clicks 'Confirm Order', waits 5 seconds, gets anxious, and clicks 'Confirm Order' again, a poorly engineered platform would create duplicate purchase orders and place two separate manufacturing runs.
+
+UNIFIÉE creates a unique cryptographic fingerprint (an SHA-256 hash) of the order data. If the server sees the exact same fingerprint while processing, it locks duplicate runs. If the request has already completed, the system replays the saved response directly from the database without re-executing any database writes.
+T6_R0_C0_P0: // src/lib/server/idempotency-core.ts
+function stableStringify(value: unknown): string {
+    if (value === null || typeof value !== "object") return JSON.stringify(value)
+    if (Array.isArray(value)) return `[${value.map(stableStringify).join(",")}]`
+    const record = value as Record<string, unknown>
+    return `{${Object.keys(record).sort().map((key) => `${JSON.stringify(key)}:${stableStringify(record[key])}`).join(",")}}`
+}
+
+export function hashIdempotencyPayload(payload: unknown): string {
+    return crypto.createHash("sha256").update(stableStringify(payload)).digest("hex")
+}
+T7_R0_C0_P0: HYBRID SEARCH EXPLAINED SIMPLY
+Why Traditional Search Fails in Industrial Packaging:
+1. Keyword Search Fails: If a café searches for 'biodegradable takeout bowl', a standard search misses a factory listing titled 'Compostable Sugarcane Bagasse Bowl 500ml' because the words don't match.
+2. Pure Vector AI Search Fails: Vector AI understands meaning, but struggles with numbers. When searching for an '8 oz coffee cup', pure vector search might return a '12 oz coffee cup' because both are coffee cups in latent space.
+
+UNIFIÉE Hybrid Solution: We run BOTH vector search (for conceptual meaning) AND PostgreSQL full-text search (for exact numbers and sizes), then fuse them using Reciprocal Rank Fusion (RRF) so the best matches rise to the top, boosting exact matches alongside conceptual relevance.
+T8_R0_C0_P0: // src/lib/ai/retrieval.ts
+export async function searchHybrid({ query, session, filters, limit = 5 }) {
+    const trimmed = query.trim();
+    if (!trimmed) return [];
+    assertRequirementAccess(session, filters?.entityType);
+
+    const [queryVector, textResults] = await Promise.all([
+        embedSingleQuery(trimmed),
+        searchFullText({ query: trimmed, session, filters, limit }).catch(() => []),
+    ]);
+
+    let vectorResults = [];
+    if (queryVector) {
+        vectorResults = await searchVector({ queryVector, session, filters, limit }).catch(() => []);
+    }
+
+    if (vectorResults.length > 0 && textResults.length > 0) {
+        return reciprocalRankFusion(vectorResults, textResults, limit);
+    }
+    return (vectorResults.length > 0 ? vectorResults : textResults).slice(0, limit);
+}
+T9_R0_C0_P0: PLAIN-ENGLISH COMPREHENSION
+Allows users to log in securely with email or Google. If an OAuth user joins, the system ensures they configure a password so they are never locked out. Sliding-window IP rate limiting prevents automated account enumeration and email harvesting by limiting email lookup attempts to 5 per minute per IP.
+T10_R0_C0_P0: // src/app/api/auth/check-email/route.ts
+const rateCheck = await checkRateLimit(
+  { keyPrefix: "check-email", limit: 5, windowSeconds: 60 },
+  clientIp
+);
+if (!rateCheck.success) {
+  return NextResponse.json(
+    { status: "error", error: "Too many sign-in attempts. Please wait a minute." },
+    { status: 429, headers: { "Retry-After": String(rateCheck.resetInSeconds) } }
+  );
+}
+T11_R0_C0_P0: PLAIN-ENGLISH COMPREHENSION
+A three-step onboarding wizard that routes accounts into their dedicated portal (Business, Manufacturer, or Designer). It captures legal business credentials (such as GSTIN tax IDs) and validates them on the server.
+T12_R0_C0_P0: // src/actions/business-registration.ts
+export async function registerBusinessAction(data: z.infer<typeof businessOnboardingSchema>) {
+    const session = await auth.api.getSession({ headers: await headers() });
+    if (!session?.user) return { success: false, error: "Must be signed in." };
+
+    const rateCheck = await checkRateLimit({ keyPrefix: "business-reg", limit: 5, windowSeconds: 600 }, session.user.id);
+    if (!rateCheck.success) return { success: false, error: "Too many attempts." };
+
+    await db.insert(business).values({ id: crypto.randomUUID(), userId: session.user.id, ...data });
+    return { success: true };
+}
+T13_R0_C0_P0: PLAIN-ENGLISH COMPREHENSION
+Extracts specs from rough notes. A restaurant owner can type unstructured notes (e.g., 'Need 2500 burger boxes 6x6x3 inches that won't get soggy on delivery') and the AI extracts technical specifications (E-flute corrugated kraft, grease-resistant barrier, 6x6x3 in).
+T14_R0_C0_P0: // src/app/api/ai/requirements/extract/route.ts
+const result = await generateText({
+    model: getModel("requirement_builder"),
+    output: Output.object({ schema: aiRequirementOutputSchema }),
+    system: buildRequirementBuilderSystemPrompt(),
+    prompt: stripPii(parseResult.data.prompt),
+    abortSignal: AbortSignal.timeout(15000),
+});
+T15_R0_C0_P0: PLAIN-ENGLISH COMPREHENSION
+Matches customer packaging requirements with factory product lines and designer portfolios. It ranks candidates by combining AI conceptual understanding with exact size and quantity relevance, boosting exact matches alongside semantic similarity.
+T16_R0_C0_P0: // src/app/api/ai/requirements/search-vendors/route.ts
+const context: SessionContext = { userId: session.user.id, role: "business", businessId: owner.id };
+const vectorResults = await searchVector(queryDocument.embedding, context, parsed.data.limit * 2);
+const textResults = await searchFullText(queryDocument.content, context, parsed.data.limit * 2);
+const merged = reciprocalRankFusion(vectorResults, textResults).slice(0, parsed.data.limit);
+T17_R0_C0_P0: PLAIN-ENGLISH COMPREHENSION
+Allows brands to accept a manufacturer's quote with a single click. It automatically declines competing bids, creates a purchase order, and prevents accidental duplicate orders using SHA-256 fingerprinting.
+T18_R0_C0_P0: // src/actions/order-actions.ts
+const profile = await getBusinessForSession()
+if (!profile || profile.id !== parsed.data.businessId) return { success: false, error: "Unauthorized." };
+
+const idempotency = idempotencyResponse(await beginIdempotency("create-order", parsed.data.idempotencyKey ?? crypto.randomUUID(), profile.id, parsed.data));
+if (idempotency.handled) return idempotency.response as OrderActionResult<{ orderId: string; orderNumber: string; status: "confirmed" }>;
+T19_R0_C0_P0: PLAIN-ENGLISH COMPREHENSION
+A creative services studio where packaging designers build modular gigs with tiered pricing (Basic, Standard, Premium packages), optional gig extras (such as 3D renders or fast delivery), and FAQs. Designers use an in-app AI copy generator to draft compelling service descriptions and package deliverables. Publishing enforces profile completeness (bio and specialization) to guarantee high platform quality.
+T20_R0_C0_P0: // src/actions/designer-services.ts
+if (parsed.data.status === "published") {
+    const hasBio = Boolean(designer.bio && designer.bio.trim().length >= 10)
+    const hasSpecialization = Boolean(
+        (designer.packagingDesignSpecializations && designer.packagingDesignSpecializations.length > 0) ||
+        (designer.specializations && designer.specializations.length > 0)
+    )
+
+    if (!hasBio || !hasSpecialization) {
+        return {
+            success: false,
+            error: "Profile completeness required to publish: please complete your bio and add at least one specialization in your Profile.",
+        }
+    }
+}
+
+const basicPackage = parsed.data.packages.find((p) => p.tier === "basic")
+if (!basicPackage) {
+    return { success: false, error: "Basic package tier is mandatory." }
+}
+T21_R0_C0_P0: PLAIN-ENGLISH COMPREHENSION
+The buyer discovery portal where F&B brand managers search for packaging designers. Brands can filter by packaging category (dieline/structural, labels, 3D renders), supported packaging types (boxes, cups, pouches), price range based on the Basic tier, delivery speed, and software skills. Brands can bookmark gigs into their 'Saved' tab for easy access.
+T22_R0_C0_P0: // src/lib/business/marketplace.ts
+export async function getMarketplaceGigs(filters: MarketplaceFilterInput) {
+    const conditions = [
+        eq(designerServiceTable.status, "published"),
+        isNull(designerServiceTable.deletedAt),
+    ]
+
+    if (filters.category && filters.category !== "all") {
+        conditions.push(eq(designerServiceTable.category, filters.category as any))
+    }
+
+    const baseQuery = db
+        .select({
+            gig: designerServiceTable,
+            designer: packagingDesignerTable,
+            basicPrice: sql<number>`min(${designerServicePackagesTable.price})::float`,
+            minDeliveryDays: sql<number>`min(${designerServicePackagesTable.deliveryDays})`,
+        })
+        .from(designerServiceTable)
+        .innerJoin(packagingDesignerTable, eq(designerServiceTable.designerId, packagingDesignerTable.id))
+        .leftJoin(designerServicePackagesTable, eq(designerServiceTable.id, designerServicePackagesTable.serviceId))
+T23_R0_C0_P0: PLAIN-ENGLISH COMPREHENSION
+When a business chooses a design package, they proceed to checkout where they select optional extras and complete a structured industrial packaging brief (specifying packaging type, dimensions, materials, brand colors, fonts, target audience, dieline availability, and required file formats). A prominent notice confirms that payment is arranged directly between the brand and designer. Cryptographic idempotency protects against duplicate submissions.
+T24_R0_C0_P0: // src/actions/hired-service-orders.ts
+// Block hiring own gig
+if (gig.designerUserId === session.user.id) {
+    const res = { success: false, error: "You cannot order your own design gig." }
+    await completeIdempotency(idempotency.id, res)
+    return res
+}
+
+await tx.insert(businessHiredServiceTable).values({
+    id: orderId,
+    businessId: biz.id,
+    serviceId: gig.id,
+    designerId: gig.designerId,
+    serviceTitle: gig.title,
+    designerName: gig.designerName || gig.fullName,
+    designerEmail: gig.designerEmail,
+    packageTier: pkg.tier,
+    packageName: pkg.name,
+    price: String(totalPrice),
+    deliveryDays: totalDays,
+    revisionsIncluded: pkg.revisionsIncluded,
+    revisionsUsed: 0,
+    extras: selectedExtras,
+    brief: parsed.data.brief,
+    status: "requested",
+})
+T25_R0_C0_P0: PLAIN-ENGLISH COMPREHENSION
+A unified digital workspace shared between the brand and designer. Both sides view an interactive stepper tracking the order from Requested to In Progress, Delivered, and Completed. The workspace features a read-only brief tab, an in-app conversation thread with 15-second polling, versioned file deliveries with preview links, revision limit enforcement, and lazy auto-completion after 3 days.
+T26_R0_C0_P0: // src/lib/hired-services/lifecycle.ts
+export const allowedTransitions: Record<HiredServiceRole, Partial<Record<HiredServiceStatus, readonly HiredServiceStatus[]>>> = {
+    business: {
+        requested: ["cancelled"],
+        delivered: ["completed", "revision_requested"],
+        active: ["cancelled"],
+    },
+    designer: {
+        requested: ["active", "declined"],
+        active: ["delivered"],
+        revision_requested: ["active", "delivered"],
+    },
+    system: {
+        requested: ["expired"], // 48h timeout
+        delivered: ["completed", "closed"], // 3d auto-complete
+    },
+}
+
+export function canTransition(from: HiredServiceStatus, to: HiredServiceStatus, role: HiredServiceRole): boolean {
+    if (from === to) return true
+    return allowedTransitions[role][from]?.includes(to) ?? false
+}
+T27_R0_C0_P0: PLAIN-ENGLISH COMPREHENSION
+Reviews can only be submitted after an order is successfully completed, eliminating fake or unverified feedback. The brand rates the designer on an overall 1–5 star scale alongside three detailed sub-ratings: Communication, Service Quality, and As Described. Designers can post a public reply. Rating averages are immediately recomputed across all reviews and updated on both the gig and the designer profile. Reviews are permanently locked against edits after 7 days.
+T28_R0_C0_P0: // src/actions/hired-service-orders.ts
+await tx.insert(designerReviewsTable).values({
+    id: crypto.randomUUID(),
+    orderId: order.id,
+    serviceId: order.serviceId,
+    designerId: order.designerId,
+    businessId: order.businessId,
+    rating: parsed.data.rating,
+    communicationRating: parsed.data.communicationRating,
+    qualityRating: parsed.data.qualityRating,
+    asDescribedRating: parsed.data.asDescribedRating,
+    text: parsed.data.text,
+})
+
+const [gigAgg] = await tx
+    .select({
+        avg: sql<string>`round(avg(${designerReviewsTable.rating})::numeric, 2)`,
+        count: sql<number>`count(${designerReviewsTable.id})::int`,
+    })
+    .from(designerReviewsTable)
+    .where(eq(designerReviewsTable.serviceId, order.serviceId))
+
+await tx.update(designerServiceTable).set({
+    ratingAvg: gigAgg.avg || "0",
+    ratingCount: gigAgg.count || 0,
+}).where(eq(designerServiceTable.id, order.serviceId))
+T29_R0_C0_P0: PLAIN-ENGLISH COMPREHENSION
+Physical packaging production requires strict verification before raw materials are cut. UNIFIÉE enforces a 9-stage state machine for industrial orders: placed -> confirmed -> proof_pending -> proof_approved -> in_production -> quality_check -> dispatched -> delivered -> completed. Brands can attach completed design dielines (linked_order_id) directly to the order to feed the prepress step.
+T30_R0_C0_P0: // src/lib/orders/lifecycle.ts
+export const allowedTransitions: Record<OrderActor, Partial<Record<OrderStatus, readonly OrderStatus[]>>> = {
+    business: {
+        placed: ["cancelled"],
+        confirmed: ["proof_pending", "cancelled"],
+        proof_pending: ["proof_approved", "cancelled"],
+        proof_approved: ["cancelled"],
+        in_production: [],
+        quality_check: [],
+        dispatched: [],
+        delivered: ["completed"],
+    },
+    manufacturer: {
+        placed: ["confirmed", "rejected", "cancelled"],
+        confirmed: ["proof_pending", "cancelled"],
+        proof_pending: ["proof_approved"],
+        proof_approved: ["in_production"],
+        in_production: ["quality_check"],
+        quality_check: ["dispatched"],
+        dispatched: ["delivered"],
+    },
+    designer: {},
+    system: {},
+}
+T31_R0_C0_P0: PLAIN-ENGLISH COMPREHENSION
+The factory operations center where packaging converters manage catalog lines, configure tiered volume discount slabs (e.g., ₹15/box for 1,000 units vs. ₹10/box for 10,000 units), review incoming purchase orders, upload prepress proofs, and manage courier tracking details.
+T32_R0_C0_P0: // src/actions/vendor-actions.ts
+export async function uploadProofAction(input: { orderId: string; fileUrl: string; note?: string }) {
+    const vendor = await getAuthenticatedVendor()
+    if (!vendor) return { success: false, error: "Unauthorized." }
+
+    const [order] = await db.select({ id: businessOrdersTable.id, status: businessOrdersTable.status })
+        .from(businessOrdersTable)
+        .where(and(eq(businessOrdersTable.id, input.orderId), eq(businessOrdersTable.vendorId, vendor.manufacturerId)))
+        .limit(1)
+
+    if (!order || !canTransition(order.status as OrderStatus, "proof_pending", "manufacturer")) {
+        return { success: false, error: "A proof can only be uploaded after the order is confirmed." }
+    }
+
+    const [latest] = await db.select({ version: orderArtworkProofsTable.version })
+        .from(orderArtworkProofsTable)
+        .where(eq(orderArtworkProofsTable.orderId, order.id))
+        .orderBy(desc(orderArtworkProofsTable.version))
+        .limit(1)
+
+    await db.transaction(async (tx) => {
+        await tx.insert(orderArtworkProofsTable).values({
+            id: crypto.randomUUID(),
+            orderId: order.id,
+            version: (latest?.version ?? 0) + 1,
+            fileUrl: input.fileUrl,
+            uploadedBy: vendor.userId,
+        })
+        await tx.update(businessOrdersTable).set({ status: "proof_pending", updatedAt: new Date() })
+            .where(eq(businessOrdersTable.id, order.id))
+    })
+    return { success: true }
+}
+T33_R0_C0_P0: PLAIN-ENGLISH COMPREHENSION
+A 24/7 packaging consultant accessible in the corner of every screen. Users can ask technical questions (e.g., 'What GSM should I use for a hot coffee sleeve?') or request navigation help without leaving their dashboard.
+T34_R0_C0_P0: // src/app/api/ai/assistant/route.ts
+const result = streamText({
+    model: getModel("assistant_chat"),
+    system: buildAssistantSystemPrompt(role, userContext, knowledgeContext),
+    messages: cleanMessages,
+});
+
+return result.toTextStreamResponse({
+    headers: responseHeaders,
+});
+T35_R0_C0_P0: AUTOMATED VERIFICATION SUMMARY
+26 Automated Unit Tests Passing (Zero Failures):
+• 6 tests in tests/idempotency.test.ts & tests/order-lifecycle.test.ts verifying cryptographic hashing and manufacturing order transitions.
+• 20 tests in tests/designer-hiring.test.ts verifying design state transitions, lazy 48h auto-expiry, lazy 3-day auto-completion, revision limit enforcement, self-hire guards, and 7-day review modification locks.

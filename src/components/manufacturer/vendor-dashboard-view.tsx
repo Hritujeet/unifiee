@@ -12,6 +12,7 @@ import {
     ShieldCheck,
     ArrowUpRight,
     Boxes,
+    Sparkles,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
@@ -82,7 +83,7 @@ export default function VendorDashboardView({
                                 className="bg-primary/10 text-primary border-primary/30 text-[11px] font-semibold gap-1.5 py-0.5 px-2.5 rounded-full"
                             >
                                 <ShieldCheck className="size-3.5" />
-                                Verified Packaging Partner
+                                Registered Converter
                             </Badge>
                             <span className="hidden sm:inline text-xs text-muted-foreground">&bull;</span>
                             <span className="text-xs text-muted-foreground flex items-center gap-1.5">
@@ -130,68 +131,92 @@ export default function VendorDashboardView({
 
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                     {/* Gross Revenue */}
-                    <Card className="border shadow-xs hover:border-primary/40 transition-all hover:shadow-sm group bg-card">
-                        <CardHeader className="p-5 pb-2">
-                            <div className="flex items-center justify-between">
-                                <CardDescription className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                                    Total Revenue
-                                </CardDescription>
-                                <div className="size-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
-                                    <IndianRupee className="size-4" />
+                    <Card className="relative overflow-hidden border shadow-xs hover:border-primary/40 transition-all hover:shadow-sm group bg-card">
+                        <div className="blur-[2.5px] select-none pointer-events-none opacity-50">
+                            <CardHeader className="p-5 pb-2">
+                                <div className="flex items-center justify-between">
+                                    <CardDescription className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                                        Total Revenue
+                                    </CardDescription>
+                                    <div className="size-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                                        <IndianRupee className="size-4" />
+                                    </div>
                                 </div>
-                            </div>
-                            <CardTitle className="text-2xl font-black tracking-tight text-foreground mt-2">
-                                ₹{metrics.grossEarnings.toLocaleString("en-IN")}
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent className="p-5 pt-1">
-                            <p className="text-[11px] text-muted-foreground flex items-center gap-1">
-                                Across <strong>{metrics.totalOrders}</strong> total orders
-                            </p>
-                        </CardContent>
+                                <CardTitle className="text-2xl font-black tracking-tight text-foreground mt-2">
+                                    ₹{metrics.grossEarnings.toLocaleString("en-IN")}
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent className="p-5 pt-1">
+                                <p className="text-[11px] text-muted-foreground flex items-center gap-1">
+                                    Across <strong>{metrics.totalOrders}</strong> total orders
+                                </p>
+                            </CardContent>
+                        </div>
+                        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-background/50 backdrop-blur-[2px]">
+                            <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/30 bg-background/95 px-2.5 py-1 text-[11px] font-semibold text-foreground shadow-xs">
+                                <Sparkles className="size-3 text-amber-500" />
+                                Coming Soon
+                            </span>
+                        </div>
                     </Card>
 
                     {/* Payment status */}
-                    <Card className="border shadow-xs hover:border-amber-500/40 transition-all hover:shadow-sm group bg-card">
-                        <CardHeader className="p-5 pb-2">
-                            <div className="flex items-center justify-between">
-                                <CardDescription className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                                    Payment status
-                                </CardDescription>
-                                <div className="size-8 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center group-hover:bg-amber-500 group-hover:text-white transition-colors">
+                    <Card className="relative overflow-hidden border shadow-xs hover:border-amber-500/40 transition-all hover:shadow-sm group bg-card">
+                        <div className="blur-[2.5px] select-none pointer-events-none opacity-50">
+                            <CardHeader className="p-5 pb-2">
+                                <div className="flex items-center justify-between">
+                                    <CardDescription className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                                        Payment status
+                                    </CardDescription>
+                                    <div className="size-8 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center group-hover:bg-amber-500 group-hover:text-white transition-colors">
+                                    </div>
                                 </div>
-                            </div>
-                            <CardTitle className="text-2xl font-black tracking-tight text-foreground mt-2">
-                                Payments not connected yet
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent className="p-5 pt-1">
-                            <p className="text-[11px] text-amber-600 dark:text-amber-400 font-medium flex items-center gap-1">
-                                Payment is arranged offline in this prototype
-                            </p>
-                        </CardContent>
+                                <CardTitle className="text-2xl font-black tracking-tight text-foreground mt-2">
+                                    Payments not connected yet
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent className="p-5 pt-1">
+                                <p className="text-[11px] text-amber-600 dark:text-amber-400 font-medium flex items-center gap-1">
+                                    Payment is arranged offline in this prototype
+                                </p>
+                            </CardContent>
+                        </div>
+                        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-background/50 backdrop-blur-[2px]">
+                            <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/30 bg-background/95 px-2.5 py-1 text-[11px] font-semibold text-foreground shadow-xs">
+                                <Sparkles className="size-3 text-amber-500" />
+                                Coming Soon
+                            </span>
+                        </div>
                     </Card>
 
                     {/* Settled / Paid */}
-                    <Card className="border shadow-xs hover:border-emerald-500/40 transition-all hover:shadow-sm group bg-card">
-                        <CardHeader className="p-5 pb-2">
-                            <div className="flex items-center justify-between">
-                                <CardDescription className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                                    Settled & Paid
-                                </CardDescription>
-                                <div className="size-8 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center group-hover:bg-emerald-500 group-hover:text-white transition-colors">
-                                    <CheckCircle2 className="size-4" />
+                    <Card className="relative overflow-hidden border shadow-xs hover:border-emerald-500/40 transition-all hover:shadow-sm group bg-card">
+                        <div className="blur-[2.5px] select-none pointer-events-none opacity-50">
+                            <CardHeader className="p-5 pb-2">
+                                <div className="flex items-center justify-between">
+                                    <CardDescription className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                                        Settled & Paid
+                                    </CardDescription>
+                                    <div className="size-8 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center group-hover:bg-emerald-500 group-hover:text-white transition-colors">
+                                        <CheckCircle2 className="size-4" />
+                                    </div>
                                 </div>
-                            </div>
-                            <CardTitle className="text-base font-semibold tracking-tight text-foreground mt-2">
-                                Payments not connected yet
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent className="p-5 pt-1">
-                            <p className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-1">
-                                Payment is arranged offline in this prototype
-                            </p>
-                        </CardContent>
+                                <CardTitle className="text-base font-semibold tracking-tight text-foreground mt-2">
+                                    Payments not connected yet
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent className="p-5 pt-1">
+                                <p className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-1">
+                                    Payment is arranged offline in this prototype
+                                </p>
+                            </CardContent>
+                        </div>
+                        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-background/50 backdrop-blur-[2px]">
+                            <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/30 bg-background/95 px-2.5 py-1 text-[11px] font-semibold text-foreground shadow-xs">
+                                <Sparkles className="size-3 text-amber-500" />
+                                Coming Soon
+                            </span>
+                        </div>
                     </Card>
 
                     {/* Active Orders */}

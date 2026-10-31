@@ -215,6 +215,7 @@ export default async function DesignerDashboardPage() {
                     value={`₹${totalCompletedValue.toLocaleString("en-IN")}`}
                     detail="Total value of finished client contracts"
                     icon={CircleDollarSign}
+                    comingSoon
                 />
             </div>
 

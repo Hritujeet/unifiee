@@ -33,11 +33,11 @@ const dashboards = [
     url: "app.unifiee.com/manufacturer",
     heading: "The vendor dashboard",
     description:
-      "Manufacturers publish a live product catalog with capacity, MOQ, and lead time. Qualified briefs arrive directly in the offer queue. Accepted orders settle through escrow, giving vendors a predictable, structured demand channel instead of fragmented inbound inquiries.",
+      "Manufacturers publish a live product catalog with capacity, MOQ, and lead time. Qualified briefs arrive directly in the offer queue. Accepted orders settle directly, giving vendors a predictable, structured demand channel instead of fragmented inbound inquiries.",
     features: [
       "Catalog management with capacity and lead-time controls",
       "Offer queue with full buyer brief context",
-      "Escrow-backed payment visibility through delivery",
+      "Direct payment visibility through delivery",
       "Order fulfillment status and buyer communication",
     ],
     meta: "Designed for packaging manufacturers and converters",

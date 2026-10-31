@@ -13,6 +13,7 @@ import {
   Plus,
   Shield,
   ShieldCheck,
+  Sparkles,
   Tag,
   Tags,
   Truck,
@@ -95,12 +96,25 @@ export function BusinessDashboardPreview() {
             ["Offers to review", "3"],
             ["Orders in progress", "2"],
             ["Ordered this month", "₹48,200"],
-          ].map(([label, value]) => (
-            <div key={label} className="rounded-xl border border-border/60 bg-card/50 p-2.5 sm:p-3">
-              <p className="truncate text-[9px] text-muted-foreground sm:text-[10px]">{label}</p>
-              <p className="mt-0.5 text-base font-semibold tracking-tight sm:mt-1 sm:text-lg">{value}</p>
-            </div>
-          ))}
+          ].map(([label, value]) => {
+            const isEarnings = label === "Ordered this month";
+            return (
+              <div key={label} className="relative overflow-hidden rounded-xl border border-border/60 bg-card/50 p-2.5 sm:p-3">
+                <div className={isEarnings ? "blur-[2px] select-none pointer-events-none opacity-50" : undefined}>
+                  <p className="truncate text-[9px] text-muted-foreground sm:text-[10px]">{label}</p>
+                  <p className="mt-0.5 text-base font-semibold tracking-tight sm:mt-1 sm:text-lg">{value}</p>
+                </div>
+                {isEarnings && (
+                  <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-background/50 backdrop-blur-[2px]">
+                    <span className="inline-flex items-center gap-1 rounded-full border border-amber-500/30 bg-background/95 px-2 py-0.5 text-[9px] font-semibold text-foreground shadow-xs">
+                      <Sparkles className="size-2.5 text-amber-500" />
+                      Coming Soon
+                    </span>
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
 
         <div className="grid min-w-0 gap-3 lg:grid-cols-3">
@@ -170,38 +184,49 @@ export function VendorDashboardPreview() {
             Verified partner
           </span>
           <span className="flex items-center gap-1.5 text-[9px] text-muted-foreground sm:text-[10px]">
-            <span className="size-1.5 animate-pulse rounded-full bg-emerald-500" />
-            Escrow enabled
+            <span className="size-1.5 rounded-full bg-emerald-500" />
+            Direct payment
           </span>
         </div>
         <p className="font-heading mt-2 text-base font-semibold tracking-tight sm:text-xl">
           Good afternoon, GreenCup Solutions
         </p>
         <p className="mt-1 max-w-lg text-[10px] text-muted-foreground sm:text-[11px]">
-          Manage offerings, review buyer orders, and track escrow in one place.
+          Manage offerings, review buyer orders, and track fulfillment in one place.
         </p>
       </div>
 
       <div className="grid grid-cols-4 gap-1.5 sm:gap-2">
         {[
           ["Total Revenue", "₹2,40,000", IndianRupee, "Across 18 orders"],
-          ["In Escrow", "₹36,400", Shield, "Released on delivery"],
+          ["Pending Payment", "₹36,400", Shield, "Direct settlement"],
           ["Settled & Paid", "₹2,03,600", ShieldCheck, "Completed to bank"],
           ["Active Orders", "4", Truck, "In production or dispatched"],
         ].map(([label, value, Icon, detail]) => {
           const MetricIcon = Icon as typeof IndianRupee;
+          const isEarnings = label !== "Active Orders";
           return (
-            <div key={String(label)} className="min-w-0 rounded-xl border border-border/60 bg-card/50 p-2 sm:p-3">
-              <div className="flex items-center justify-between gap-1">
-                <p className="truncate text-[7px] font-semibold uppercase tracking-wide text-muted-foreground sm:text-[9px]">
-                  {label as string}
-                </p>
-                <span className="hidden size-7 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary sm:flex">
-                  <MetricIcon className="size-3.5" />
-                </span>
+            <div key={String(label)} className="relative overflow-hidden min-w-0 rounded-xl border border-border/60 bg-card/50 p-2 sm:p-3">
+              <div className={isEarnings ? "blur-[2px] select-none pointer-events-none opacity-50" : undefined}>
+                <div className="flex items-center justify-between gap-1">
+                  <p className="truncate text-[7px] font-semibold uppercase tracking-wide text-muted-foreground sm:text-[9px]">
+                    {label as string}
+                  </p>
+                  <span className="hidden size-7 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary sm:flex">
+                    <MetricIcon className="size-3.5" />
+                  </span>
+                </div>
+                <p className="mt-1 truncate text-[11px] font-semibold tracking-tight sm:mt-2 sm:text-lg">{value as string}</p>
+                <p className="mt-1 hidden truncate text-[10px] text-muted-foreground sm:block">{detail as string}</p>
               </div>
-              <p className="mt-1 truncate text-[11px] font-semibold tracking-tight sm:mt-2 sm:text-lg">{value as string}</p>
-              <p className="mt-1 hidden truncate text-[10px] text-muted-foreground sm:block">{detail as string}</p>
+              {isEarnings && (
+                <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-background/50 backdrop-blur-[2px]">
+                  <span className="inline-flex items-center gap-1 rounded-full border border-amber-500/30 bg-background/95 px-1.5 py-0.5 text-[8px] font-semibold text-foreground shadow-xs">
+                    <Sparkles className="size-2 text-amber-500" />
+                    Coming Soon
+                  </span>
+                </div>
+              )}
             </div>
           );
         })}
@@ -292,17 +317,28 @@ export function DesignerStudioPreview() {
           ["Earnings", "₹86,000", CircleDollarSign],
         ].map(([label, value, Icon]) => {
           const StatIcon = Icon as typeof Tags;
+          const isEarnings = label === "Earnings";
           return (
-            <div key={String(label)} className="rounded-xl border bg-card p-3">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-[10px] text-muted-foreground">{label as string}</p>
-                  <p className="font-heading mt-1 text-xl font-semibold">{value as string}</p>
+            <div key={String(label)} className="relative overflow-hidden rounded-xl border bg-card p-3">
+              <div className={isEarnings ? "blur-[2px] select-none pointer-events-none opacity-50" : undefined}>
+                <div className="flex items-start justify-between">
+                  <div>
+                    <p className="text-[10px] text-muted-foreground">{label as string}</p>
+                    <p className="font-heading mt-1 text-xl font-semibold">{value as string}</p>
+                  </div>
+                  <span className="flex size-8 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                    <StatIcon className="size-4" />
+                  </span>
                 </div>
-                <span className="flex size-8 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                  <StatIcon className="size-4" />
-                </span>
               </div>
+              {isEarnings && (
+                <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-background/50 backdrop-blur-[2px]">
+                  <span className="inline-flex items-center gap-1 rounded-full border border-amber-500/30 bg-background/95 px-2 py-0.5 text-[9px] font-semibold text-foreground shadow-xs">
+                    <Sparkles className="size-2.5 text-amber-500" />
+                    Coming Soon
+                  </span>
+                </div>
+              )}
             </div>
           );
         })}

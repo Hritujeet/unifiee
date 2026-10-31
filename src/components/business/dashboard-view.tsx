@@ -10,6 +10,7 @@ import {
     ExternalLink,
     Palette,
     Plus,
+    Sparkles,
     Tag,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -227,8 +228,8 @@ export default function BusinessDashboardView({
                     </Link>
                 </Card>
 
-                <Card className="p-4 hover:border-border transition-all">
-                    <Link href="/business/orders" className="block space-y-1">
+                <Card className="relative overflow-hidden p-4 hover:border-border transition-all">
+                    <div className="blur-[2.5px] select-none pointer-events-none opacity-50 space-y-1">
                         <span className="text-xs text-muted-foreground font-normal">
                             Ordered this month
                         </span>
@@ -236,9 +237,15 @@ export default function BusinessDashboardView({
                             {formattedOrdered}
                         </div>
                         <p className="text-[11px] text-muted-foreground">
-                            Paid: {formattedPaid}
+                            Settled offline: {formattedPaid}
                         </p>
-                    </Link>
+                    </div>
+                    <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-background/50 backdrop-blur-[2px]">
+                        <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/30 bg-background/95 px-2.5 py-1 text-[11px] font-semibold text-foreground shadow-xs">
+                            <Sparkles className="size-3 text-amber-500" />
+                            Coming Soon
+                        </span>
+                    </div>
                 </Card>
             </div>
 
