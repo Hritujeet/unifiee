@@ -498,6 +498,10 @@ if (idempotency.handled) return idempotency.response as OrderActionResult<{ orde
 ### 7.6 Fiverr-Style Packaging Designer Gigs, Tiered Packages & AI Gig Studio
 - **Plain-English Comprehension**:
   A creative services studio where packaging designers build modular gigs with tiered pricing (Basic, Standard, Premium packages), optional gig extras (such as 3D renders or fast delivery), and FAQs. Designers use an in-app AI copy generator to draft compelling service descriptions and package deliverables. Publishing enforces profile completeness (bio and specialization) to guarantee high platform quality.
+
+![Packaging Designer Studio](assets/designer_studio.png)
+*Figure: Packaging Designer Studio displaying studio overview, profile strength card, and gig listing entry point*
+
 - **Technical Architecture**: Component `src/components/designer/gig-editor-dialog.tsx` provides a 5-step wizard (`Overview -> Packages -> Gallery -> FAQ -> Review & Publish`). Server Action `saveDesignerGigAction` in `src/actions/designer-services.ts` verifies profile completeness, saves package tiers into `designer_service_packages`, and synchronizes vector embeddings in `ai_documents` via `syncEntityEmbeddings`.
 - **Key code snippet**:
 ```typescript
@@ -711,6 +715,10 @@ await tx
   8. `delivered`: Courier marks shipment delivered.
   9. `completed`: Brand inspects physical boxes and confirms delivery.
   Brands can attach completed design dielines (`linked_order_id`) directly to the order to feed the prepress step.
+
+![F&B Business Dashboard](assets/business_dashboard.png)
+*Figure: F&B Business Dashboard displaying active manufacturing order cards with the "Review proof" dieline signoff action*
+
 - **Technical Architecture**: Defined in `src/lib/orders/lifecycle.ts`. State transitions are enforced by `canTransition(from, to, actor)`. Proof uploads write to `order_artwork_proofs` with automatic version incrementing. Dispute tickets are managed in `order_issues`. Milestones and courier dispatches write to `order_fulfillment_milestones` and `order_shipments`.
 - **Key code snippet**:
 ```typescript
@@ -767,6 +775,10 @@ stateDiagram-v2
 ### 7.12 Manufacturer Operations Hub, Tiered Volume Pricing & Factory Milestones
 - **Plain-English Comprehension**:
   The factory operations center where packaging converters manage catalog lines, configure tiered volume discount slabs (e.g., ₹15/box for 1,000 units vs. ₹10/box for 10,000 units), review incoming purchase orders, upload prepress proofs, and manage courier tracking details.
+
+![Packaging Manufacturer Command Center](assets/vendor_dashboard.png)
+*Figure: Packaging Manufacturer Command Center displaying plant metrics, incoming order queues, and published offerings entry*
+
 - **Technical Architecture**: Page `src/app/manufacturer/orders/[id]/page.tsx` renders `vendor-order-detail-view.tsx`. Actions in `src/actions/vendor-actions.ts` manage catalog offerings (`createOfferingAction`), update order statuses (`updateOrderStatusAction`), and upload artwork proofs (`uploadProofAction`).
 - **Key code snippet**:
 ```typescript
