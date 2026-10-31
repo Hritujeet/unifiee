@@ -75,13 +75,13 @@ export function DesignerServicesManager({
         try {
             const res = await toggleGigStatus(gig.id, nextStatus)
             if (res.success) {
-                toast.success(nextStatus === "published" ? "Gig published!" : "Gig paused")
+                toast.success(nextStatus === "published" ? "Gig published" : "Gig paused")
                 router.refresh()
             } else {
-                toast.error(res.error || "Could not update gig status.")
+                toast.error("Couldn't save gig")
             }
         } catch {
-            toast.error("Failed to update status.")
+            toast.error("Couldn't save gig")
         } finally {
             setLoadingId(null)
         }
@@ -94,13 +94,13 @@ export function DesignerServicesManager({
         try {
             const res = await deleteGigAction(gig.id)
             if (res.success) {
-                toast.success("Gig deleted.")
+                toast.success("Gig deleted")
                 router.refresh()
             } else {
-                toast.error(res.error || "Could not delete gig.")
+                toast.error("Couldn't delete gig")
             }
         } catch {
-            toast.error("Failed to delete gig.")
+            toast.error("Couldn't delete gig")
         } finally {
             setLoadingId(null)
         }

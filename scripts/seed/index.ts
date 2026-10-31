@@ -179,6 +179,32 @@ async function seedCatalog() {
             fieldDefinitions: [{ name: "gsm", label: "GSM", type: "number", required: true }],
         }).onConflictDoNothing()
     }
+
+    const standardTypes = [
+        ["paper_cup", "Paper Cups & Tumblers"],
+        ["pizza_box", "Pizza Boxes & Corrugated"],
+        ["corrugated_box", "Shipping Cartons & Boxes"],
+        ["food_container", "Food Containers & Meal Trays"],
+        ["pouch", "Pouches & Bags"],
+        ["paper_bag", "Paper Carry Bags"],
+        ["cutlery", "Cutlery & Wooden Ware"],
+        ["stickers_labels", "Stickers & Labels"],
+        ["bowls", "Paper Bowls"],
+        ["others", "Other Packaging"],
+        ["paper-cups", "Paper Cups & Tumblers"],
+        ["food-boxes", "Food Containers & Meal Trays"],
+        ["paper-bags", "Paper Carry Bags"],
+        ["corrugated-boxes", "Shipping Cartons & Boxes"],
+        ["stickers-labels", "Stickers & Labels"],
+    ]
+    for (const [key, displayName] of standardTypes) {
+        await db.insert(offeringTypesTable).values({
+            key,
+            displayName,
+            vendorType: "manufacturer",
+            fieldDefinitions: [],
+        }).onConflictDoNothing()
+    }
 }
 
 async function seedDesignerServices() {

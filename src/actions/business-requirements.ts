@@ -185,7 +185,7 @@ export async function createRequirementAction(
         return response
     } catch (error) {
         console.error("Error creating business requirement:", error)
-        const message = error instanceof Error ? error.message : "Database error while saving requirement."
+        const message = "Failed to submit business requirement. Please try again."
         if (idempotencyId) await completeIdempotency(idempotencyId, { success: false, error: message })
         return { success: false, error: message }
     }

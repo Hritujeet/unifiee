@@ -108,22 +108,21 @@ export function SignupForm({
         const isRateLimited = result.error.status === 429 ||
           /too many requests|rate limit/i.test(result.error.message || "");
         if (isRateLimited) {
-          toast.error("Too many registration attempts", {
-            description: "Please wait a minute before trying again.",
+          toast.error("Too many attempts", {
+            description: "Wait a minute and try again.",
             duration: 6000,
           })
           return
         }
-        toast.error("Account creation failed", {
-          description: result.error.message || "Failed to create account. This email might already be in use.",
+        toast.error("Registration failed", {
+          description: "This email may already exist.",
           duration: 6000,
         })
         setPasswordValue("password", "", { shouldValidate: false })
         setPasswordValue("confirmPassword", "", { shouldValidate: false })
         return
       }
-      toast.success("Account created successfully!", {
-        description: "Welcome to UNIFIÉE! Taking you to onboarding...",
+      toast.success("Account created", {
         duration: 3000,
       })
       setIsRedirecting(true)
@@ -133,8 +132,8 @@ export function SignupForm({
     onError: (error) => {
       const msg = error instanceof Error ? error.message : "Unable to reach server."
       const isRateLimited = /too many requests|rate limit/i.test(msg)
-      toast.error(isRateLimited ? "Too many registration attempts" : "Registration failed", {
-        description: isRateLimited ? "Please wait a minute before trying again." : msg,
+      toast.error(isRateLimited ? "Too many attempts" : "Registration failed", {
+        description: isRateLimited ? "Wait a minute and try again." : "Try again.",
         duration: 6000,
       })
     },
@@ -148,8 +147,8 @@ export function SignupForm({
       })
     },
     onError: (error) => {
-      toast.error("Google sign-up error", {
-        description: error instanceof Error ? error.message : "Failed to connect to Google OAuth. Please try again.",
+      toast.error("Google sign-up failed", {
+        description: "Try again.",
         duration: 6000,
       })
     },

@@ -8,6 +8,8 @@ import { generateText, Output } from "ai";
 import { getModel, MODEL_IDS } from "@/lib/ai/models";
 import { checkAiBudget } from "@/lib/ai/rate-limit";
 import { stripPii } from "@/lib/ai/privacy";
+import { isRateLimitOrQuotaError } from "@/lib/ai/errors";
+import { getFallbackRequirementExtract } from "@/lib/ai/fallbacks";
 import {
     aiRequirementOutputSchema,
     buildRequirementBuilderSystemPrompt,
@@ -33,16 +35,6 @@ export async function POST(req: Request) {
 
         const userId = session.user.id;
 
-        // Check user budget
-        const budget = checkAiBudget(userId);
-        if (!budget.allowed) {
-            return NextResponse.json(
-                { error: budget.reason || "Rate limit reached. Please wait a moment." },
-                { status: 429 }
-            );
-        }
-
-        // Check business authorization
         const businessRows = await db
             .select({ id: business.id })
             .from(business)
@@ -66,8 +58,20 @@ export async function POST(req: Request) {
         }
 
         const rawPrompt = parseResult.data.prompt;
-
         const cleanPrompt = stripPii(rawPrompt);
+
+        // Check user budget
+        const budget = checkAiBudget(userId);
+        if (!budget.allowed) {
+            // Free-tier AI budget reached: gracefully extract requirement using heuristic domain parser
+            return NextResponse.json({
+                structured: getFallbackRequirementExtract(cleanPrompt),
+                fallback: true,
+                isQuota: true,
+                remainingDaily: 0,
+            });
+        }
+
         const route = getModel("requirement_builder");
 
         // Structured Extraction via Gemini Flash
@@ -101,19 +105,32 @@ export async function POST(req: Request) {
             remainingDaily: budget.remainingDaily,
         });
     } catch (error: unknown) {
-        console.error("[REQUIREMENT_EXTRACT_ERROR]", error);
+        console.warn("[REQUIREMENT_EXTRACT_GRACEFUL_FALLBACK]", error);
         logAiUsage({
             task: "requirement_builder",
             provider: "google",
             modelId: MODEL_IDS.GEMINI_FLASH,
             latencyMs: Date.now() - startTime,
-            status: "error",
+            status: "fallback",
             error: String(error),
         });
 
-        return NextResponse.json(
-            { error: "Failed to extract packaging requirement. Please try rephrasing your request." },
-            { status: 500 }
-        );
+        try {
+            const body = await req.clone().json().catch(() => ({}));
+            const rawPrompt = String(body.prompt || "");
+            return NextResponse.json({
+                structured: getFallbackRequirementExtract(stripPii(rawPrompt)),
+                fallback: true,
+                isQuota: isRateLimitOrQuotaError(error),
+                remainingDaily: 0,
+            });
+        } catch {
+            return NextResponse.json({
+                structured: getFallbackRequirementExtract("Custom packaging for business"),
+                fallback: true,
+                isQuota: isRateLimitOrQuotaError(error),
+                remainingDaily: 0,
+            });
+        }
     }
 }

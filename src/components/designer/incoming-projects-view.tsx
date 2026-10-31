@@ -21,13 +21,13 @@ export default function IncomingProjectsView({ projects }: { projects: DesignerI
                 notes: status === "in_review" ? "Delivery submitted for client review." : project.notes ?? undefined,
             })
             if (!result.success) {
-                toast.error(result.error ?? "Could not update project.")
+                toast.error("Couldn't save project")
                 return
             }
-            toast.success(status === "completed" ? "Project marked complete." : "Project status updated.")
+            toast.success(status === "completed" ? "Project completed" : "Status saved")
             router.refresh()
         } catch {
-            toast.error("Could not update project. Please try again.")
+            toast.error("Couldn't save project")
         } finally {
             setPendingId(null)
         }

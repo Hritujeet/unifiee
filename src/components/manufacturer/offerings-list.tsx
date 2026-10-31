@@ -6,9 +6,6 @@ import { toggleOfferingStatusAction, deleteOfferingAction } from "@/actions/vend
 import {
     Card,
     CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
 } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -35,12 +32,13 @@ import {
     Trash2,
     Clock,
     MapPin,
-    IndianRupee,
-    Boxes,
-    Layers,
-    Truck,
-    Filter,
+    CheckCircle2,
 } from "lucide-react"
+import {
+    formatCategoryDisplayName,
+    normalizeCategoryKey,
+    STANDARD_OFFERING_CATEGORIES,
+} from "@/lib/constants/categories"
 import { toast } from "sonner"
 import { useRouter } from "next/navigation"
 
@@ -61,6 +59,7 @@ export interface DbOfferingItem {
     city: string
     state: string
     status: string
+    attributes?: Record<string, unknown> | null
     createdAt: Date
 }
 
@@ -79,11 +78,15 @@ export function OfferingsList({ initialOfferings }: OfferingsListProps) {
 
     const filtered = offerings.filter((o) => {
         const matchesStatus = statusFilter === "all" ? true : o.status === statusFilter
-        const matchesCategory = categoryFilter === "all" ? true : o.offeringType === categoryFilter
+        const matchesCategory =
+            categoryFilter === "all"
+                ? true
+                : normalizeCategoryKey(o.offeringType) === normalizeCategoryKey(categoryFilter)
         const searchLower = searchQuery.toLowerCase()
         const matchesSearch =
             o.title.toLowerCase().includes(searchLower) ||
             o.offeringType.toLowerCase().includes(searchLower) ||
+            formatCategoryDisplayName(o.offeringType).toLowerCase().includes(searchLower) ||
             o.city.toLowerCase().includes(searchLower)
         return matchesStatus && matchesCategory && matchesSearch
     })
@@ -97,10 +100,10 @@ export function OfferingsList({ initialOfferings }: OfferingsListProps) {
                 setOfferings((prev) =>
                     prev.map((o) => (o.id === id ? { ...o, status: nextStatus } : o))
                 )
-                toast.success(`Offering status updated to ${nextStatus}`)
+                toast.success("Status saved")
                 router.refresh()
             } else {
-                toast.error(res.error || "Failed to update status")
+                toast.error("Couldn't save status")
             }
         } finally {
             setTogglingId(null)
@@ -112,11 +115,11 @@ export function OfferingsList({ initialOfferings }: OfferingsListProps) {
         const res = await deleteOfferingAction(deletingId)
         if (res.success) {
             setOfferings((prev) => prev.filter((o) => o.id !== deletingId))
-            toast.success("Offering removed from catalog")
+            toast.success("Offering deleted")
             setDeletingId(null)
             router.refresh()
         } else {
-            toast.error(res.error || "Failed to delete offering")
+            toast.error("Couldn't delete offering")
         }
     }
 
@@ -156,18 +159,16 @@ export function OfferingsList({ initialOfferings }: OfferingsListProps) {
 
                 <div className="flex flex-wrap items-center gap-2">
                     <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                        <SelectTrigger className="w-36 text-xs h-9 bg-card">
+                        <SelectTrigger className="w-48 text-xs h-9 bg-card">
                             <SelectValue placeholder="Category" />
                         </SelectTrigger>
                         <SelectContent>
                             <SelectItem value="all">All Categories</SelectItem>
-                            <SelectItem value="paper_cup">Paper Cups</SelectItem>
-                            <SelectItem value="pizza_box">Pizza Boxes</SelectItem>
-                            <SelectItem value="corrugated_box">Shipping Boxes</SelectItem>
-                            <SelectItem value="food_container">Containers</SelectItem>
-                            <SelectItem value="pouch">Pouches</SelectItem>
-                            <SelectItem value="paper_bag">Paper Bags</SelectItem>
-                            <SelectItem value="cutlery">Cutlery</SelectItem>
+                            {STANDARD_OFFERING_CATEGORIES.map((cat) => (
+                                <SelectItem key={cat.key} value={cat.key}>
+                                    {cat.displayName}
+                                </SelectItem>
+                            ))}
                         </SelectContent>
                     </Select>
 
@@ -198,83 +199,137 @@ export function OfferingsList({ initialOfferings }: OfferingsListProps) {
                     <p className="text-xs text-muted-foreground mt-1">Try clearing your search query or status filter.</p>
                 </div>
             ) : (
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+                <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
                     {filtered.map((item) => {
                         const isToggling = togglingId === item.id
+                        const unitPriceNum = parseFloat(item.unitPrice) || 0
+                        const minOrderValue = unitPriceNum * (item.minOrderQuantity || 0)
+                        const attrs = (item.attributes || {}) as Record<string, unknown>
+
                         return (
                             <Card
                                 key={item.id}
-                                className="border shadow-xs hover:border-primary/50 transition-all hover:shadow-sm flex flex-col justify-between overflow-hidden group bg-card"
+                                className="border-2 border-primary/20 hover:border-primary/50 shadow-xs hover:shadow-md transition-all bg-card overflow-hidden flex flex-col justify-between group rounded-xl"
                             >
-                                <CardHeader className="p-4 sm:p-5 pb-3 space-y-2">
-                                    <div className="flex items-start justify-between gap-2">
-                                        <Badge
-                                            variant="secondary"
-                                            className="text-[10px] font-semibold uppercase tracking-wider capitalize py-0.5 px-2"
-                                        >
-                                            {item.offeringType.replace("_", " ")}
-                                        </Badge>
-                                        <Badge
-                                            variant="outline"
-                                            onClick={() => handleToggleStatus(item.id, item.status)}
-                                            className={
+                                {/* Top Status & Fulfilment Banner - Identical to Live Buyer Directory Preview */}
+                                <div className="bg-primary/5 px-4 py-2.5 border-b border-primary/20 flex items-center justify-between">
+                                    <button
+                                        type="button"
+                                        onClick={() => handleToggleStatus(item.id, item.status)}
+                                        disabled={isToggling}
+                                        className="text-[11px] font-semibold text-primary flex items-center gap-1.5 hover:opacity-80 transition-opacity"
+                                        title="Click to toggle status"
+                                    >
+                                        <span
+                                            className={`size-2 rounded-full ${
                                                 item.status === "active"
-                                                    ? "cursor-pointer bg-emerald-500/10 text-emerald-600 border-emerald-500/30 text-[10px] font-bold uppercase transition-colors hover:bg-emerald-500/20"
-                                                    : "cursor-pointer bg-muted text-muted-foreground text-[10px] font-bold uppercase transition-colors hover:bg-muted/80"
-                                            }
-                                        >
-                                            {isToggling ? "Updating..." : item.status.toUpperCase()}
-                                        </Badge>
-                                    </div>
+                                                    ? "bg-emerald-500 animate-pulse"
+                                                    : item.status === "paused"
+                                                    ? "bg-amber-500"
+                                                    : "bg-muted-foreground"
+                                            }`}
+                                        />
+                                        <span>
+                                            {isToggling
+                                                ? "Updating..."
+                                                : item.status === "active"
+                                                ? "Live in Catalog"
+                                                : item.status === "paused"
+                                                ? "Paused"
+                                                : "Draft"}
+                                        </span>
+                                    </button>
+                                    <Badge variant="outline" className="text-[9px] uppercase font-bold tracking-wider">
+                                        {(item.fulfilmentMode || "made_to_order").replace("_", " ")}
+                                    </Badge>
+                                </div>
 
-                                    <div>
-                                        <CardTitle className="text-sm font-bold leading-snug line-clamp-1 text-foreground group-hover:text-primary transition-colors">
-                                            {item.title}
-                                        </CardTitle>
-                                        <CardDescription className="text-xs line-clamp-2 mt-1 leading-relaxed">
-                                            {item.description}
-                                        </CardDescription>
-                                    </div>
-                                </CardHeader>
-
-                                <CardContent className="p-4 sm:p-5 pt-0 space-y-3.5 text-xs">
-                                    {/* Economics & Spec Box */}
-                                    <div className="rounded-xl bg-muted/40 p-3 space-y-2 border border-border/50">
-                                        <div className="flex justify-between items-baseline border-b border-border/40 pb-1.5">
-                                            <span className="text-muted-foreground font-medium">Unit Price:</span>
-                                            <span className="font-extrabold text-foreground text-sm">
-                                                ₹{parseFloat(item.unitPrice).toFixed(2)}
-                                                <span className="text-[11px] text-muted-foreground font-normal"> / {item.unitOfMeasure}</span>
-                                            </span>
+                                <CardContent className="p-5 space-y-4 flex-1 flex flex-col justify-between">
+                                    <div className="space-y-4">
+                                        {/* Category & Title */}
+                                        <div className="space-y-1">
+                                            <Badge variant="secondary" className="text-[10px] uppercase font-semibold capitalize">
+                                                {formatCategoryDisplayName(item.offeringType)}
+                                            </Badge>
+                                            <h3 className="font-heading text-base font-extrabold text-foreground leading-snug group-hover:text-primary transition-colors line-clamp-1">
+                                                {item.title}
+                                            </h3>
+                                            <p className="text-xs text-muted-foreground line-clamp-2">
+                                                {item.description}
+                                            </p>
                                         </div>
 
-                                        <div className="grid grid-cols-2 gap-2 text-[11px]">
-                                            <div className="flex flex-col">
-                                                <span className="text-muted-foreground">MOQ</span>
-                                                <span className="font-semibold text-foreground">
-                                                    {item.minOrderQuantity.toLocaleString()} {item.unitOfMeasure}
+                                        {/* Material & Size / GSM pill badges */}
+                                        {Boolean(attrs.size || attrs.material || attrs.gsm) && (
+                                            <div className="flex items-center gap-2 flex-wrap text-[11px] text-muted-foreground">
+                                                {attrs.size ? (
+                                                    <span className="rounded bg-muted px-2 py-0.5 font-medium">
+                                                        {String(attrs.size)}
+                                                    </span>
+                                                ) : null}
+                                                {attrs.material ? (
+                                                    <span className="rounded bg-muted px-2 py-0.5 font-medium">
+                                                        {String(attrs.material)}
+                                                    </span>
+                                                ) : null}
+                                                {attrs.gsm ? (
+                                                    <span className="rounded bg-muted px-2 py-0.5 font-medium">
+                                                        {String(attrs.gsm)} GSM
+                                                    </span>
+                                                ) : null}
+                                            </div>
+                                        )}
+
+                                        {/* Economics Display Box */}
+                                        <div className="rounded-xl bg-muted/50 p-3.5 space-y-2 border">
+                                            <div className="flex items-baseline justify-between">
+                                                <span className="text-xs text-muted-foreground">Unit Wholesale Price</span>
+                                                <span className="text-lg font-black text-foreground">
+                                                    ₹{unitPriceNum > 0 ? unitPriceNum.toFixed(2) : "0.00"}
+                                                    <span className="text-xs font-normal text-muted-foreground"> / {item.unitOfMeasure}</span>
                                                 </span>
                                             </div>
-                                            <div className="flex flex-col">
-                                                <span className="text-muted-foreground">Lead Time</span>
+
+                                            <div className="flex items-center justify-between text-xs text-muted-foreground pt-1 border-t border-border/50">
+                                                <span>Min Order Batch</span>
                                                 <span className="font-semibold text-foreground">
-                                                    {item.leadTimeDaysMin}-{item.leadTimeDaysMax} Days
+                                                    {item.minOrderQuantity.toLocaleString()} {item.unitOfMeasure}s
+                                                </span>
+                                            </div>
+
+                                            <div className="flex items-center justify-between text-xs pt-1 border-t border-border/50">
+                                                <span className="font-medium text-foreground">Min Order Value</span>
+                                                <span className="font-bold text-primary text-sm">
+                                                    ₹{minOrderValue.toLocaleString("en-IN", { maximumFractionDigits: 2 })}
                                                 </span>
                                             </div>
                                         </div>
 
-                                        <div className="flex items-center justify-between pt-1 border-t border-border/40 text-[11px] text-muted-foreground">
-                                            <span className="flex items-center gap-1">
-                                                <MapPin className="size-3 shrink-0" />
-                                                {item.city}, {item.state}
-                                            </span>
-                                            <span className="capitalize">{item.fulfilmentMode.replace("_", " ")}</span>
+                                        {/* Delivery & Logistics info */}
+                                        <div className="space-y-1.5 text-[11px] text-muted-foreground">
+                                            <div className="flex items-center gap-1.5">
+                                                <Clock className="size-3 text-muted-foreground shrink-0" />
+                                                <span>
+                                                    Lead Time: <strong>{item.leadTimeDaysMin}-{item.leadTimeDaysMax} days</strong> turnaround
+                                                </span>
+                                            </div>
+                                            <div className="flex items-center gap-1.5">
+                                                <MapPin className="size-3 text-muted-foreground shrink-0" />
+                                                <span>
+                                                    Ships from <strong>{item.city}, {item.state}</strong>
+                                                </span>
+                                            </div>
+                                            <div className="flex items-center gap-1.5">
+                                                <CheckCircle2 className="size-3 text-emerald-500 shrink-0" />
+                                                <span>Payments are arranged offline in this prototype</span>
+                                            </div>
                                         </div>
                                     </div>
 
                                     {/* Action Buttons */}
-                                    <div className="flex items-center justify-between gap-2 pt-1">
+                                    <div className="flex items-center justify-between gap-2 pt-3 border-t border-border/50">
                                         <Button
+                                            type="button"
                                             variant="outline"
                                             size="sm"
                                             disabled={isToggling}
@@ -284,10 +339,12 @@ export function OfferingsList({ initialOfferings }: OfferingsListProps) {
                                             {item.status === "active" ? "Pause Offering" : "Activate Offering"}
                                         </Button>
                                         <Button
+                                            type="button"
                                             variant="ghost"
                                             size="icon"
                                             onClick={() => setDeletingId(item.id)}
                                             className="size-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                                            title="Remove from Catalog"
                                         >
                                             <Trash2 className="size-3.5" />
                                         </Button>

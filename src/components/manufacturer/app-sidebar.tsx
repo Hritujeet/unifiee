@@ -44,7 +44,7 @@ export default function ManufacturerAppSidebar() {
     const handleSignOut = async () => {
         setSigningOut(true)
         await authClient.signOut()
-        toast.success("Signed out successfully")
+        toast.success("Signed out")
         router.push("/")
         router.refresh()
     }

@@ -91,13 +91,15 @@ export default function NewRequirementPage() {
                 body: JSON.stringify({ prompt: rawPrompt }),
             })
 
-            const data = await res.json()
+            const data = await res.json().catch(() => ({}))
 
-            if (!res.ok) {
-                throw new Error(data.error || "Failed to parse requirements.")
+            const parsed = data?.structured
+            if (!parsed) {
+                setParseError(data?.error || "AI service is currently busy. Please fill in details manually.")
+                toast.error("Couldn't parse specification", { description: "Try again." })
+                return
             }
 
-            const parsed = data.structured
             const validUse: PackagingUse = [
                 "coffee",
                 "food",
@@ -132,14 +134,15 @@ export default function NewRequirementPage() {
                 requiredByDate: parsed.requiredByDate || "",
             })
 
-            setConfidenceScore(parsed.confidenceScore ?? 0.9)
+            setConfidenceScore(parsed.confidenceScore ?? 0.85)
             setMissingFields(parsed.missingFields || [])
-            toast.success("AI parsed your specification. Review it before saving.")
+            toast.success("Specification parsed", { description: "Review before saving." })
+            setParseError(null)
         } catch (err: unknown) {
             console.error("AI parse error:", err)
             const msg = err instanceof Error ? err.message : "Failed to extract specification."
             setParseError(msg)
-            toast.error(msg)
+            toast.error("Couldn't parse specification", { description: "Try again." })
         } finally {
             setIsParsing(false)
         }
@@ -170,16 +173,16 @@ export default function NewRequirementPage() {
             })
 
             if (!result.success) {
-                toast.error(result.error || "Failed to save requirement.")
+                toast.error("Couldn't save requirement", { description: "Try again." })
                 setIsSaving(false)
                 return
             }
 
-            toast.success("Requirement saved privately.")
+            toast.success("Requirement saved")
             router.push("/business/requirements")
             router.refresh()
         } catch {
-            toast.error("An unexpected error occurred while saving your requirement.")
+            toast.error("Couldn't save requirement", { description: "Try again." })
             setIsSaving(false)
         } finally {
             saveInFlightRef.current = false

@@ -8,6 +8,12 @@ import { generateText, Output } from "ai";
 import { executeWithFallback, MODEL_IDS } from "@/lib/ai/models";
 import { checkAiBudget } from "@/lib/ai/rate-limit";
 import { stripPii } from "@/lib/ai/privacy";
+import { isRateLimitOrQuotaError } from "@/lib/ai/errors";
+import {
+    getFallbackGigCreation,
+    getFallbackDesignerBio,
+    getFallbackDeliveryHelper,
+} from "@/lib/ai/fallbacks";
 import {
     buildGigCreationPrompt,
     buildDesignerBioPrompt,
@@ -58,14 +64,6 @@ export async function POST(req: Request) {
 
         const userId = session.user.id;
 
-        const budget = checkAiBudget(userId);
-        if (!budget.allowed) {
-            return NextResponse.json(
-                { error: budget.reason || "AI rate limit reached. Please wait a moment." },
-                { status: 429 }
-            );
-        }
-
         const designerRows = await db
             .select({ id: packagingDesignerTable.id, displayName: packagingDesignerTable.displayName })
             .from(packagingDesignerTable)
@@ -90,6 +88,50 @@ export async function POST(req: Request) {
         }
 
         const { mode } = parseResult.data;
+
+        const budget = checkAiBudget(userId);
+        if (!budget.allowed) {
+            // Free-tier AI budget reached: gracefully serve standard production fallback
+            if (mode === "gig_creator") {
+                return NextResponse.json({
+                    gig: getFallbackGigCreation({
+                        rawNotes: body.rawNotes,
+                        category: body.category,
+                        specialization: body.specialization,
+                    }),
+                    fallback: true,
+                    isQuota: true,
+                    remainingDaily: 0,
+                });
+            }
+            if (mode === "bio_writer") {
+                return NextResponse.json({
+                    bio: getFallbackDesignerBio({
+                        specialties: body.specialties,
+                        tools: body.tools,
+                        experienceYears: body.experienceYears,
+                        roughNotes: body.roughNotes,
+                    }),
+                    fallback: true,
+                    isQuota: true,
+                    remainingDaily: 0,
+                });
+            }
+            if (mode === "delivery_helper") {
+                return NextResponse.json({
+                    deliveryNote: getFallbackDeliveryHelper({
+                        orderNumber: body.orderNumber,
+                        serviceTitle: body.serviceTitle,
+                        clientName: body.clientName,
+                        deliveryNotes: body.deliveryNotes,
+                        isRevision: body.isRevision,
+                    }),
+                    fallback: true,
+                    isQuota: true,
+                    remainingDaily: 0,
+                });
+            }
+        }
 
         // 1. Gig Creation Assistant
         if (mode === "gig_creator") {
@@ -280,19 +322,59 @@ export async function POST(req: Request) {
 
         return NextResponse.json({ error: `Unsupported mode: ${mode}` }, { status: 400 });
     } catch (error: unknown) {
-        console.error("[DESIGNER_ASSIST_ROUTE_ERROR]", error);
+        console.warn("[DESIGNER_ASSIST_GRACEFUL_FALLBACK]", error);
         logAiUsage({
             task: "designer_assist",
             provider: "google",
             modelId: MODEL_IDS.GEMINI_FLASH,
             latencyMs: Date.now() - startTime,
-            status: "error",
+            status: "fallback",
             error: String(error),
         });
 
-        return NextResponse.json(
-            { error: "Failed to process designer AI request. Please try again." },
-            { status: 500 }
-        );
+        const isQuota = isRateLimitOrQuotaError(error);
+
+        try {
+            const body = await req.clone().json().catch(() => ({}));
+            const mode = body.mode || "gig_creator";
+
+            if (mode === "gig_creator") {
+                return NextResponse.json({
+                    gig: getFallbackGigCreation(body),
+                    fallback: true,
+                    isQuota,
+                    remainingDaily: 0,
+                });
+            }
+            if (mode === "bio_writer") {
+                return NextResponse.json({
+                    bio: getFallbackDesignerBio(body),
+                    fallback: true,
+                    isQuota,
+                    remainingDaily: 0,
+                });
+            }
+            if (mode === "delivery_helper") {
+                return NextResponse.json({
+                    deliveryNote: getFallbackDeliveryHelper(body),
+                    fallback: true,
+                    isQuota,
+                    remainingDaily: 0,
+                });
+            }
+            return NextResponse.json({
+                gig: getFallbackGigCreation(body),
+                fallback: true,
+                isQuota,
+                remainingDaily: 0,
+            });
+        } catch {
+            return NextResponse.json({
+                gig: getFallbackGigCreation({}),
+                fallback: true,
+                isQuota,
+                remainingDaily: 0,
+            });
+        }
     }
 }

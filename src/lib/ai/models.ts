@@ -1,6 +1,7 @@
 import { createMistral } from "@ai-sdk/mistral";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import type { LanguageModelV4, EmbeddingModelV4 } from "@ai-sdk/provider";
+import { isRateLimitOrQuotaError } from "./errors";
 
 export const MODEL_IDS = {
     MISTRAL_CHAT: "mistral-small-latest" as const,
@@ -158,22 +159,23 @@ export async function executeWithFallback<T>(
     try {
         return await execute(primary);
     } catch (error: unknown) {
-        const errStr = String(error).toLowerCase();
-        const isQuotaOrRateLimit =
-            errStr.includes("429") ||
-            errStr.includes("rate limit") ||
-            errStr.includes("quota") ||
-            errStr.includes("resource_exhausted");
-
+        const isQuotaOrRateLimit = isRateLimitOrQuotaError(error);
         const fallback = getFallbackModel(task);
 
         if (isQuotaOrRateLimit && fallback) {
             console.warn(
-                `[AI_FALLBACK] Primary model ${primary.modelId} (${primary.provider}) hit rate limit/quota. Failing over to ${fallback.modelId} (${fallback.provider})...`
+                `[AI_FALLBACK] Primary model ${primary.modelId} (${primary.provider}) hit rate limit/quota/credits. Failing over to ${fallback.modelId} (${fallback.provider})...`
             );
-            return await execute(fallback);
+            try {
+                return await execute(fallback);
+            } catch (fallbackErr) {
+                console.warn(`[AI_FALLBACK_FAILED] Fallback model ${fallback.modelId} also encountered an error:`, fallbackErr);
+            }
         }
 
+        if (error && typeof error === "object") {
+            (error as Record<string, unknown>).isRateLimit = isQuotaOrRateLimit;
+        }
         throw error;
     }
 }

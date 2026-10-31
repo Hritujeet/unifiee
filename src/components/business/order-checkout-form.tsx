@@ -119,10 +119,10 @@ export function OrderCheckoutForm({
             })
 
             if (res.success && res.data?.orderId) {
-                toast.success("Order request placed successfully! Redirecting to workspace...")
+                toast.success("Order placed")
                 router.push(`/business/hired-services/${res.data.orderId}`)
             } else {
-                toast.error(res.error || "Failed to place order. Please review your brief.")
+                toast.error("Couldn't place order")
             }
         })
     }

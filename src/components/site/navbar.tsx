@@ -82,7 +82,7 @@ export function NavbarClient({ initialSession, initialRole }: NavbarClientProps)
     setMobileOpen(false);
     setRole(null);
     await authClient.signOut();
-    toast.success("Signed out successfully");
+    toast.success("Signed out");
     router.push("/");
     router.refresh();
   };

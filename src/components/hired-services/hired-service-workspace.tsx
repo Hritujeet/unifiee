@@ -174,10 +174,10 @@ export function HiredServiceWorkspace({ data }: { data: WorkspaceData }) {
         startTransition(async () => {
             const res = await respondToDesignRequestAction({ orderId: order.id, action: "accept" })
             if (res.success) {
-                toast.success("Order accepted! Delivery timeline started.")
+                toast.success("Order accepted")
                 router.refresh()
             } else {
-                toast.error(res.error || "Failed to accept order.")
+                toast.error("Couldn't accept order")
             }
         })
     }
@@ -194,11 +194,11 @@ export function HiredServiceWorkspace({ data }: { data: WorkspaceData }) {
                 declineReason,
             })
             if (res.success) {
-                toast.success("Order request declined.")
+                toast.success("Order declined")
                 setDeclineOpen(false)
                 router.refresh()
             } else {
-                toast.error(res.error || "Failed to decline order.")
+                toast.error("Couldn't decline order")
             }
         })
     }
@@ -226,12 +226,12 @@ export function HiredServiceWorkspace({ data }: { data: WorkspaceData }) {
                 designerNote: deliveryNote.trim(),
             })
             if (res.success) {
-                toast.success("Deliverables submitted for review!")
+                toast.success("Deliverables submitted")
                 setDeliverOpen(false)
                 setActiveTab("deliveries")
                 router.refresh()
             } else {
-                toast.error(res.error || "Failed to submit delivery.")
+                toast.error("Couldn't submit deliverables")
             }
         })
     }
@@ -240,11 +240,11 @@ export function HiredServiceWorkspace({ data }: { data: WorkspaceData }) {
         startTransition(async () => {
             const res = await respondToDeliveryAction({ orderId: order.id, action: "accept" })
             if (res.success) {
-                toast.success("Delivery accepted! Project marked as Completed.")
+                toast.success("Delivery accepted")
                 setReviewOpen(true)
                 router.refresh()
             } else {
-                toast.error(res.error || "Failed to accept delivery.")
+                toast.error("Couldn't accept delivery")
             }
         })
     }
@@ -261,11 +261,11 @@ export function HiredServiceWorkspace({ data }: { data: WorkspaceData }) {
                 revisionNotes,
             })
             if (res.success) {
-                toast.success("Revision requested. Designer has been notified.")
+                toast.success("Revision requested")
                 setRevisionOpen(false)
                 router.refresh()
             } else {
-                toast.error(res.error || "Failed to request revision.")
+                toast.error("Couldn't request revision")
             }
         })
     }
@@ -278,11 +278,11 @@ export function HiredServiceWorkspace({ data }: { data: WorkspaceData }) {
         startTransition(async () => {
             const res = await cancelOrderAction({ orderId: order.id, reason: cancelReason })
             if (res.success) {
-                toast.success("Order has been cancelled.")
+                toast.success("Order cancelled")
                 setCancelOpen(false)
                 router.refresh()
             } else {
-                toast.error(res.error || "Failed to cancel order.")
+                toast.error("Couldn't cancel order")
             }
         })
     }
@@ -302,7 +302,7 @@ export function HiredServiceWorkspace({ data }: { data: WorkspaceData }) {
             attachments: attach,
         })
         if (!res.success) {
-            toast.error(res.error || "Could not send message.")
+            toast.error("Couldn't send message")
         } else {
             refetchMessages()
         }
@@ -323,12 +323,12 @@ export function HiredServiceWorkspace({ data }: { data: WorkspaceData }) {
                 text: reviewText.trim(),
             })
             if (res.success) {
-                toast.success("Thank you! Review submitted successfully.")
+                toast.success("Review submitted")
                 setReviewOpen(false)
                 setActiveTab("review")
                 router.refresh()
             } else {
-                toast.error(res.error || "Failed to submit review.")
+                toast.error("Couldn't submit review")
             }
         })
     }
@@ -341,11 +341,11 @@ export function HiredServiceWorkspace({ data }: { data: WorkspaceData }) {
                 replyText: replyText.trim(),
             })
             if (res.success) {
-                toast.success("Your reply was posted!")
+                toast.success("Reply posted")
                 setReplyOpen(false)
                 router.refresh()
             } else {
-                toast.error(res.error || "Failed to post reply.")
+                toast.error("Couldn't post reply")
             }
         })
     }
@@ -361,11 +361,11 @@ export function HiredServiceWorkspace({ data }: { data: WorkspaceData }) {
                 businessOrderId: orderIdToAttach.trim(),
             })
             if (res.success) {
-                toast.success("Artwork attached to production order!")
+                toast.success("Artwork attached")
                 setAttachOpen(false)
                 router.refresh()
             } else {
-                toast.error(res.error || "Failed to attach artwork.")
+                toast.error("Couldn't attach artwork")
             }
         })
     }

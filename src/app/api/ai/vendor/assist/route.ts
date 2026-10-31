@@ -8,6 +8,11 @@ import { generateText, Output } from "ai";
 import { executeWithFallback, MODEL_IDS } from "@/lib/ai/models";
 import { checkAiBudget } from "@/lib/ai/rate-limit";
 import { stripPii } from "@/lib/ai/privacy";
+import { isRateLimitOrQuotaError } from "@/lib/ai/errors";
+import {
+    getFallbackVendorSuggestion,
+    getFallbackSpecsAudit,
+} from "@/lib/ai/fallbacks";
 import {
     buildVendorAssistPrompt,
     buildVendorDetailsCheckPrompt,
@@ -35,14 +40,6 @@ export async function POST(req: Request) {
         }
 
         const userId = session.user.id;
-
-        const budget = checkAiBudget(userId);
-        if (!budget.allowed) {
-            return NextResponse.json(
-                { error: budget.reason || "Rate limit reached. Please wait a moment." },
-                { status: 429 }
-            );
-        }
 
         const vendorRows = await db
             .select({ id: manufacturerTable.id })
@@ -72,6 +69,25 @@ export async function POST(req: Request) {
         const category = stripPii(parseResult.data.category);
         const material = stripPii(parseResult.data.material);
         const size = stripPii(parseResult.data.size);
+
+        const budget = checkAiBudget(userId);
+        if (!budget.allowed) {
+            // Free-tier limit reached: gracefully serve standard production fallback instead of throwing error
+            if (mode === "check_specs") {
+                return NextResponse.json({
+                    audit: getFallbackSpecsAudit({ title, category, description, material }),
+                    fallback: true,
+                    isQuota: true,
+                });
+            }
+
+            return NextResponse.json({
+                suggestion: getFallbackVendorSuggestion(mode, { title, description, category, material, size }),
+                fallback: true,
+                isQuota: true,
+                remainingDaily: 0,
+            });
+        }
 
         // Check missing technical specifications
         if (mode === "check_specs") {
@@ -148,19 +164,41 @@ export async function POST(req: Request) {
             remainingDaily: budget.remainingDaily,
         });
     } catch (error: unknown) {
-        console.error("[VENDOR_ASSIST_ROUTE_ERROR]", error);
+        console.warn("[VENDOR_ASSIST_GRACEFUL_FALLBACK]", error);
         logAiUsage({
             task: "field_suggestions",
             provider: "google",
             modelId: MODEL_IDS.GEMINI_FLASH,
             latencyMs: Date.now() - startTime,
-            status: "error",
+            status: "fallback",
             error: String(error),
         });
 
-        return NextResponse.json(
-            { error: "Failed to generate suggestions. Please try again." },
-            { status: 500 }
-        );
+        const isQuota = isRateLimitOrQuotaError(error);
+
+        try {
+            const body = await req.clone().json().catch(() => ({}));
+            const mode = body.mode || "suggest_title";
+            if (mode === "check_specs") {
+                return NextResponse.json({
+                    audit: getFallbackSpecsAudit(body),
+                    fallback: true,
+                    isQuota,
+                });
+            }
+            return NextResponse.json({
+                suggestion: getFallbackVendorSuggestion(mode, body),
+                fallback: true,
+                isQuota,
+                remainingDaily: 0,
+            });
+        } catch {
+            return NextResponse.json({
+                suggestion: getFallbackVendorSuggestion("suggest_title", {}),
+                fallback: true,
+                isQuota,
+                remainingDaily: 0,
+            });
+        }
     }
 }

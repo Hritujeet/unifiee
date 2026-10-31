@@ -6,7 +6,9 @@ import { db } from "@/lib/db"
 import { manufacturerTable } from "@/lib/db/schema/manufacturer"
 import {
     offeringsTable,
+    offeringTypesTable,
 } from "@/lib/db/schema/offering"
+import { formatCategoryDisplayName } from "@/lib/constants/categories"
 import {
     businessOrdersTable,
     businessOrderItemsTable,
@@ -345,6 +347,14 @@ export async function createOfferingAction(input: CreateOfferingInput) {
         const now = new Date()
         const validUntil = new Date(Date.now() + 180 * 24 * 60 * 60 * 1000) // 6 months
 
+        // Ensure offering type exists in lookup table to satisfy foreign key constraint
+        await db.insert(offeringTypesTable).values({
+            key: input.category,
+            displayName: formatCategoryDisplayName(input.category),
+            vendorType: "manufacturer",
+            fieldDefinitions: [],
+        }).onConflictDoNothing()
+
         await db.insert(offeringsTable).values({
             id: offeringId,
             vendorId: vendor.manufacturerId,
@@ -418,8 +428,7 @@ export async function createOfferingAction(input: CreateOfferingInput) {
         return { success: true, offeringId }
     } catch (err: unknown) {
         console.error("Error creating offering:", err)
-        const msg = err instanceof Error ? err.message : "Failed to publish offering."
-        return { success: false, error: msg }
+        return { success: false, error: "Failed to publish offering. Please check the details and try again." }
     }
 }
 

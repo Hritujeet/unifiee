@@ -138,11 +138,11 @@ export function HiredServicesManager({ services }: { services: HiredDesignerServ
             })
 
             if (!result.success) {
-                toast.error(result.error ?? "Could not add custom project.")
+                toast.error("Couldn't add project")
                 return
             }
 
-            toast.success("Project added to tracker!")
+            toast.success("Project added")
             setIsAddOpen(false)
             setCustomForm({
                 serviceTitle: "",
@@ -154,7 +154,7 @@ export function HiredServicesManager({ services }: { services: HiredDesignerServ
             })
             router.refresh()
         } catch {
-            toast.error("Failed to add project.")
+            toast.error("Couldn't add project")
         } finally {
             setIsAdding(false)
         }

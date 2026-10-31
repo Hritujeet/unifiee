@@ -240,21 +240,24 @@ export function GigEditorDialog({
                     category,
                 }),
             })
-            const data = await res.json()
-            if (!res.ok) throw new Error(data.error || "AI generation failed.")
+            const data = await res.json().catch(() => ({}))
+            const g = data?.gig
 
-            const g = data.gig
-            if (g.title) setTitle(g.title)
-            if (g.description) setDescription(g.description)
-            if (g.deliverables?.length) {
-                setBasicPkg((p) => ({ ...p, deliverables: g.deliverables.join("\n") }))
+            if (g) {
+                if (g.title) setTitle(g.title)
+                if (g.description) setDescription(g.description)
+                if (g.deliverables?.length) {
+                    setBasicPkg((p) => ({ ...p, deliverables: g.deliverables.join("\n") }))
+                }
+                if (g.faq?.length) {
+                    setFaq(g.faq)
+                }
+                toast.success("Draft generated")
+            } else {
+                toast.error("Couldn't generate draft")
             }
-            if (g.faq?.length) {
-                setFaq(g.faq)
-            }
-            toast.success("Gig content drafted with AI!")
         } catch (err: any) {
-            toast.error(err.message || "Failed to generate AI gig copy.")
+            toast.error("Couldn't generate draft")
         } finally {
             setIsGeneratingAi(false)
         }
@@ -264,7 +267,7 @@ export function GigEditorDialog({
     const handleSubmit = (finalStatus: "published" | "draft") => {
         if (finalStatus === "published") {
             if (!hasBio || !hasSpecialization) {
-                toast.error("Profile completeness required to publish. Please add a bio and specialization in your profile.")
+                toast.error("Profile incomplete", { description: "Add bio and specialization to publish." })
                 return
             }
             if (!title.trim() || title.length < 5) {
@@ -344,11 +347,11 @@ export function GigEditorDialog({
             })
 
             if (res.success) {
-                toast.success(finalStatus === "published" ? "Gig published and indexed in marketplace!" : "Draft saved.")
+                toast.success(finalStatus === "published" ? "Gig published" : "Draft saved")
                 onOpenChange(false)
                 router.refresh()
             } else {
-                toast.error(res.error || "Could not save gig.")
+                toast.error("Couldn't save gig")
             }
         })
     }

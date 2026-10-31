@@ -7,6 +7,8 @@
  * 4. Exponential backoff with jitter on 429 errors.
  */
 
+import { isRateLimitOrQuotaError } from "./errors";
+
 interface UserBudgetRecord {
     minuteCount: number;
     minuteResetAt: number;
@@ -136,27 +138,27 @@ export async function withAiRetry<T>(
         try {
             return await fn();
         } catch (error: unknown) {
-            const errStr = String(error).toLowerCase();
-            const isRateLimit =
-                errStr.includes("429") ||
-                errStr.includes("rate limit") ||
-                errStr.includes("resource_exhausted") ||
-                errStr.includes("quota");
+            const isRateLimit = isRateLimitOrQuotaError(error);
 
             if (isRateLimit && attempt < maxRetries) {
                 // Add jitter (±20%)
                 const jitter = delay * (0.8 + Math.random() * 0.4);
                 console.warn(
-                    `[AI_RETRY] 429 encountered for ${options.taskName || "task"}. Retrying attempt ${attempt + 1}/${maxRetries} after ${Math.round(jitter)}ms...`
+                    `[AI_RETRY] 429/quota encountered for ${options.taskName || "task"}. Retrying attempt ${attempt + 1}/${maxRetries} after ${Math.round(jitter)}ms...`
                 );
                 await new Promise((res) => setTimeout(res, jitter));
                 delay *= 2; // Exponential backoff
                 continue;
             }
 
+            if (error && typeof error === "object") {
+                (error as Record<string, unknown>).isRateLimit = isRateLimit;
+            }
             throw error;
         }
     }
 
-    throw new Error("Maximum retry attempts exceeded.");
+    const maxErr = new Error("Maximum retry attempts exceeded.");
+    (maxErr as unknown as Record<string, unknown>).isRateLimit = true;
+    throw maxErr;
 }

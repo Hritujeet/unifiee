@@ -2,6 +2,10 @@
 
 import { useState } from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
+import { Badge } from "@/components/ui/badge"
+import { OfferingCard, type BusinessOfferingItem } from "@/components/business/offering-card"
+import { formatCategoryDisplayName } from "@/lib/constants/categories"
 import {
     ArrowRight,
     Briefcase,
@@ -11,6 +15,9 @@ import {
     Palette,
     Plus,
     Sparkles,
+    Clock,
+    MapPin,
+    ShoppingBag,
     Tag,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -42,6 +49,7 @@ export interface BusinessDashboardProps {
     initialRequirements: Requirement[]
     initialQuotations: Quotation[]
     initialOrders: Order[]
+    initialOfferings?: BusinessOfferingItem[]
 }
 
 export default function BusinessDashboardView({
@@ -49,7 +57,9 @@ export default function BusinessDashboardView({
     initialRequirements,
     initialQuotations,
     initialOrders,
+    initialOfferings = [],
 }: BusinessDashboardProps) {
+    const router = useRouter()
     const requirements = initialRequirements
     const quotations = initialQuotations
     const orders = initialOrders
@@ -443,13 +453,47 @@ export default function BusinessDashboardView({
                 </div>
             </div>
 
+            {/* Component: Featured Packaging Offers from Verified Manufacturers */}
+            {initialOfferings && initialOfferings.length > 0 && (
+                <section className="space-y-4 pt-6 border-t border-border/40">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <h2 className="font-heading text-lg font-bold tracking-tight text-foreground flex items-center gap-2">
+                                <ShoppingBag className="size-4 text-primary" />
+                                Available Packaging Offers
+                            </h2>
+                            <p className="text-xs text-muted-foreground mt-0.5">
+                                Verified catalog offerings ready for immediate wholesale batch orders.
+                            </p>
+                        </div>
+                        <Button variant="ghost" size="sm" asChild className="text-xs text-primary gap-1">
+                            <Link href="/business/offers">
+                                <span>View all offers</span>
+                                <ArrowRight className="size-3.5" />
+                            </Link>
+                        </Button>
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
+                        {initialOfferings.slice(0, 3).map((offering) => (
+                            <OfferingCard
+                                key={offering.id}
+                                offering={offering}
+                                actionLabel="View in offers catalog"
+                                onSelect={() => router.push("/business/offers")}
+                            />
+                        ))}
+                    </div>
+                </section>
+            )}
+
             <div className="text-[11px] text-muted-foreground/70 border-t border-border/40 pt-4">
                 Data shown is from your account.
             </div>
 
             {/* MODAL 1: QUICK OFFERS REVIEW DIALOG */}
             <Dialog open={isOffersModalOpen} onOpenChange={setIsOffersModalOpen}>
-                <DialogContent className="sm:max-w-lg">
+                <DialogContent className="sm:max-w-xl max-h-[85vh] overflow-y-auto">
                     <DialogHeader>
                         <DialogTitle className="text-base font-semibold">
                             Pending Vendor Offers
@@ -459,31 +503,73 @@ export default function BusinessDashboardView({
                         </DialogDescription>
                     </DialogHeader>
 
-                    <div className="space-y-3 py-2 max-h-[60vh] overflow-y-auto">
+                    <div className="space-y-4 py-2 max-h-[65vh] overflow-y-auto">
                         {pendingOffers.map((q) => (
-                            <Card key={q.id} className="p-4 space-y-3 border-border/60">
-                                <div className="flex items-start justify-between gap-4">
-                                    <div>
-                                        <div className="font-semibold text-foreground text-sm">{q.vendorName}</div>
-                                        <div className="text-xs text-muted-foreground mt-0.5">
-                                            {q.vendorLocation} • Delivery: {q.deliveryEstimate}
-                                        </div>
-                                    </div>
-                                    <div className="text-right shrink-0">
-                                        <div className="text-base font-bold text-foreground">
-                                            {q.unitPrice} <span className="text-xs font-normal text-muted-foreground">/ unit</span>
-                                        </div>
-                                        <div className="text-xs text-muted-foreground">Total: {q.totalPrice} ({q.quantity})</div>
-                                    </div>
+                            <Card
+                                key={q.id}
+                                className="border-2 border-primary/20 hover:border-primary/50 shadow-xs bg-card overflow-hidden rounded-xl flex flex-col justify-between"
+                            >
+                                <div className="bg-primary/5 px-4 py-2 border-b border-primary/20 flex items-center justify-between">
+                                    <span className="text-[11px] font-semibold text-primary flex items-center gap-1.5">
+                                        <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
+                                        <span className="truncate max-w-[200px]">{q.vendorName}</span>
+                                    </span>
+                                    <Badge variant="outline" className="text-[9px] uppercase font-bold tracking-wider">
+                                        Custom Offer
+                                    </Badge>
                                 </div>
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => setIsOffersModalOpen(false)}
-                                    className="w-full h-8 text-xs font-medium hover:bg-muted"
-                                >
-                                    <Link href="/business/offers">Review offer</Link>
-                                </Button>
+                                <CardContent className="p-4 space-y-3">
+                                    <div className="space-y-1">
+                                        <Badge variant="secondary" className="text-[10px] uppercase font-semibold capitalize">
+                                            {formatCategoryDisplayName(q.packagingType)}
+                                        </Badge>
+                                        <h4 className="font-heading text-sm font-bold text-foreground">
+                                            {q.requirementTitle}
+                                        </h4>
+                                    </div>
+                                    <div className="rounded-lg bg-muted/50 p-3 space-y-1.5 border text-xs">
+                                        <div className="flex justify-between items-baseline">
+                                            <span className="text-muted-foreground">Unit Wholesale Price</span>
+                                            <span className="font-bold text-foreground text-sm">{q.unitPrice} / unit</span>
+                                        </div>
+                                        <div className="flex justify-between text-muted-foreground pt-1 border-t border-border/50">
+                                            <span>Order Quantity</span>
+                                            <span className="font-semibold text-foreground">{q.quantity}</span>
+                                        </div>
+                                        <div className="flex justify-between pt-1 border-t border-border/50">
+                                            <span className="font-medium text-foreground">Total Quoted Value</span>
+                                            <span className="font-bold text-primary">{q.totalPrice}</span>
+                                        </div>
+                                    </div>
+                                    <div className="space-y-1 text-[11px] text-muted-foreground">
+                                        <div className="flex items-center gap-1.5">
+                                            <Clock className="size-3 text-muted-foreground shrink-0" />
+                                            <span>
+                                                Production: <strong>{q.productionTime}</strong> · Delivery:{" "}
+                                                <strong>{q.deliveryEstimate}</strong>
+                                            </span>
+                                        </div>
+                                        <div className="flex items-center gap-1.5">
+                                            <MapPin className="size-3 text-muted-foreground shrink-0" />
+                                            <span>
+                                                Location: <strong>{q.vendorLocation}</strong>
+                                            </span>
+                                        </div>
+                                        <div className="flex items-center gap-1.5">
+                                            <CheckCircle2 className="size-3 text-emerald-500 shrink-0" />
+                                            <span>Payments are arranged offline in this prototype</span>
+                                        </div>
+                                    </div>
+                                    <Button
+                                        variant="default"
+                                        size="sm"
+                                        asChild
+                                        onClick={() => setIsOffersModalOpen(false)}
+                                        className="w-full h-8 text-xs font-semibold shadow-xs"
+                                    >
+                                        <Link href="/business/offers">Review & accept in offers</Link>
+                                    </Button>
+                                </CardContent>
                             </Card>
                         ))}
                     </div>
@@ -513,7 +599,7 @@ export default function BusinessDashboardView({
                     }
                 }}
             >
-                <DialogContent className="sm:max-w-lg">
+                <DialogContent className="sm:max-w-xl max-h-[85vh] overflow-y-auto">
                     <DialogHeader>
                         <DialogTitle className="text-base font-semibold">
                             Artwork Proof Review
@@ -629,7 +715,7 @@ export default function BusinessDashboardView({
                                             toast.error("Please enter revision feedback before submitting.")
                                             return
                                         }
-                                        toast.info("Feedback sent to vendor designer.")
+                                        toast.info("Feedback sent")
                                         setIsRequestingRevision(false)
                                         setRevisionComment("")
                                         setIsProofModalOpen(false)

@@ -29,15 +29,18 @@ export function RequirementVendorSearch({ requirementId }: { requirementId: stri
                 body: JSON.stringify({ requirementId, limit: 5 }),
             })
             const data = await response.json()
-            if (!response.ok) throw new Error(data.error || "Search failed.")
+            if (!response.ok) {
+                toast.info("Search in progress", { description: "Try again shortly." })
+                return
+            }
             setMatches(data.listings ?? [])
             if (data.state === "not_ready") {
-                toast.info("Your requirement is still being prepared for search. Try again shortly.")
+                toast.info("Search in progress", { description: "Try again shortly." })
             } else if ((data.listings ?? []).length === 0) {
-                toast.info("No matching vendors yet. Try broadening the requirement.")
+                toast.info("No vendors found", { description: "Try broadening criteria." })
             }
         } catch (error) {
-            toast.error(error instanceof Error ? error.message : "Search failed. Please try again.")
+            toast.error("Search failed", { description: "Try again." })
         } finally {
             setLoading(false)
         }

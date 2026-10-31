@@ -37,15 +37,6 @@ export async function POST(req: Request) {
 
         const userId = session.user.id;
 
-        // 1. Enforce free-tier budget limit
-        const budget = checkAiBudget(userId);
-        if (!budget.allowed) {
-            return NextResponse.json(
-                { error: budget.reason || "AI rate limit reached. Please wait." },
-                { status: 429 }
-            );
-        }
-
         const body = await req.json().catch(() => ({}));
         const parseResult = assistantRequestSchema.safeParse(body);
         if (!parseResult.success) {
@@ -68,6 +59,28 @@ export async function POST(req: Request) {
             biz.length > 0 ? "business" : mfg.length > 0 ? "manufacturer" : des.length > 0 ? "designer" : "none";
 
         const orgName = biz[0]?.companyName || mfg[0]?.companyName || des[0]?.displayName || "Independent";
+
+        // 1. Enforce free-tier budget limit gracefully
+        const budget = checkAiBudget(userId);
+        if (!budget.allowed) {
+            const roleGreeting =
+                role === "business"
+                    ? "As a Business buyer, you can post packaging requirements, search verified suppliers, and hire packaging designers directly from your dashboard."
+                    : role === "manufacturer"
+                    ? "As a Packaging Manufacturer, you can view incoming buyer orders, post packaging offerings, and update order fulfillment stages directly from your workspace."
+                    : role === "designer"
+                    ? "As a Packaging Designer, you can create and publish design gigs, manage client revisions, and deliver print-ready packaging artwork."
+                    : "UNIFIÉE connects food & beverage businesses with verified packaging manufacturers and designers.";
+
+            const fallbackText = `The interactive assistant is currently experiencing peak demand. In the meantime, here is a quick guide:\n\n${roleGreeting}\n\n• For your orders and active jobs, navigate to your workspace orders.\n• For catalog listings and technical specifications, visit the offerings manager.\n\nPlease check back in a minute for full conversational AI support.`;
+
+            return new Response(fallbackText, {
+                headers: {
+                    "Content-Type": "text/plain; charset=utf-8",
+                    "x-remaining-daily": "0",
+                },
+            });
+        }
 
         const sessionContext: SessionContext = {
             userId,
@@ -165,19 +178,22 @@ export async function POST(req: Request) {
             headers: responseHeaders,
         });
     } catch (error: unknown) {
-        console.error("[AI_ASSISTANT_ROUTE_ERROR]", error);
+        console.warn("[AI_ASSISTANT_GRACEFUL_FALLBACK]", error);
         logAiUsage({
             task: "assistant_chat",
             provider: "google",
             modelId: "unknown",
             latencyMs: Date.now() - startTime,
-            status: "error",
+            status: "fallback",
             error: String(error),
         });
 
-        return NextResponse.json(
-            { error: "An unexpected error occurred while processing your request. Please try again." },
-            { status: 500 }
-        );
+        const fallbackText = "Our AI assistant is temporarily resting due to high demand. Please try again in a few moments, or use the navigation sidebar to access your orders, catalog offerings, or designer marketplace directly.";
+        return new Response(fallbackText, {
+            headers: {
+                "Content-Type": "text/plain; charset=utf-8",
+                "x-remaining-daily": "0",
+            },
+        });
     }
 }

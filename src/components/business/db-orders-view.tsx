@@ -26,13 +26,13 @@ export default function DbOrdersView({ orders }: { orders: BusinessOrderSummary[
         try {
             const result = await cancelOrderAction({ orderId, role: "business", reason, idempotencyKey: crypto.randomUUID() })
             if (!result.success) {
-                toast.error(result.error ?? "Could not cancel the order.")
+                toast.error("Couldn't cancel order")
                 return
             }
-            toast.success("Order cancelled.")
+            toast.success("Order cancelled")
             router.refresh()
         } catch {
-            toast.error("Could not cancel the order. Please try again.")
+            toast.error("Couldn't cancel order", { description: "Try again." })
         } finally {
             inFlightRef.current = false
             setPendingId(null)

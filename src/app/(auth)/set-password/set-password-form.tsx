@@ -37,7 +37,7 @@ export default function SetPasswordForm() {
 
   const mutation = useMutation({
     mutationFn: async (data: z.infer<typeof setPasswordSchema>) => {
-      toast.loading("Setting your password...", { id: "set-password" })
+      toast.loading("Saving password...", { id: "set-password" })
       const result = await setPasswordAction(data)
       if (!result?.success) {
         throw new Error(result?.error || "Failed to set password")
@@ -45,9 +45,8 @@ export default function SetPasswordForm() {
       return result
     },
     onSuccess: () => {
-      toast.success("Password set successfully!", {
+      toast.success("Password saved", {
         id: "set-password",
-        description: "Your credentials are updated. Redirecting to your dashboard...",
         duration: 4000,
       })
       setIsRedirecting(true)
@@ -56,9 +55,9 @@ export default function SetPasswordForm() {
       window.location.href = "/callback"
     },
     onError: (error) => {
-      toast.error("Could not set password", {
+      toast.error("Couldn't save password", {
         id: "set-password",
-        description: error instanceof Error ? error.message : "An error occurred while updating your password.",
+        description: "Try again.",
         duration: 6000,
       })
     }

@@ -154,10 +154,10 @@ export function OrderManagementView({ initialOrders }: OrderManagementViewProps)
                         o.order.id === orderId ? { ...o, order: { ...o.order, status: newStatus } } : o
                     )
                 )
-                toast.success(`Order status updated to ${newStatus}`)
+                toast.success("Status saved")
                 router.refresh()
             } else {
-                toast.error(res.error || "Failed to update order status")
+                toast.error("Couldn't save status")
             }
         } finally {
             inFlightRef.current = false
@@ -405,7 +405,7 @@ export function OrderManagementView({ initialOrders }: OrderManagementViewProps)
                                                         const result = await uploadProofAction({ orderId: order.id, fileUrl, idempotencyKey: crypto.randomUUID() })
                                                         setUpdatingId(null)
                                                         if (result.success) router.refresh()
-                                                        else toast.error(result.error)
+                                                        else toast.error("Couldn't upload proof")
                                                     }}
                                                     className="h-8 text-xs gap-1.5 font-semibold shadow-xs"
                                                 >
@@ -438,7 +438,7 @@ export function OrderManagementView({ initialOrders }: OrderManagementViewProps)
                                                         const result = await markQualityCheckAction(order.id, "Quality check completed.", crypto.randomUUID())
                                                         setUpdatingId(null)
                                                         if (result.success) router.refresh()
-                                                        else toast.error(result.error)
+                                                        else toast.error("Couldn't complete check")
                                                     }}
                                                     variant="secondary"
                                                     className="h-8 text-xs gap-1.5 font-semibold border shadow-xs"
@@ -469,7 +469,7 @@ export function OrderManagementView({ initialOrders }: OrderManagementViewProps)
                                                         })
                                                         setUpdatingId(null)
                                                         if (result.success) router.refresh()
-                                                        else toast.error(result.error)
+                                                        else toast.error("Couldn't save shipment")
                                                     }}
                                                     className="h-8 text-xs gap-1.5 font-semibold bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs"
                                                 >

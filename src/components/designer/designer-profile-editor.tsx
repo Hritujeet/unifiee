@@ -159,19 +159,23 @@ export function DesignerProfileEditor({ designer }: { designer: DesignerProfile 
                 }),
             })
 
-            const data = await res.json()
-            if (!res.ok) throw new Error(data.error || "Failed to generate bio.")
-
-            setBioSuggestion({
-                headline: data.bio.headline,
-                bio: data.bio.bio,
-            })
-            toast.success("AI generated portfolio headline and bio!")
+            const data = await res.json().catch(() => ({}))
+            if (data?.bio) {
+                setBioSuggestion({
+                    headline: data.bio.headline,
+                    bio: data.bio.bio,
+                })
+                toast.success("Suggestions generated")
+                setAiError(null)
+            } else {
+                setAiError(data?.error || "AI service is currently busy. Please try again.")
+                toast.error("Couldn't generate suggestions")
+            }
         } catch (err: unknown) {
             console.error("AI bio writer error:", err)
             const msg = err instanceof Error ? err.message : "Bio generation failed."
             setAiError(msg)
-            toast.error(msg)
+            toast.error("Couldn't generate suggestions")
         } finally {
             setIsGeneratingBio(false)
         }
@@ -182,15 +186,15 @@ export function DesignerProfileEditor({ designer }: { designer: DesignerProfile 
         try {
             const result = await updateDesignerProfile(formData)
             if (!result.success) {
-                toast.error(result.error ?? "Could not update your profile.")
+                toast.error("Couldn't save profile")
                 return
             }
 
-            toast.success("Profile updated successfully!")
+            toast.success("Profile saved")
             setOpen(false)
             router.refresh()
         } catch {
-            toast.error("Something went wrong while saving your profile.")
+            toast.error("Couldn't save profile")
         } finally {
             setSaving(false)
         }
@@ -241,7 +245,7 @@ export function DesignerProfileEditor({ designer }: { designer: DesignerProfile 
                                     setHeadline(bioSuggestion.headline)
                                     setBio(bioSuggestion.bio)
                                     setBioSuggestion(null)
-                                    toast.success("Headline and bio applied!")
+                                    toast.success("Changes applied")
                                 }}
                                 onEdit={(edited) => {
                                     setBio(edited)

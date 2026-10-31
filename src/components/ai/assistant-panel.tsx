@@ -136,7 +136,19 @@ export function AssistantPanel({ role = "business", userName }: AssistantPanelPr
 
             if (!res.ok) {
                 const errData = await res.json().catch(() => ({}));
-                throw new Error(errData.error || `Request failed with status ${res.status}`);
+                const isRateLimit = res.status === 429 || /rate limit|credit|quota/i.test(errData.error || "");
+                const fallbackMsg = isRateLimit
+                    ? "Our AI assistant is temporarily resting due to high demand. Please try again in a moment, or navigate directly to your workspace options."
+                    : (errData.error || "The AI assistant is temporarily unavailable. Please try again shortly.");
+
+                setMessages((prev) =>
+                    prev.map((msg) =>
+                        msg.id === assistantMsgId
+                            ? { ...msg, content: fallbackMsg }
+                            : msg
+                    )
+                );
+                return;
             }
 
             // Extract remaining daily budget
@@ -156,7 +168,16 @@ export function AssistantPanel({ role = "business", userName }: AssistantPanelPr
                 }
             }
 
-            if (!res.body) throw new Error("No response body received");
+            if (!res.body) {
+                setMessages((prev) =>
+                    prev.map((msg) =>
+                        msg.id === assistantMsgId
+                            ? { ...msg, content: "No response received. Please try again." }
+                            : msg
+                    )
+                );
+                return;
+            }
 
             const reader = res.body.getReader();
             const decoder = new TextDecoder();

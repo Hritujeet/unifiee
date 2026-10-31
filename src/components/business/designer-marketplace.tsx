@@ -82,12 +82,12 @@ export function DesignerMarketplace({
         )
         const res = await toggleSaveGigAction(serviceId)
         if (res.success) {
-            toast.success(res.data?.saved ? "Gig saved to favorites!" : "Removed from favorites")
+            toast.success(res.data?.saved ? "Gig saved" : "Gig removed")
         } else {
             setSavedIds((prev) =>
                 isCurrentlySaved ? [...prev, serviceId] : prev.filter((id) => id !== serviceId)
             )
-            toast.error(res.error || "Could not update favorites.")
+            toast.error("Couldn't save gig")
         }
     }
 

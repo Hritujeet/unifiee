@@ -57,7 +57,7 @@ export function showValidationToast<T extends FieldValues>(
     const errorList = extractFormErrors(errors);
     if (errorList.length === 0) {
         toast.error("Form incomplete", {
-            description: "Please check that all mandatory fields are filled out.",
+            description: "Fill out all required fields.",
             duration: 5000,
         });
         return;
@@ -65,8 +65,8 @@ export function showValidationToast<T extends FieldValues>(
 
     const count = errorList.length;
     const title = count === 1
-        ? `1 field needs your attention`
-        : `${count} fields need your attention`;
+        ? "1 field needs attention"
+        : `${count} fields need attention`;
 
     // Take top 4 distinct error messages
     const distinctMessages: string[] = [];
@@ -97,8 +97,8 @@ export function showValidationToast<T extends FieldValues>(
  * Toast when user attempts to submit without checking the Terms of Service
  */
 export function showTermsRequiredToast() {
-    toast.warning("Terms of Service agreement required", {
-        description: "Please review and check the box confirming you agree to the Terms of Service and Privacy Policy to submit.",
+    toast.warning("Terms agreement required", {
+        description: "Accept terms to continue.",
         duration: 6000,
     });
 }
@@ -106,20 +106,18 @@ export function showTermsRequiredToast() {
 /**
  * Start a loading toast that will be replaced on completion
  */
-export function showRegistrationLoadingToast(roleName: string) {
-    return toast.loading(`Registering as ${roleName}...`, {
+export function showRegistrationLoadingToast(_roleName: string) {
+    return toast.loading("Creating account...", {
         id: "onboarding-registration",
-        description: "Validating your information and provisioning your account.",
     });
 }
 
 /**
  * Success toast for registration
  */
-export function showRegistrationSuccessToast(roleName: string, destination: string = "dashboard") {
-    toast.success(`Welcome to UNIFIÉE! Registered as ${roleName}.`, {
+export function showRegistrationSuccessToast(_roleName: string, _destination: string = "dashboard") {
+    toast.success("Account registered", {
         id: "onboarding-registration",
-        description: `Your profile has been created. Redirecting to your ${destination}...`,
         duration: 4000,
     });
 }
@@ -127,10 +125,10 @@ export function showRegistrationSuccessToast(roleName: string, destination: stri
 /**
  * Error toast for registration failures
  */
-export function showRegistrationErrorToast(roleName: string, errorMessage?: string) {
-    toast.error(`Unable to register as ${roleName}`, {
+export function showRegistrationErrorToast(_roleName: string, _errorMessage?: string) {
+    toast.error("Couldn't register account", {
         id: "onboarding-registration",
-        description: errorMessage || "The server rejected the registration. Please review your entries and try again.",
+        description: "Review your entries and try again.",
         duration: 8000,
     });
 }

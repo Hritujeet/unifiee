@@ -20,13 +20,13 @@ export function TrackServiceButton({ serviceId, tracked }: { serviceId: string; 
             try {
                 const result = await trackHiredDesignerService(serviceId, crypto.randomUUID())
                 if (!result.success) {
-                    toast.error(result.error ?? "Could not track this service.")
+                    toast.error("Couldn't track service")
                     return
                 }
-                toast.success("Service added to your hired-services tracker.")
+                toast.success("Service tracked")
                 router.refresh()
             } catch {
-                toast.error("Could not track this service. Please try again.")
+                toast.error("Couldn't track service", { description: "Try again." })
             } finally {
                 inFlightRef.current = false
             }

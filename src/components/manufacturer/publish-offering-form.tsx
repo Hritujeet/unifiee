@@ -40,6 +40,10 @@ import { AiBadge } from "@/components/ai/ai-badge"
 import { AiSuggestionCard } from "@/components/ai/ai-suggestion-card"
 import { AiErrorState } from "@/components/ai/ai-error-state"
 import { toast } from "sonner"
+import {
+    formatCategoryDisplayName,
+    STANDARD_OFFERING_CATEGORIES,
+} from "@/lib/constants/categories"
 
 interface AiSuggestionState {
     field: "title" | "description"
@@ -113,36 +117,42 @@ export function PublishOfferingForm() {
                 }),
             })
 
-            const data = await res.json()
-            if (!res.ok) {
-                throw new Error(data.error || "AI assist request failed.")
-            }
+            const data = await res.json().catch(() => ({}))
 
-            if (mode === "suggest_title") {
-                setActiveSuggestion({
-                    field: "title",
-                    original: title,
-                    suggestedText: data.suggestion.suggestedText,
-                    rationale: data.suggestion.rationale,
-                })
-                toast.success("AI generated title suggestion!")
-            } else if (mode === "improve_description") {
-                setActiveSuggestion({
-                    field: "description",
-                    original: description,
-                    suggestedText: data.suggestion.suggestedText,
-                    rationale: data.suggestion.rationale,
-                })
-                toast.success("AI generated description polish!")
-            } else if (mode === "check_specs") {
+            // Don't throw an error; handle rate limits, out of credits, and responses gracefully
+            if (data?.suggestion) {
+                if (mode === "suggest_title") {
+                    setActiveSuggestion({
+                        field: "title",
+                        original: title,
+                        suggestedText: data.suggestion.suggestedText,
+                        rationale: data.suggestion.rationale,
+                    })
+                    toast.success("Title suggested")
+                } else if (mode === "improve_description") {
+                    setActiveSuggestion({
+                        field: "description",
+                        original: description,
+                        suggestedText: data.suggestion.suggestedText,
+                        rationale: data.suggestion.rationale,
+                    })
+                    toast.success("Description suggested")
+                }
+                setAiError(null)
+            } else if (data?.audit) {
                 setSpecsAudit(data.audit)
-                toast.success("Packaging technical specifications audited!")
+                toast.success("Specifications audited")
+                setAiError(null)
+            } else {
+                const msg = data?.error || "AI service is currently busy. Please try again."
+                setAiError(msg)
+                toast.error("Couldn't generate suggestion")
             }
         } catch (err: unknown) {
             console.error("Vendor AI assist error:", err)
-            const msg = err instanceof Error ? err.message : "AI assist failed."
+            const msg = err instanceof Error ? err.message : "AI service temporarily unavailable."
             setAiError(msg)
-            toast.error(msg)
+            toast.error("Couldn't generate suggestion")
         } finally {
             setAiLoadingField(null)
         }
@@ -190,16 +200,16 @@ export function PublishOfferingForm() {
             })
 
             if (!res.success) {
-                toast.error(res.error || "Failed to publish offering")
+                toast.error("Couldn't publish offering")
                 return
             }
 
-            toast.success("Offering published and indexed in AI marketplace vector database!")
+            toast.success("Offering published")
             router.push("/manufacturer/offerings")
             router.refresh()
         } catch (err: unknown) {
             console.error("Error creating offering:", err)
-            toast.error("An unexpected error occurred.")
+            toast.error("Couldn't publish offering")
         } finally {
             setSubmitting(false)
         }
@@ -268,13 +278,11 @@ export function PublishOfferingForm() {
                                         <SelectValue placeholder="Select Category" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="paper_cup">Paper Cups & Tumblers</SelectItem>
-                                        <SelectItem value="pizza_box">Pizza Boxes & Corrugated</SelectItem>
-                                        <SelectItem value="corrugated_box">Shipping Cartons & Boxes</SelectItem>
-                                        <SelectItem value="food_container">Food Containers & Meal Trays</SelectItem>
-                                        <SelectItem value="pouch">Pouches & Bags</SelectItem>
-                                        <SelectItem value="paper_bag">Paper Carry Bags</SelectItem>
-                                        <SelectItem value="cutlery">Cutlery & Wooden Ware</SelectItem>
+                                        {STANDARD_OFFERING_CATEGORIES.map((cat) => (
+                                            <SelectItem key={cat.key} value={cat.key}>
+                                                {cat.displayName}
+                                            </SelectItem>
+                                        ))}
                                     </SelectContent>
                                 </Select>
                             </div>
@@ -314,7 +322,7 @@ export function PublishOfferingForm() {
                                         onAccept={(acceptedText) => {
                                             setTitle(acceptedText)
                                             setActiveSuggestion(null)
-                                            toast.success("Title updated!")
+                                            toast.success("Changes applied")
                                         }}
                                         onEdit={(newVal) => {
                                             setTitle(newVal)
@@ -400,7 +408,7 @@ export function PublishOfferingForm() {
                                         onAccept={(acceptedText) => {
                                             setDescription(acceptedText)
                                             setActiveSuggestion(null)
-                                            toast.success("Description updated!")
+                                            toast.success("Changes applied")
                                         }}
                                         onEdit={(newVal) => {
                                             setDescription(newVal)
@@ -451,7 +459,7 @@ export function PublishOfferingForm() {
                                                             (prev) => `${prev.trim()}\n\n${specsAudit.suggestedAdditions}`
                                                         )
                                                         setSpecsAudit(null)
-                                                        toast.success("Technical specifications appended!")
+                                                        toast.success("Specifications added")
                                                     }}
                                                     className="h-7 text-xs font-medium"
                                                 >
@@ -693,7 +701,7 @@ export function PublishOfferingForm() {
                             <CardContent className="p-5 space-y-4">
                                 <div className="space-y-1">
                                     <Badge variant="secondary" className="text-[10px] uppercase font-semibold capitalize">
-                                        {category.replace("_", " ")}
+                                        {formatCategoryDisplayName(category)}
                                     </Badge>
                                     <h3 className="font-heading text-base font-extrabold text-foreground leading-snug">
                                         {title.trim() || "12oz Ripple Wall Kraft Coffee Cup"}

@@ -91,10 +91,10 @@ export function GigDetailView({
         setIsSaved(next)
         const res = await toggleSaveGigAction(gig.id)
         if (res.success) {
-            toast.success(res.data?.saved ? "Gig saved to favorites!" : "Removed from favorites")
+            toast.success(res.data?.saved ? "Gig saved" : "Gig removed")
         } else {
             setIsSaved(!next)
-            toast.error(res.error || "Could not save gig.")
+            toast.error("Couldn't save gig")
         }
     }
 

@@ -1,10 +1,12 @@
 import type { Metadata } from "next"
 import Link from "next/link"
-import { eq, and } from "drizzle-orm"
+import { eq, and, desc, isNull, gt } from "drizzle-orm"
 import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
 import { business } from "@/lib/db/schema/business"
 import { businessHiredServiceTable } from "@/lib/db/schema/business-hired-service"
+import { offeringsTable } from "@/lib/db/schema/offering"
+import { manufacturerTable } from "@/lib/db/schema/manufacturer"
 import { headers } from "next/headers"
 import BusinessDashboardView from "@/components/business/dashboard-view"
 import { getBusinessRequirementsAction } from "@/actions/business-requirements"
@@ -35,7 +37,7 @@ export default async function BusinessDashboardPage() {
     const profile = businessProfile[0]
     const displayName = profile?.businessName || profile?.fullName || "Unifiée"
 
-    const [requirementsResult, quotesResult, ordersResult, pendingDeliveries] = await Promise.all([
+    const [requirementsResult, quotesResult, ordersResult, pendingDeliveries, latestOfferings] = await Promise.all([
         getBusinessRequirementsAction(),
         getBusinessQuotesAction(),
         getBusinessOrdersAction(),
@@ -52,6 +54,34 @@ export default async function BusinessDashboardPage() {
                       eq(businessHiredServiceTable.status, "delivered")
                   ))
             : Promise.resolve([]),
+        db
+            .select({
+                id: offeringsTable.id,
+                title: offeringsTable.title,
+                description: offeringsTable.description,
+                offeringType: offeringsTable.offeringType,
+                unitPrice: offeringsTable.unitPrice,
+                unitOfMeasure: offeringsTable.unitOfMeasure,
+                minOrderQuantity: offeringsTable.minOrderQuantity,
+                quantityStep: offeringsTable.quantityStep,
+                leadTimeDaysMin: offeringsTable.leadTimeDaysMin,
+                leadTimeDaysMax: offeringsTable.leadTimeDaysMax,
+                city: offeringsTable.city,
+                state: offeringsTable.state,
+                vendorName: manufacturerTable.companyName,
+                fulfilmentMode: offeringsTable.fulfilmentMode,
+                attributes: offeringsTable.attributes,
+                shippingTerms: offeringsTable.shippingTerms,
+            })
+            .from(offeringsTable)
+            .innerJoin(manufacturerTable, eq(offeringsTable.vendorId, manufacturerTable.id))
+            .where(and(
+                eq(offeringsTable.status, "active"),
+                isNull(offeringsTable.deletedAt),
+                gt(offeringsTable.validUntil, new Date()),
+            ))
+            .orderBy(desc(offeringsTable.createdAt))
+            .limit(6),
     ])
 
     const quotes = quotesResult.success ? quotesResult.data ?? [] : []
@@ -161,6 +191,7 @@ export default async function BusinessDashboardPage() {
                 initialRequirements={requirements}
                 initialQuotations={quotations}
                 initialOrders={orders}
+                initialOfferings={latestOfferings}
             />
         </div>
     )

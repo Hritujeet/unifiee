@@ -22,9 +22,9 @@ export default function VendorOrderDetailView({ detail }: { detail: Detail }) {
         setBusy(true)
         const result = await action()
         setBusy(false)
-        if (!result.success) toast.error(result.error)
+        if (!result.success) toast.error("Couldn't save order")
         else {
-            toast.success("Order updated.")
+            toast.success("Order saved")
             router.refresh()
         }
     }

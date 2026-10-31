@@ -86,14 +86,14 @@ export default function RequirementsView({
         try {
             const res = await deleteRequirementAction(id)
             if (!res.success) {
-                toast.error(res.error || "Failed to delete requirement.")
+                toast.error("Couldn't delete requirement")
                 setDeletingId(null)
                 return
             }
-            toast.success(`Requirement "${title}" deleted from database.`)
+            toast.success("Requirement deleted")
             router.refresh()
         } catch {
-            toast.error("Could not delete requirement.")
+            toast.error("Couldn't delete requirement")
         } finally {
             setDeletingId(null)
         }

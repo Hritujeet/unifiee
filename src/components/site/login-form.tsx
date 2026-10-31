@@ -102,9 +102,14 @@ export function LoginForm({
     },
     onSuccess: (data, variables) => {
       if (data.status === "not_registered") {
-        toast.error("This email is not registered. Please sign up first.")
+        toast.error("Account not found", {
+          description: "Sign up to create an account.",
+        })
       } else if (data.status === "set_pw") {
-        toast.info("This email is registered with Google. Please click 'Continue with Google' to sign in and set your password.", { duration: 6000 })
+        toast.info("Google sign-in required", {
+          description: "Continue with Google to sign in.",
+          duration: 6000,
+        })
       } else if (data.status === "enter_pw") {
         const cleanEmail = variables.email.trim()
         setEmailToLogin(cleanEmail)
@@ -112,8 +117,8 @@ export function LoginForm({
         setPasswordValue("password", "", { shouldValidate: false })
         setStep("password")
       } else {
-        toast.error("Account lookup failed", {
-          description: "Could not determine the sign-in provider for this email. Please try Google sign-in or refresh the page.",
+        toast.error("Lookup failed", {
+          description: "Try again or use Google.",
           duration: 6000,
         })
       }
@@ -121,8 +126,8 @@ export function LoginForm({
     onError: (error) => {
       const msg = error instanceof Error ? error.message : "Unable to reach authentication server."
       const isRateLimit = /too many|wait a minute/i.test(msg)
-      toast.error(isRateLimit ? "Sign-in rate limit reached" : "Connection error", {
-        description: msg,
+      toast.error(isRateLimit ? "Too many attempts" : "Connection failed", {
+        description: "Wait a moment and try again.",
         duration: 6000,
       })
     },
@@ -140,21 +145,20 @@ export function LoginForm({
         const isRateLimited = result.error.status === 429 ||
           /too many requests|rate limit/i.test(result.error.message || "");
         if (isRateLimited) {
-          toast.error("Too many login attempts", {
-            description: "You have exceeded the maximum login attempts. Please wait a minute before trying again.",
+          toast.error("Too many attempts", {
+            description: "Wait a minute and try again.",
             duration: 6000,
           })
           return
         }
         toast.error("Sign in failed", {
-          description: result.error.message || "Invalid email or password combination. Please re-check your password.",
+          description: "Check your email and password.",
           duration: 6000,
         })
         setPasswordValue("password", "", { shouldValidate: false })
         return
       }
-      toast.success("Signed in successfully!", {
-        description: "Welcome back! Directing you to your account...",
+      toast.success("Signed in", {
         duration: 3000,
       })
       setIsRedirecting(true)
@@ -164,8 +168,8 @@ export function LoginForm({
     onError: (error) => {
       const msg = error instanceof Error ? error.message : "Could not complete sign in."
       const isRateLimited = /too many requests|rate limit/i.test(msg)
-      toast.error(isRateLimited ? "Too many login attempts" : "Sign in failed", {
-        description: isRateLimited ? "You have exceeded the maximum login attempts. Please wait a minute before trying again." : msg,
+      toast.error(isRateLimited ? "Too many attempts" : "Sign in failed", {
+        description: isRateLimited ? "Wait a minute and try again." : "Check your credentials and try again.",
         duration: 6000,
       })
     },
@@ -179,8 +183,8 @@ export function LoginForm({
       })
     },
     onError: (error) => {
-      toast.error("Google sign-in error", {
-        description: error instanceof Error ? error.message : "Failed to initiate Google authentication. Please try again.",
+      toast.error("Google sign-in failed", {
+        description: "Try again.",
         duration: 6000,
       })
     },

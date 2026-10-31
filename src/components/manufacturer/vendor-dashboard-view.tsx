@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { ORDER_STATUS_LABELS, type OrderStatus } from "@/lib/orders/lifecycle"
+import { formatCategoryDisplayName } from "@/lib/constants/categories"
 
 export interface VendorDashboardViewProps {
     vendorName: string
@@ -382,7 +383,7 @@ export default function VendorDashboardView({
                                                 {offering.title}
                                             </h4>
                                             <div className="flex items-center gap-2 text-muted-foreground text-[11px]">
-                                                <span className="capitalize">{offering.offeringType.replace("_", " ")}</span>
+                                                <span className="capitalize">{formatCategoryDisplayName(offering.offeringType)}</span>
                                                 <span>&bull;</span>
                                                 <span>MOQ: {offering.minOrderQuantity.toLocaleString()} {offering.unitOfMeasure}</span>
                                             </div>

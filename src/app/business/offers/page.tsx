@@ -38,6 +38,9 @@ export default async function BusinessOffersPage() {
             city: offeringsTable.city,
             state: offeringsTable.state,
             vendorName: manufacturerTable.companyName,
+            fulfilmentMode: offeringsTable.fulfilmentMode,
+            attributes: offeringsTable.attributes,
+            shippingTerms: offeringsTable.shippingTerms,
         })
         .from(offeringsTable)
         .innerJoin(manufacturerTable, eq(offeringsTable.vendorId, manufacturerTable.id))

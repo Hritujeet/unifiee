@@ -21,6 +21,28 @@ export interface FriendlyAiError {
     canRetry: boolean;
 }
 
+export function isRateLimitOrQuotaError(err: unknown): boolean {
+    const errorString = String(err).toLowerCase();
+    const messageLower = (err instanceof Error ? err.message : errorString).toLowerCase();
+    return (
+        messageLower.includes("429") ||
+        messageLower.includes("rate limit") ||
+        messageLower.includes("rate_limit") ||
+        messageLower.includes("quota") ||
+        messageLower.includes("resource_exhausted") ||
+        messageLower.includes("credit") ||
+        messageLower.includes("balance") ||
+        messageLower.includes("billing") ||
+        messageLower.includes("insufficient_quota") ||
+        messageLower.includes("over_quota") ||
+        messageLower.includes("too many requests") ||
+        errorString.includes("429") ||
+        errorString.includes("quota") ||
+        errorString.includes("resource_exhausted") ||
+        errorString.includes("credit")
+    );
+}
+
 export function mapAiError(err: unknown): FriendlyAiError {
     const errorString = String(err);
     const messageLower = (err instanceof Error ? err.message : errorString).toLowerCase();
@@ -40,14 +62,8 @@ export function mapAiError(err: unknown): FriendlyAiError {
         };
     }
 
-    // 2. Rate Limits & Quotas (429, RESOURCE_EXHAUSTED)
-    if (
-        messageLower.includes("429") ||
-        messageLower.includes("rate limit") ||
-        messageLower.includes("quota") ||
-        messageLower.includes("resource_exhausted") ||
-        messageLower.includes("too many requests")
-    ) {
+    // 2. Rate Limits & Quotas (429, RESOURCE_EXHAUSTED, Out of Credits)
+    if (isRateLimitOrQuotaError(err)) {
         // Attempt to extract retry delay from error if present
         let retryDelay = 15;
         const match = messageLower.match(/retry after (\d+)/i) || messageLower.match(/in (\d+)s/i);
